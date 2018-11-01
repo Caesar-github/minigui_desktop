@@ -280,6 +280,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 			char cmd[128];
 			sprintf(cmd, "/data/start.sh %d", game_sel);
                 	system_fd_closexec(cmd);
+                	system_fd_closexec("killall retroarch weston");
 		} else {
                     switch (menu_sel) {
                         case 0:
