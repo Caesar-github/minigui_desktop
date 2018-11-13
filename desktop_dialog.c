@@ -248,6 +248,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKRIGHT:
                 if (line_sel) {
                     if (menu_sel < 4)
                         menu_sel++;
@@ -262,6 +263,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKLEFT:
                 if (line_sel) {
                     if (menu_sel > 0)
                         menu_sel--;
@@ -275,7 +277,8 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 }
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case 0xb:
+            case 0xb:  /* menu on sdk */
+            case SCANCODE_ENTER: /* key start/enter */
                 if (line_sel == 0) {
 			char cmd[128];
 			sprintf(cmd, "/data/start.sh %d", game_sel);
