@@ -224,11 +224,14 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         switch (wParam) {
             case SCANCODE_MODE:
             case SCANCODE_MUTE:
-                line_sel = line_sel?0:1;
+            case SCANCODE_CURSORBLOCKDOWN:
+            case SCANCODE_CURSORBLOCKUP:
+                line_sel = line_sel ? 0 : 1;
                 batt = battery;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKRIGHT:
                 if (line_sel) {
                     if (menu_sel < MENU_NUM - 1)
                         menu_sel++;
@@ -243,6 +246,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKLEFT:
                 if (line_sel) {
                     if (menu_sel > 0)
                         menu_sel--;
@@ -257,12 +261,13 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_PLAY:
+            case SCANCODE_ENTER:
                 if (line_sel == 0) {
-			char cmd[128];
-			sprintf(cmd, "/data/start.sh %d", game_sel);
-                	system_fd_closexec(cmd);
-                	system_fd_closexec("killall retroarch weston");
-		} else {
+                    char cmd[128];
+                    sprintf(cmd, "/data/start.sh %d", game_sel);
+                    system_fd_closexec(cmd);
+                    system_fd_closexec("killall retroarch weston");
+                } else {
                     switch (menu_sel) {
                         case 0:
                             creat_browser_dialog(hWnd, FILTER_FILE_GAME, TITLE_GAME);
