@@ -20,11 +20,14 @@
 
 char timebuff[100];
 static RECT msg_rcTime = {TIME_PINT_X, TIME_PINT_Y, TIME_PINT_X + TIME_PINT_W, TIME_PINT_Y + TIME_PINT_H};
-static RECT msg_rcBatt = {BATT_PINT_X, BATT_PINT_Y, BATT_PINT_X + BATT_PINT_W, BATT_PINT_Y + BATT_PINT_H};
-static RECT msg_rcBg = {BG_PINT_X, BG_PINT_Y, BG_PINT_X + BG_PINT_W, BG_PINT_Y + BG_PINT_H};
+RECT msg_rcBatt = {BATT_PINT_X, BATT_PINT_Y, BATT_PINT_X + BATT_PINT_W, BATT_PINT_Y + BATT_PINT_H};
+RECT msg_rcBg = {BG_PINT_X, BG_PINT_Y, BG_PINT_X + BG_PINT_W, BG_PINT_Y + BG_PINT_H};
+RECT msg_rcTitle = {TITLE_PINT_X, TITLE_PINT_Y, TITLE_PINT_X + TITLE_PINT_W, TITLE_PINT_Y + TITLE_PINT_H};
+RECT msg_rcDialog = {0, 0, LCD_W, LCD_H};
 
-static BITMAP batt_bmap;
+BITMAP batt_bmap[6];
 BITMAP background_bmap;
+int battery = 0;
 
 static char* mk_time(char* buff)
 {
@@ -55,18 +58,15 @@ static int loadres(void)
 {
     int i;
     char img[128];
-    char respath[] = "/usr/local/share/minigui/res/images/";
+    char respath[] = UI_IMAGE_PATH;
 
-    char batt_img[] = "batt.bmp";
-    char background_img[] = "background.jpg";
+    for (i = 0; i < 6; i++) {
+        snprintf(img, sizeof(img), "%sbattery%d.png", respath, i);
+        if (LoadBitmap(HDC_SCREEN, &batt_bmap[i], img))
+            return -1;
+    }
 
-    /* load batt bmp */
-    snprintf(img, sizeof(img), "%s%s", respath, batt_img);
-    if (LoadBitmap(HDC_SCREEN, &batt_bmap, img))
-        return -1;
-
-    /* load bt bmp */
-    snprintf(img, sizeof(img), "%s%s", respath, background_img);
+    snprintf(img, sizeof(img), "%sbackground.jpg", respath);
     if (LoadBitmap(HDC_SCREEN, &background_bmap, img))
         return -1;
 
@@ -75,10 +75,11 @@ static int loadres(void)
 
 static void unloadres(void)
 {
-    /* unload batt bmp */
-    UnloadBitmap(&batt_bmap);
+    int i;
+    
+    for (i = 0; i < 6; i++)
+      UnloadBitmap(&batt_bmap[i]);
 
-    /* unload bt bmp */
     UnloadBitmap(&background_bmap);
 }
 
@@ -95,21 +96,15 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         break;
         case MSG_TIMER:
            if (wParam == _ID_TIMER) {
-               //InvalidateRect(hWnd, &msg_rcTime, FALSE);
-               //InvalidateRect(hWnd, &msg_rcBatt, FALSE);
-               //InvalidateRect(hWnd, &msg_rcBt, FALSE);
-               //InvalidateRect(hWnd, &msg_rcWifi, FALSE);
+               if (battery < 5)
+                   battery++;
+               else
+                   battery = 0;
            }
         break;
         case MSG_PAINT:
             hdc = BeginPaint(hWnd);
-            /*
-            mk_time(timebuff);
-            TextOut(hdc, TIME_PINT_X, TIME_PINT_Y, timebuff);
-            FillBoxWithBitmap(hdc, BATT_PINT_X,
-                              BATT_PINT_Y, BATT_PINT_W,
-                              BATT_PINT_H, &batt_bmap);
-            */
+
             FillBoxWithBitmap(hdc, BG_PINT_X,
                               BG_PINT_Y, BG_PINT_W,
                               BG_PINT_H, &background_bmap);
@@ -137,10 +132,10 @@ static void InitCreateInfo(PMAINWINCREATE pCreateInfo)
     //pCreateInfo->hCursor = GetSystemCursor (0);
     pCreateInfo->hIcon = 0;
     pCreateInfo->MainWindowProc = MainWinProc;
-    pCreateInfo->lx = 0; 
-    pCreateInfo->ty = 0; 
-    pCreateInfo->rx = 480;
-    pCreateInfo->by = 320;
+    pCreateInfo->lx = 0;
+    pCreateInfo->ty = 0;
+    pCreateInfo->rx = LCD_W;
+    pCreateInfo->by = LCD_H;
     pCreateInfo->iBkColor = PIXEL_lightwhite; 
     pCreateInfo->dwAddData = 0;
     pCreateInfo->hHosting = HWND_DESKTOP;

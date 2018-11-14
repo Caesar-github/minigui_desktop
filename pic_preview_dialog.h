@@ -35,6 +35,6 @@
 #ifndef __PIC_PREVIEW_H__
 #define __PIC_PREVIEW_H__
 
-void creat_picpreview_dialog(HWND hWnd);
+void creat_picpreview_dialog(HWND hWnd, struct directory_node *node);
 
 #endif

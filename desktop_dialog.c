@@ -19,56 +19,19 @@
 
 #include "common.h"
 
-#if 0
-#define ICON_SPAC      90
-#define GAME_PINT_X    25
-#define GAME_PINT_Y    LCD_H - 96
-#define GAME_PINT_W    76
-#define GAME_PINT_H    96
-#else
-#define ICON_SPAC      90
-#define GAME_PINT_X    25
-#define GAME_PINT_Y    LCD_H - 80
-#define GAME_PINT_W    64
-#define GAME_PINT_H    64
-#endif
-
-#define MUSIC_PINT_X    GAME_PINT_X + ICON_SPAC
-#define MUSIC_PINT_Y    GAME_PINT_Y
-#define MUSIC_PINT_W    GAME_PINT_W
-#define MUSIC_PINT_H    GAME_PINT_H
-
-#define PHOTO_PINT_X    MUSIC_PINT_X + ICON_SPAC
-#define PHOTO_PINT_Y    GAME_PINT_Y
-#define PHOTO_PINT_W    GAME_PINT_W
-#define PHOTO_PINT_H    GAME_PINT_H
-
-#define FOLDE_PINT_X    PHOTO_PINT_X + ICON_SPAC
-#define FOLDE_PINT_Y    GAME_PINT_Y
-#define FOLDE_PINT_W    GAME_PINT_W
-#define FOLDE_PINT_H    GAME_PINT_H
-
-#define SETTING_PINT_X    FOLDE_PINT_X + ICON_SPAC
-#define SETTING_PINT_Y    GAME_PINT_Y
-#define SETTING_PINT_W    GAME_PINT_W
-#define SETTING_PINT_H    GAME_PINT_H
-
-#define GAME_ICON_PINT_X    50
-#define GAME_ICON_PINT_Y    90
-#define GAME_ICON_PINT_W    160
-#define GAME_ICON_PINT_H    90
-#define GAME_ICON_SPAC      220
-#define GAME_ICON_ZOOM_W    (GAME_ICON_PINT_W / 5)
-#define GAME_ICON_ZOOM_H    (GAME_ICON_PINT_H / 5)
-
 static int menu_sel = 0;
 static int game_sel = 0;
 static int line_sel = 0;
-#define MENU_ICON_NUM   2
-#define GAME_ICON_NUM   1
-#define GAME_NUM        6
+static int batt = 0;
 
-static BITMAP menu_bmap[5][MENU_ICON_NUM];
+#define MENU_NUM        6
+#define MENU_ICON_NUM   2
+
+#define GAME_NUM        6
+#define GAME_ICON_NUM   1
+#define GAME_ICON_NUM_PERPAGE  4
+
+static BITMAP menu_bmap[MENU_NUM][MENU_ICON_NUM];
 static BITMAP game_bmap[GAME_NUM][GAME_ICON_NUM];
 
 static RECT msg_rcGame = {GAME_PINT_X, GAME_PINT_Y, GAME_PINT_X + GAME_PINT_W, GAME_PINT_Y + GAME_PINT_H};
@@ -76,17 +39,17 @@ static RECT msg_rcMusic = {MUSIC_PINT_X, MUSIC_PINT_Y, MUSIC_PINT_X + MUSIC_PINT
 static RECT msg_rcPhoto = {PHOTO_PINT_X, PHOTO_PINT_Y, PHOTO_PINT_X + PHOTO_PINT_W, PHOTO_PINT_Y + PHOTO_PINT_H};
 static RECT msg_rcFolde = {FOLDE_PINT_X, FOLDE_PINT_Y, FOLDE_PINT_X + FOLDE_PINT_W, FOLDE_PINT_Y + FOLDE_PINT_H};
 static RECT msg_rcSetting = {SETTING_PINT_X, SETTING_PINT_Y, SETTING_PINT_X + SETTING_PINT_W, SETTING_PINT_Y + SETTING_PINT_H};
-static RECT msg_rcBg = {BG_PINT_X, BG_PINT_Y, BG_PINT_X + BG_PINT_W, BG_PINT_Y + BG_PINT_H};
 
-static GAL_Rect msg_galrcMenu[] = {
+const GAL_Rect msg_galrcMenu[] = {
 	{GAME_PINT_X, GAME_PINT_Y, GAME_PINT_W, GAME_PINT_H},
 	{MUSIC_PINT_X, MUSIC_PINT_Y, MUSIC_PINT_W, MUSIC_PINT_H},
 	{PHOTO_PINT_X, PHOTO_PINT_Y, PHOTO_PINT_W, PHOTO_PINT_H},
+	{VIDEO_PINT_X, VIDEO_PINT_Y, VIDEO_PINT_W, VIDEO_PINT_H},
 	{FOLDE_PINT_X, FOLDE_PINT_Y, FOLDE_PINT_W, FOLDE_PINT_H},
 	{SETTING_PINT_X, SETTING_PINT_Y, SETTING_PINT_W, SETTING_PINT_H}
 };
 
-static char game_name[GAME_NUM][64] = {
+static const char game_name[GAME_NUM][64] = {
 	"GAME1",
 	"GAME2",
 	"GAME3",
@@ -94,49 +57,59 @@ static char game_name[GAME_NUM][64] = {
 	"GAME5",
 	"GAME6"
 };
+#define TITLE_GAME        "游戏"
+#define TITLE_MUSIC       "音乐"
+#define TITLE_PIC         "图片"
+#define TITLE_VIDEO       "视频"
+#define TITLE_BROWSER     "资源管理器"
 
-extern BITMAP background_bmap;
 static int loadres(void)
 {
     int i, j;
     char img[128];
-    char respath[] = "/usr/local/share/minigui/res/images/";
+    char respath[] = UI_IMAGE_PATH;
 
     for (i = 0; i < MENU_ICON_NUM; i++) {
         /* load game bmp */
         snprintf(img, sizeof(img), "%sgame%d.png", respath, i);
-        printf("%s\n", img);
+        //printf("%s\n", img);
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[0][i], img))
             return -1;
 
         snprintf(img, sizeof(img), "%smusic%d.png", respath, i);
-        printf("%s\n", img);
+        //printf("%s\n", img);
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[1][i], img))
             return -1;
 
         snprintf(img, sizeof(img), "%sphoto%d.png", respath, i);
-        printf("%s\n", img);
+        //printf("%s\n", img);
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[2][i], img))
             return -1;
 
-        snprintf(img, sizeof(img), "%sfolde%d.png", respath, i);
-        printf("%s\n", img);
+        snprintf(img, sizeof(img), "%svideo%d.png", respath, i);
+        //printf("%s\n", img);
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[3][i], img))
             return -1;  
 
-        snprintf(img, sizeof(img), "%ssetting%d.png", respath, i);
-        printf("%s\n", img);
+        snprintf(img, sizeof(img), "%sfolde%d.png", respath, i);
+        //printf("%s\n", img);
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[4][i], img))
+            return -1;  
+
+        snprintf(img, sizeof(img), "%ssetting%d.png", respath, i);
+        //printf("%s\n", img);
+        if (LoadBitmap(HDC_SCREEN, &menu_bmap[5][i], img))
             return -1;
     }
     for (j = 0; j < GAME_NUM; j++) {
         for (i = 0; i < GAME_ICON_NUM; i++) {
             snprintf(img, sizeof(img), "%sgame_%d_%d.png", respath, j, i);
-            printf("%s\n", img);
+            //printf("%s\n", img);
             if (LoadBitmap(HDC_SCREEN, &game_bmap[j][i], img))
                 return -1;
         }
     }
+
     return 0;
 }
 
@@ -144,7 +117,7 @@ static void unloadres(void)
 {
     int i, j;
 
-    for (j = 0; j < 5; j++)
+    for (j = 0; j < MENU_NUM; j++)
         for (i = 0; i < MENU_ICON_NUM; i ++)
             UnloadBitmap(&menu_bmap[j][i]);
 
@@ -165,14 +138,17 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         loadres();
         bkcolor = GetWindowElementPixel(hWnd, WE_BGC_WINDOW);
         SetWindowBkColor(hWnd, bkcolor);
-        SetTimer(hWnd, _ID_TIMER_1, 100);
+        SetTimer(hWnd, _ID_TIMER_DESKTOP, 100);
         if (hFocus)
             SetFocus(hFocus);
         return 0;
     }
     case MSG_TIMER: {
-        if (wParam == _ID_TIMER_1) {
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+        if (wParam == _ID_TIMER_DESKTOP) {
+            if (batt != battery) {
+                batt = battery;
+                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+            }
         }
         break;
     }
@@ -188,52 +164,56 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         FillBoxWithBitmap(hdc, BG_PINT_X,
                                BG_PINT_Y, BG_PINT_W,
                                BG_PINT_H, &background_bmap);
-        for (i = 0; i < 4; i++) {
+        FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,
+                               BATT_PINT_W, BATT_PINT_H,
+                               &batt_bmap[batt]);
+        for (i = 0; i < GAME_ICON_NUM_PERPAGE; i++) {
             RECT msg_rcName;
 
-            if (((game_sel / 4) * 4 + i) >= GAME_NUM)
+            if (((game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i) >= GAME_NUM)
                 break;
-            if ((i == game_sel % 4) && (line_sel == 0))
+            if ((i == game_sel % GAME_ICON_NUM_PERPAGE) && (line_sel == 0))
                 FillBoxWithBitmap(hdc, GAME_ICON_PINT_X + GAME_ICON_SPAC * i - (GAME_ICON_ZOOM_W / 2),
                                        GAME_ICON_PINT_Y - GAME_ICON_ZOOM_H, GAME_ICON_PINT_W + GAME_ICON_ZOOM_W,
-                                       GAME_ICON_PINT_H + GAME_ICON_ZOOM_H, &game_bmap[(game_sel / 4) * 4 + i][0]);
+                                       GAME_ICON_PINT_H + GAME_ICON_ZOOM_H, &game_bmap[(game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i][0]);
             else
                 FillBoxWithBitmap(hdc, GAME_ICON_PINT_X + GAME_ICON_SPAC * i,
                                        GAME_ICON_PINT_Y, GAME_ICON_PINT_W,
-                                       GAME_ICON_PINT_H, &game_bmap[(game_sel / 4) * 4 + i][0]);
+                                       GAME_ICON_PINT_H, &game_bmap[(game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i][0]);
            msg_rcName.left = GAME_ICON_PINT_X + GAME_ICON_SPAC * i;
            msg_rcName.top = GAME_ICON_PINT_Y + GAME_ICON_PINT_H + 20;
            msg_rcName.right = msg_rcName.left + GAME_ICON_PINT_W;
            msg_rcName.bottom = msg_rcName.top + 24;
            SetBkColor(hdc, COLOR_transparent);
            SetBkMode(hdc,BM_TRANSPARENT);
-           DrawText (hdc, game_name[(game_sel / 4) * 4 + i], -1, &msg_rcName, DT_TOP | DT_CENTER);
+           SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+           DrawText (hdc, game_name[(game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i], -1, &msg_rcName, DT_TOP | DT_CENTER);
         }
-        page = (GAME_NUM + 3) / 4;
-            
+        page = (GAME_NUM + GAME_ICON_NUM_PERPAGE - 1) / GAME_ICON_NUM_PERPAGE;
+
         for (i = 0; i < page; i++) {
             int x;
             if (page == 1)
-                x =  LCD_W / 2;
+                x =  DESKTOP_PAGE_DOT_X;
             else if (page % 2)
-           	    x =  LCD_W / 2 - page / 2 * 40;
+           	    x =  DESKTOP_PAGE_DOT_X - page / 2 * DESKTOP_PAGE_DOT_SPAC;
             else
-                x =  LCD_W / 2 - page / 2 * 40 + 20;
+                x =  DESKTOP_PAGE_DOT_X - page / 2 * DESKTOP_PAGE_DOT_SPAC + DESKTOP_PAGE_DOT_SPAC / 2;
 
-            if (i == game_sel / 4)
-                FillCircle(hdc, x + i * 40, GAME_ICON_PINT_Y + GAME_ICON_PINT_H + 90, 4);
+            if (i == game_sel / GAME_ICON_NUM_PERPAGE)
+                FillCircle(hdc, x + i * DESKTOP_PAGE_DOT_SPAC, DESKTOP_PAGE_DOT_Y, DESKTOP_PAGE_DOT_DIA);
             else
-                Circle(hdc, x + i * 40, GAME_ICON_PINT_Y + GAME_ICON_PINT_H + 90, 4);    
+                Circle(hdc, x + i * DESKTOP_PAGE_DOT_SPAC, DESKTOP_PAGE_DOT_Y, DESKTOP_PAGE_DOT_DIA);    
         }
-        for (i = 0; i < 5; i++) {
+        for (i = 0; i < MENU_NUM; i++) {
             if ((i == menu_sel) && (line_sel == 1))
                 FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
                                   msg_galrcMenu[i].y, msg_galrcMenu[i].w,
                                   msg_galrcMenu[i].h, &menu_bmap[i][1]);
             else
-                FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
-                                  msg_galrcMenu[i].y, msg_galrcMenu[i].w,
-                                  msg_galrcMenu[i].h, &menu_bmap[i][0]);
+                FillBoxWithBitmap(hdc, msg_galrcMenu[i].x + MENU_ICON_ZOOM_W / 2,
+                                  msg_galrcMenu[i].y + MENU_ICON_ZOOM_H, msg_galrcMenu[i].w - MENU_ICON_ZOOM_W,
+                                  msg_galrcMenu[i].h - MENU_ICON_ZOOM_H, &menu_bmap[i][0]);
         }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
@@ -245,12 +225,12 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             case SCANCODE_MODE:
             case SCANCODE_MUTE:
                 line_sel = line_sel?0:1;
+                batt = battery;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKRIGHT:
                 if (line_sel) {
-                    if (menu_sel < 4)
+                    if (menu_sel < MENU_NUM - 1)
                         menu_sel++;
                     else
                         menu_sel = 0;
@@ -263,12 +243,11 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKLEFT:
                 if (line_sel) {
                     if (menu_sel > 0)
                         menu_sel--;
                     else
-                        menu_sel = 4;
+                        menu_sel = MENU_NUM - 1;
                 } else {
                     if (game_sel > 0)
                         game_sel--;
@@ -277,8 +256,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 }
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case 0xb:  /* menu on sdk */
-            case SCANCODE_ENTER: /* key start/enter */
+            case SCANCODE_PLAY:
                 if (line_sel == 0) {
 			char cmd[128];
 			sprintf(cmd, "/data/start.sh %d", game_sel);
@@ -287,14 +265,22 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 		} else {
                     switch (menu_sel) {
                         case 0:
+                            creat_browser_dialog(hWnd, FILTER_FILE_GAME, TITLE_GAME);
                             break;
                         case 1:
+                            creat_browser_dialog(hWnd, FILTER_FILE_MUSIC, TITLE_MUSIC);
                             break;
                         case 2:
+                            creat_browser_dialog(hWnd, FILTER_FILE_PIC, TITLE_PIC);
                             break;
                         case 3:
+                            creat_browser_dialog(hWnd, FILTER_FILE_VIDEO, TITLE_VIDEO);
                             break;
                         case 4:
+                            creat_browser_dialog(hWnd, FILTER_FILE_NO, TITLE_BROWSER);
+                            break;
+                        case 5:
+                            creat_setting_dialog(hWnd);
                             break;
                     }
                 }
