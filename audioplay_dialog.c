@@ -137,6 +137,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     case MSG_KEYDOWN:
         switch (wParam) {
             case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKDOWN:
                 if (file_select != 0)
                     file_select--;
                 else
@@ -148,6 +149,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
             case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKUP:
                 if (file_select < file_total - 1)
                     file_select++;
                 else
@@ -159,9 +161,11 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
             case SCANCODE_MODE:
+            case SCANCODE_B:
                 EndDialog(hWnd, wParam);
                 break;
             case SCANCODE_PLAY:
+            case SCANCODE_A:
                 play_status = play_status?0:1;
                 InvalidateRect(hWnd, &msg_rcPlayStatus, TRUE);
                 break;

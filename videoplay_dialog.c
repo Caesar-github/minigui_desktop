@@ -392,6 +392,7 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     case MSG_KEYDOWN:
         switch (wParam) {
             case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKUP:
                 //videoplay();
                 if (videoplay_t == NULL) {
                     videoplay_exit = 0;
@@ -399,10 +400,13 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 }
                 break;
             case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKDOWN:
                 break;
             case SCANCODE_PLAY:
+            case SCANCODE_A:
                 break;
             case SCANCODE_MODE:
+            case SCANCODE_B:
                 videoplay_exit = 1;
                 //if (videoplay_t != NULL)
                 //    pthread_join(videoplay_t, NULL);

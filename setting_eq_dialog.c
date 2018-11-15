@@ -143,11 +143,13 @@ static LRESULT setting_eq_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
             case SCANCODE_MODE:
+            case SCANCODE_B:
                 EndDialog(hWnd, wParam);
                 break;
             case SCANCODE_MUTE:
                 break;
             case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKUP:
                 if (list_sel < (sizeof(name_list) / sizeof(char *) - 1))
                     list_sel++;
                 else
@@ -155,6 +157,7 @@ static LRESULT setting_eq_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKDOWN:
                  if (list_sel > 0)
                     list_sel--;
                 else
@@ -162,6 +165,7 @@ static LRESULT setting_eq_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_PLAY:
+            case SCANCODE_A:
                 eq_val = list_sel;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;

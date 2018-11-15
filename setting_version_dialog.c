@@ -116,15 +116,19 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
             case SCANCODE_MODE:
+            case SCANCODE_B:
                 EndDialog(hWnd, wParam);
                 break;
             case SCANCODE_MUTE:
                 break;
             case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKUP:
                 break;
             case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKDOWN:
                 break;
             case SCANCODE_PLAY:
+            case SCANCODE_A:
                 break;
         }
         break;

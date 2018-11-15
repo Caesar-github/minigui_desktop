@@ -262,6 +262,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 break;
             case SCANCODE_PLAY:
             case SCANCODE_ENTER:
+            case SCANCODE_A:
                 if (line_sel == 0) {
                     char cmd[128];
                     sprintf(cmd, "/data/start.sh %d", game_sel);

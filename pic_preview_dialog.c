@@ -176,6 +176,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
     case MSG_KEYDOWN:
         switch (wParam) {
             case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKDOWN:
                 if (move_mode != 0)
                     break;
                 if (list_select != 0) {
@@ -186,6 +187,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                 }
                 break;
             case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKUP:
                 if (move_mode != 0)
                     break;
                 if (list_select < file_total - 1) {
@@ -196,9 +198,11 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                 }
                 break;
             case SCANCODE_MODE:
+            case SCANCODE_B:
                 EndDialog(hWnd, wParam);
                 break;
             case SCANCODE_PLAY:
+            case SCANCODE_A:
                 break;
         }
         break;

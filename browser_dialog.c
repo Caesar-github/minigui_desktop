@@ -458,6 +458,7 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
             case SCANCODE_MODE:
+            case SCANCODE_B:
                 cur_dir_node = free_dir_node(cur_dir_node);
                 if (cur_dir_node) {
                     InvalidateRect(hWnd, &msg_rcBg, TRUE);
@@ -468,14 +469,16 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 break;
             case SCANCODE_MUTE:
                 break;
-            case SCANCODE_VOLUP:
+            case SCANCODE_VOLDOWN:
+            case SCANCODE_CURSORBLOCKDOWN:
                 if (cur_dir_node->file_sel < (cur_dir_node->total - 1))
                     cur_dir_node->file_sel++;
                 else
                     cur_dir_node->file_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_VOLDOWN:
+            case SCANCODE_VOLUP:
+            case SCANCODE_CURSORBLOCKUP:
                  if (cur_dir_node->file_sel > 0)
                     cur_dir_node->file_sel--;
                 else
@@ -483,6 +486,7 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_PLAY:
+            case SCANCODE_A:
                 enter_folder(hWnd, cur_dir_node);
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
