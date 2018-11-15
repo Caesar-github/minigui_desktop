@@ -133,7 +133,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             case SCANCODE_MUTE:
                 break;
             case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKUP:
+            case SCANCODE_CURSORBLOCKDOWN:
                 if (list_sel < (sizeof(name_list) / sizeof(char *) - 1))
                     list_sel++;
                 else
@@ -141,7 +141,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKDOWN:
+            case SCANCODE_CURSORBLOCKUP:
                  if (list_sel > 0)
                     list_sel--;
                 else
