@@ -214,8 +214,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 batt = battery;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKRIGHT:
+            case KEY_RIGHT_FUNC:
                 if (line_sel) {
                     if (menu_sel < MENU_NUM - 1)
                         menu_sel++;
@@ -229,8 +228,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 }
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKLEFT:
+            case KEY_LEFT_FUNC:
                 if (line_sel) {
                     if (menu_sel > 0)
                         menu_sel--;

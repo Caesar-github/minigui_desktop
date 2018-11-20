@@ -24,6 +24,195 @@
 
 #include "common.h"
 
+LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message, 
+                WPARAM wParam, LPARAM lParam)
+{
+    HWND hCurFocus;
+
+    switch (message) {
+#if 0
+    case MSG_CREATE:
+    {
+        int i;
+        PCTRLDATA pCtrlData;
+        HWND hCtrl;
+            
+        PDLGTEMPLATE pDlgTmpl 
+                    = (PDLGTEMPLATE)(((PMAINWINCREATE)lParam)->dwReserved);
+            
+        for (i = 0; i < pDlgTmpl->controlnr; i++) {
+            pCtrlData = pDlgTmpl->controls + i;
+            if (pCtrlData->class_name) {
+                hCtrl = CreateWindowEx2 (pCtrlData->class_name,
+                              pCtrlData->caption,
+                              pCtrlData->dwStyle | WS_CHILD,
+                              pCtrlData->dwExStyle,
+                              pCtrlData->id,
+                              pCtrlData->x,
+                              pCtrlData->y,
+                              pCtrlData->w,
+                              pCtrlData->h,
+                              hWnd,
+                              pCtrlData->werdr_name,
+                              pCtrlData->we_attrs,
+                              pCtrlData->dwAddData);
+            }
+            else
+                break;
+                              
+            if (hCtrl == HWND_INVALID) {
+                dlgDestroyAllControls (hWnd);
+                return -1;
+            }
+        }
+
+        return 0;
+    }
+#endif
+    case MSG_DLG_GETDEFID:
+    {
+        HWND hDef;
+
+        hDef = GetDlgDefPushButton (hWnd);
+        if (hDef)
+            return GetDlgCtrlID (hDef);
+        return 0;
+    }
+    
+    case MSG_DLG_SETDEFID:
+    {
+        HWND hOldDef;
+        HWND hNewDef;
+
+        hNewDef = GetDlgItem (hWnd, wParam);
+        if (SendMessage (hNewDef, MSG_GETDLGCODE, 0, 0L) & DLGC_PUSHBUTTON) {
+            hOldDef = GetDlgDefPushButton (hWnd);
+            if (hOldDef) {
+                ExcludeWindowStyle (hOldDef, BS_DEFPUSHBUTTON);
+                InvalidateRect (hOldDef, NULL, TRUE);
+            }
+            IncludeWindowStyle (hNewDef, BS_DEFPUSHBUTTON);
+            InvalidateRect (hNewDef, NULL, TRUE);
+
+            return (LRESULT)hOldDef;
+        }
+        break;
+    }
+        
+    case MSG_COMMAND:
+        if (wParam == IDCANCEL) {
+            HWND hCancel;
+            
+            hCancel = GetDlgItem (hWnd, IDCANCEL);
+            if (hCancel && IsWindowEnabled (hCancel) 
+                    && IsWindowVisible (hCancel))
+                EndDialog (hWnd, IDCANCEL);
+        }
+        break;
+
+    case MSG_CLOSE:
+    {
+        HWND hCancel;
+
+        hCancel = GetDlgItem (hWnd, IDCANCEL);
+        if (hCancel && IsWindowEnabled (hCancel) 
+                    && IsWindowVisible (hCancel))
+            EndDialog (hWnd, IDCANCEL);
+
+        return 0;
+    }
+
+    case MSG_ISDIALOG:
+        return 1;
+    case MSG_KEYLONGPRESS:
+		break;
+    case MSG_KEYDOWN:
+        if ((hCurFocus = GetFocusChild (hWnd)) 
+                && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
+                DLGC_WANTALLKEYS)
+            break;
+
+        switch (wParam) {
+        case KEY_EXIT_FUNC:
+            SendMessage (hWnd, MSG_COMMAND, IDCANCEL, 0L);
+            return 0;
+        case KEY_DOWN_FUNC:
+        {
+            HWND hNewFocus;
+                
+            if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
+                            DLGC_WANTTAB)
+                break;
+
+            if (lParam & KS_SHIFT)
+                hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, TRUE);
+            else
+                hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, FALSE);
+
+            if (hNewFocus != hCurFocus) {
+                SetNullFocus (hCurFocus);
+                SetFocus (hNewFocus);
+#if 0
+                SendMessage (hWnd, MSG_DLG_SETDEFID, 
+                                GetDlgCtrlID (hNewFocus), 0L);
+#endif
+            }
+
+            return 0;
+        }
+		case KEY_UP_FUNC:
+		{
+			HWND hNewFocus;
+						
+			if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
+							DLGC_WANTTAB)
+				break;
+		
+			if (lParam & KS_SHIFT)
+				hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, FALSE);
+			else
+				hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, TRUE);
+		
+			if (hNewFocus != hCurFocus) {
+				SetNullFocus (hCurFocus);
+				SetFocus (hNewFocus);
+#if 0
+				SendMessage (hWnd, MSG_DLG_SETDEFID, 
+										GetDlgCtrlID (hNewFocus), 0L);
+#endif
+			}
+		
+			return 0;
+		}
+        case KEY_ENTER_FUNC:
+        {
+            HWND hDef;
+
+            if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
+                            DLGC_WANTENTER)
+                break;
+
+            if (SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
+                            DLGC_PUSHBUTTON)
+                break;
+
+            hDef = GetDlgDefPushButton (hWnd);
+            /* DK[07/05/10]Fix Bug4798, Check the control if has WS_DISABLED property. */
+            if (hDef && IsWindowEnabled(hDef)) {
+                SendMessage (hWnd, MSG_COMMAND, GetDlgCtrlID (hDef), 0L);
+                return 0;
+            }
+        }
+        }
+        break;
+
+    default:
+        break;
+    }
+    
+    return DefaultMainWinProc (hWnd, message, wParam, lParam);
+}
+
 static LRESULT MsgBoxProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
@@ -192,6 +381,7 @@ int MessageBox_ex(HWND hParentWnd, const char* pszText,
     int width, height;
     int mb_margin, mb_buttonw, mb_buttonh, mb_textw;
 
+    __mg_def_proc[1] = PreDefDialogProc_ex;
     IsTiny = !strcasecmp (GetDefaultWindowElementRenderer()->name, "tiny");
     if (IsTiny) {
         int font_size = GetSysFontHeight (SYSLOGFONT_CONTROL);

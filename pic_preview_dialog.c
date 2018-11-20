@@ -175,7 +175,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
     case MSG_KEYDOWN:
         switch (wParam) {
-            case KEY_DOWN_FUNC:
+            case KEY_UP_FUNC:
                 if (move_mode != 0)
                     break;
                 if (list_select != 0) {
@@ -185,7 +185,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                     move_mode = MOVE_PRE;
                 }
                 break;
-            case KEY_UP_FUNC:
+            case KEY_DOWN_FUNC:
                 if (move_mode != 0)
                     break;
                 if (list_select < file_total - 1) {

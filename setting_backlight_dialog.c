@@ -138,14 +138,14 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
             case KEY_EXIT_FUNC:
                 EndDialog(hWnd, wParam);
                 break;
-            case KEY_UP_FUNC:
+            case KEY_DOWN_FUNC:
                 if (list_sel < (BACKLIGHT_MAX - 1))
                     list_sel++;
                 else
                     list_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case KEY_DOWN_FUNC:
+            case KEY_UP_FUNC:
                  if (list_sel > 0)
                     list_sel--;
                 else

@@ -107,10 +107,6 @@ int loadversion(char **model, char **version)
         return -1;
     }
 
-    //fgetc(fp);
-    //fgetc(fp);
-    //fgetc(fp);
-
     if ((__getline(model, &len, fp)) == -1)
         return -1;
 

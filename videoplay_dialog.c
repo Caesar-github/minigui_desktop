@@ -391,7 +391,7 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         break;
     case MSG_KEYDOWN:
         switch (wParam) {
-            case KEY_UP_FUNC:
+            case KEY_ENTER_FUNC:
                 //videoplay();
                 if (videoplay_t == NULL) {
                     videoplay_exit = 0;
@@ -400,7 +400,7 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 break;
             case KEY_DOWN_FUNC:
                 break;
-            case KEY_ENTER_FUNC:
+            case KEY_UP_FUNC:
                 break;
             case KEY_EXIT_FUNC:
                 videoplay_exit = 1;

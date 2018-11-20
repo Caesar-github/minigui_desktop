@@ -467,14 +467,14 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     EndDialog(hWnd, wParam);
                 }
                 break;
-            case KEY_UP_FUNC:
+            case KEY_DOWN_FUNC:
                 if (cur_dir_node->file_sel < (cur_dir_node->total - 1))
                     cur_dir_node->file_sel++;
                 else
                     cur_dir_node->file_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case KEY_DOWN_FUNC:
+            case KEY_UP_FUNC:
                  if (cur_dir_node->file_sel > 0)
                     cur_dir_node->file_sel--;
                 else

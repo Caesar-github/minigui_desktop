@@ -136,7 +136,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         break;
     case MSG_KEYDOWN:
         switch (wParam) {
-            case KEY_DOWN_FUNC:
+            case KEY_UP_FUNC:
                 if (file_select != 0)
                     file_select--;
                 else
@@ -147,7 +147,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 cur_file_node = get_cur_file_node(file_select);
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
-            case KEY_UP_FUNC:
+            case KEY_DOWN_FUNC:
                 if (file_select < file_total - 1)
                     file_select++;
                 else

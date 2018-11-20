@@ -79,7 +79,6 @@ enum RES_STR_ID {
     RES_STR_SCREENOFF_4,
     RES_STR_SCREENOFF_5,
     RES_STR_SCREENOFF_6,
-    RES_STR_SCREENOFF_7,
     RES_STR_BACKLIGHT_1,
     RES_STR_BACKLIGHT_2,
     RES_STR_BACKLIGHT_3,
@@ -158,6 +157,7 @@ struct directory_node
 #define BROWSER_PATH_MUSIC    "/oem/file/music"
 #define BROWSER_PATH_GAME     "/oem/file/game"
 #define BROWSER_PATH_VIDEO    "/oem/file/video"
+
 #define REC_FILE_CN    "/usr/local/share/minigui/res/string/CN-UTF8.bin"
 #define REC_FILE_EN    "/usr/local/share/minigui/res/string/EN-UTF8.bin"
 #define REC_FILE_JA    "/usr/local/share/minigui/res/string/JP-UTF8.bin"

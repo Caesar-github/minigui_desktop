@@ -28,7 +28,7 @@ static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
-#define SCREENOFF_NUM    7
+#define SCREENOFF_NUM    (RES_STR_SCREENOFF_6 - RES_STR_SCREENOFF_1 + 1)
 
 static int loadres(void)
 {
@@ -138,14 +138,14 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
             case KEY_EXIT_FUNC:
                 EndDialog(hWnd, wParam);
                 break;
-            case KEY_UP_FUNC:
+            case KEY_DOWN_FUNC:
                 if (list_sel < (SCREENOFF_NUM - 1))
                     list_sel++;
                 else
                     list_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case KEY_DOWN_FUNC:
+            case KEY_UP_FUNC:
                  if (list_sel > 0)
                     list_sel--;
                 else
