@@ -7,6 +7,7 @@ STAGING_DIR ?= ../../buildroot/output/rockchip_rk3128_game/staging/
 OBJ = audioplay_dialog.o \
       browser_dialog.o \
       desktop_dialog.o \
+      hardware.o \
       main.o \
       pic_preview_dialog.o \
       setting_backlight_dialog.o \
@@ -15,6 +16,7 @@ OBJ = audioplay_dialog.o \
       setting_language_dialog.o \
       setting_screenoff_dialog.o \
       setting_version_dialog.o \
+      sysfs.o \
       system.o \
       videoplay_dialog.o \
 

@@ -2,6 +2,7 @@
  * This is a every simple sample for MiniGUI.
  * It will create a main window and display a string of "Hello, world!" in it.
  */
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +18,7 @@
 
 #include "common.h"
 #include "desktop_dialog.h"
+#include "hardware.h"
 
 char timebuff[100];
 static RECT msg_rcTime = {TIME_PINT_X, TIME_PINT_Y, TIME_PINT_X + TIME_PINT_W, TIME_PINT_Y + TIME_PINT_H};
@@ -141,17 +143,37 @@ static void InitCreateInfo(PMAINWINCREATE pCreateInfo)
     pCreateInfo->hHosting = HWND_DESKTOP;
 }
 
+void signal_func(int signal)
+{
+    switch (signal){
+        case SIGUSR1:
+            printf("ac online:%s, battery capacity:%d%%\n",
+                   ac_is_online()? "yes": "no",
+                   get_battery_capacity());
+            break;
+        default:
+            break;
+    }
+}
+
 int MiniGUIMain(int args, const char* arg[])
 {
     MSG Msg;
     MAINWINCREATE CreateInfo;
     HWND hMainWnd;
+    struct sigaction sa;
 
 #ifdef _MGRM_PROCESSES
     JoinLayer (NAME_DEF_LAYER, arg[0], 0, 0);
 #endif
 
     InitCreateInfo (&CreateInfo);
+
+    sa.sa_sigaction = NULL;
+    sa.sa_handler   = signal_func;
+    sa.sa_flags     = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGUSR1, &sa, NULL);
 
     hMainWnd = CreateMainWindow (&CreateInfo);
     if (hMainWnd == HWND_INVALID)
