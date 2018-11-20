@@ -27,13 +27,7 @@
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
-static int language_val = 0;
-static const char *pTitle = "语言设置";
 static int batt = 0;
-static const char *name_list[] = {
-    "简体中文",
-    "English"
-};
 
 static int loadres(void)
 {
@@ -110,10 +104,11 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-        DrawText(hdc, pTitle, -1, &msg_rcTitle, DT_TOP);
+        SelectFont(hdc, logfont);
+        DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        for (i = 0; i < sizeof(name_list) / sizeof(char *); i++) {
+        for (i = 0; i < LANGUAGE_MAX; i++) {
             RECT msg_rcFilename;
 
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
@@ -124,12 +119,15 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
             if (i == list_sel)
                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
 
-            if (i == language_val)
+            if (i == language)
                 FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
             else
                 FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
-
-            DrawText(hdc, name_list[i], -1, &msg_rcFilename, DT_TOP);
+            if (i == LANGUAGE_KO)
+                SelectFont(hdc, logfont_k);
+            else
+                SelectFont(hdc, logfont_cej);
+            DrawText(hdc, res_str[RES_STR_LANGUAGE_CN + i], -1, &msg_rcFilename, DT_TOP);
         }
 
         SetBrushColor(hdc, old_brush);
@@ -139,31 +137,26 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
     case MSG_KEYDOWN:
         //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
-            case SCANCODE_MODE:
-            case SCANCODE_B:
+            case KEY_EXIT_FUNC:
                 EndDialog(hWnd, wParam);
                 break;
-            case SCANCODE_MUTE:
-                break;
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKUP:
-                if (list_sel < (sizeof(name_list) / sizeof(char *) - 1))
+            case KEY_UP_FUNC:
+                if (list_sel < (LANGUAGE_MAX - 1))
                     list_sel++;
                 else
                     list_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKDOWN:
+            case KEY_DOWN_FUNC:
                  if (list_sel > 0)
                     list_sel--;
                 else
-                    list_sel = sizeof(name_list) / sizeof(char *) - 1;
+                    list_sel = LANGUAGE_MAX - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_A:
-                language_val = list_sel;
+            case KEY_ENTER_FUNC:
+                language = list_sel;
+                loadstringres();
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
         }

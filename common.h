@@ -50,6 +50,61 @@
 
 #define MSG_VIDEOPLAY_END         (MSG_USER + 1)
 
+enum RES_STR_ID {
+    RES_STR_RES = 0,
+    RES_STR_TITLE_GAME,
+    RES_STR_TITLE_MUSIC,
+    RES_STR_TITLE_PIC,
+    RES_STR_TITLE_VIDEO,
+    RES_STR_TITLE_BROWSER,
+    RES_STR_TITLE_SETTING,
+    RES_STR_TITLE_LANGUAGE,
+    RES_STR_TITLE_GAMEDISP,
+    RES_STR_TITLE_SCREENOFF,
+    RES_STR_TITLE_BACKLIGHT,
+    RES_STR_TITLE_RESTORE,
+    RES_STR_TITLE_INFO,
+    RES_STR_LANGUAGE_CN,
+    RES_STR_LANGUAGE_EN,
+    RES_STR_LANGUAGE_JP,
+    RES_STR_LANGUAGE_KO,
+    RES_STR_EQ_1,
+    RES_STR_EQ_2,
+    RES_STR_EQ_3,
+    RES_STR_EQ_4,
+    RES_STR_EQ_5,
+    RES_STR_SCREENOFF_1,
+    RES_STR_SCREENOFF_2,
+    RES_STR_SCREENOFF_3,
+    RES_STR_SCREENOFF_4,
+    RES_STR_SCREENOFF_5,
+    RES_STR_SCREENOFF_6,
+    RES_STR_SCREENOFF_7,
+    RES_STR_BACKLIGHT_1,
+    RES_STR_BACKLIGHT_2,
+    RES_STR_BACKLIGHT_3,
+    RES_STR_BACKLIGHT_4,
+    RES_STR_INFO_MODEL,
+    RES_STR_INFO_UDISKCAP,
+    RES_STR_INFO_UDISKAVACAP,
+    RES_STR_INFO_VERSION,
+    RES_STR_TITLE_GAMEDISP_FULL,
+    RES_STR_TITLE_GAMEDISP_EQUAL,
+    RES_STR_WARNING,
+    RES_STR_WARNING_RECOVERY,
+    RES_STR_YES,
+    RES_STR_NO,
+    RES_STR_OK,
+    RES_STR_CANCEL,
+    RES_STR_GAME_1,
+    RES_STR_GAME_2,
+    RES_STR_GAME_3,
+    RES_STR_GAME_4,
+    RES_STR_GAME_5,
+    RES_STR_GAME_6,
+    RES_STR_MAX
+};
+
 enum filter_filetype {
     FILTER_FILE_NO = 0,
     FILTER_FILE_MUSIC = 1,
@@ -68,6 +123,14 @@ enum filetype {
     FILE_VIDEO = 5,
     FILE_OTHER = 6,
     FILE_TYPE_MAX
+};
+
+enum languagetype {
+    LANGUAGE_CH = 0,
+    LANGUAGE_EN,
+    LANGUAGE_JA,
+    LANGUAGE_KO,
+    LANGUAGE_MAX
 };
 
 struct file_node
@@ -95,9 +158,16 @@ struct directory_node
 #define BROWSER_PATH_MUSIC    "/oem/file/music"
 #define BROWSER_PATH_GAME     "/oem/file/game"
 #define BROWSER_PATH_VIDEO    "/oem/file/video"
+#define REC_FILE_CN    "/usr/local/share/minigui/res/string/CN-UTF8.bin"
+#define REC_FILE_EN    "/usr/local/share/minigui/res/string/EN-UTF8.bin"
+#define REC_FILE_JA    "/usr/local/share/minigui/res/string/JP-UTF8.bin"
+#define REC_FILE_KO    "/usr/local/share/minigui/res/string/KO-UTF8.bin"
+
+#define VERSION_FILE   "/etc/version"
         
 //#include "ui_480x320.h"
 #include "ui_480x272.h"
+#include "key_map_rk3308.h"
 
 #include "desktop_dialog.h"
 #include "pic_preview_dialog.h"
@@ -110,7 +180,13 @@ struct directory_node
 #include "setting_screenoff_dialog.h"
 #include "setting_backlight_dialog.h"
 #include "setting_version_dialog.h"
+#include "setting_gamedisp_dialog.h"
+#include "message_dialog.h"
+#include "test_dialog.h"
 #include "system.h"
+
+extern int loadstringres(void);
+extern int loadversion(char **model, char **version);
 
 extern BITMAP batt_bmap[6];
 extern int battery;
@@ -119,4 +195,13 @@ extern RECT msg_rcBg;
 extern RECT msg_rcBatt;
 extern RECT msg_rcTitle;
 extern RECT msg_rcDialog;
+extern char *res_str[RES_STR_MAX];
+extern LOGFONT *logfont_cej;
+extern LOGFONT *logfont_k;
+extern LOGFONT *logfont;
+extern int language;
+extern int screenoff_val;
+extern int eq_val;
+extern int backlight_val;
+extern int gamedisp_val;
 #endif

@@ -27,9 +27,8 @@ static int batt = 0;
 #define MENU_NUM        6
 #define MENU_ICON_NUM   2
 
-#define GAME_NUM        6
+#define GAME_NUM        (RES_STR_GAME_6 - RES_STR_GAME_1 + 1)
 #define GAME_ICON_NUM   1
-#define GAME_ICON_NUM_PERPAGE  4
 
 static BITMAP menu_bmap[MENU_NUM][MENU_ICON_NUM];
 static BITMAP game_bmap[GAME_NUM][GAME_ICON_NUM];
@@ -48,20 +47,6 @@ const GAL_Rect msg_galrcMenu[] = {
 	{FOLDE_PINT_X, FOLDE_PINT_Y, FOLDE_PINT_W, FOLDE_PINT_H},
 	{SETTING_PINT_X, SETTING_PINT_Y, SETTING_PINT_W, SETTING_PINT_H}
 };
-
-static const char game_name[GAME_NUM][64] = {
-	"GAME1",
-	"GAME2",
-	"GAME3",
-	"GAME4",
-	"GAME5",
-	"GAME6"
-};
-#define TITLE_GAME        "游戏"
-#define TITLE_MUSIC       "音乐"
-#define TITLE_PIC         "图片"
-#define TITLE_VIDEO       "视频"
-#define TITLE_BROWSER     "资源管理器"
 
 static int loadres(void)
 {
@@ -160,6 +145,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         gal_pixel pixle = 0xff000000;
 
         hdc = BeginPaint(hWnd);
+        SelectFont(hdc, logfont);
         old_brush = SetBrushColor(hdc, pixle);
         FillBoxWithBitmap(hdc, BG_PINT_X,
                                BG_PINT_Y, BG_PINT_W,
@@ -187,7 +173,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
            SetBkColor(hdc, COLOR_transparent);
            SetBkMode(hdc,BM_TRANSPARENT);
            SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-           DrawText (hdc, game_name[(game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i], -1, &msg_rcName, DT_TOP | DT_CENTER);
+           DrawText (hdc, res_str[RES_STR_GAME_1 + (game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i], -1, &msg_rcName, DT_TOP | DT_CENTER);
         }
         page = (GAME_NUM + GAME_ICON_NUM_PERPAGE - 1) / GAME_ICON_NUM_PERPAGE;
 
@@ -222,8 +208,6 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     case MSG_KEYDOWN:
         printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
-            case SCANCODE_MODE:
-            case SCANCODE_MUTE:
             case SCANCODE_CURSORBLOCKDOWN:
             case SCANCODE_CURSORBLOCKUP:
                 line_sel = line_sel ? 0 : 1;
@@ -260,9 +244,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 }
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_ENTER:
-            case SCANCODE_A:
+            case KEY_ENTER_FUNC:
                 if (line_sel == 0) {
                     char cmd[128];
                     sprintf(cmd, "/data/start.sh %d", game_sel);
@@ -271,19 +253,19 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 } else {
                     switch (menu_sel) {
                         case 0:
-                            creat_browser_dialog(hWnd, FILTER_FILE_GAME, TITLE_GAME);
+                            creat_browser_dialog(hWnd, FILTER_FILE_GAME, res_str[RES_STR_TITLE_GAME]);
                             break;
                         case 1:
-                            creat_browser_dialog(hWnd, FILTER_FILE_MUSIC, TITLE_MUSIC);
+                            creat_browser_dialog(hWnd, FILTER_FILE_MUSIC, res_str[RES_STR_TITLE_MUSIC]);
                             break;
                         case 2:
-                            creat_browser_dialog(hWnd, FILTER_FILE_PIC, TITLE_PIC);
+                            creat_browser_dialog(hWnd, FILTER_FILE_PIC, res_str[RES_STR_TITLE_PIC]);
                             break;
                         case 3:
-                            creat_browser_dialog(hWnd, FILTER_FILE_VIDEO, TITLE_VIDEO);
+                            creat_browser_dialog(hWnd, FILTER_FILE_VIDEO, res_str[RES_STR_TITLE_VIDEO]);
                             break;
                         case 4:
-                            creat_browser_dialog(hWnd, FILTER_FILE_NO, TITLE_BROWSER);
+                            creat_browser_dialog(hWnd, FILTER_FILE_NO, res_str[RES_STR_TITLE_BROWSER]);
                             break;
                         case 5:
                             creat_setting_dialog(hWnd);

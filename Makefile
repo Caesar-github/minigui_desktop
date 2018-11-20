@@ -9,15 +9,18 @@ OBJ = audioplay_dialog.o \
       desktop_dialog.o \
       hardware.o \
       main.o \
+      message_dialog.o \
       pic_preview_dialog.o \
       setting_backlight_dialog.o \
       setting_dialog.o \
       setting_eq_dialog.o \
+      setting_gamedisp_dialog.o \
       setting_language_dialog.o \
       setting_screenoff_dialog.o \
       setting_version_dialog.o \
       sysfs.o \
       system.o \
+      test_dialog.o \
       videoplay_dialog.o \
 
 
@@ -28,7 +31,7 @@ CFLAGS ?= -I./include \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -lpthread  -ldrm -lminigui_ths -ljpeg -lpng -lm \
-	  -lavformat -lavcodec -lswscale -lavutil
+	  -lavformat -lavcodec -lswscale -lavutil -lfreetype
 
 $(BIN): $(OBJ)
 	$(CC) -o $(BIN) $(OBJ) $(CFLAGS)

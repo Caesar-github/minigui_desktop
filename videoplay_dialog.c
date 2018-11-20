@@ -391,22 +391,18 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         break;
     case MSG_KEYDOWN:
         switch (wParam) {
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKUP:
+            case KEY_UP_FUNC:
                 //videoplay();
                 if (videoplay_t == NULL) {
                     videoplay_exit = 0;
                     pthread_create(&videoplay_t, NULL, videoplay, (void *)"videoplay");
                 }
                 break;
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKDOWN:
+            case KEY_DOWN_FUNC:
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_A:
+            case KEY_ENTER_FUNC:
                 break;
-            case SCANCODE_MODE:
-            case SCANCODE_B:
+            case KEY_EXIT_FUNC:
                 videoplay_exit = 1;
                 //if (videoplay_t != NULL)
                 //    pthread_join(videoplay_t, NULL);
@@ -420,6 +416,7 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         int i;
         pthread_mutex_lock(&mutex);
         hdc = BeginPaint(hWnd);
+        SelectFont(hdc, logfont);
         InitBitmap(HDC_SCREEN, LCD_W, LCD_H, LCD_W*4, rgb_buff, &mBitMap);
         FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, &mBitMap);
         EndPaint(hWnd, hdc);

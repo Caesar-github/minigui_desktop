@@ -15,6 +15,8 @@
 #include <minigui/gdi.h>
 #include <minigui/window.h>
 #include <minigui/control.h>
+extern WINDOW_ELEMENT_RENDERER * __mg_def_renderer;
+extern MG_EXPORT PLOGFONT g_SysLogFont [];
 
 #include "common.h"
 #include "desktop_dialog.h"
@@ -30,6 +32,151 @@ RECT msg_rcDialog = {0, 0, LCD_W, LCD_H};
 BITMAP batt_bmap[6];
 BITMAP background_bmap;
 int battery = 0;
+//need save
+int language = 0;
+int screenoff_val = 0;
+int eq_val = 0;
+int backlight_val = 0;
+int gamedisp_val = 0;
+//
+char *res_str[RES_STR_MAX] = {0};
+LOGFONT  *logfont_cej;
+LOGFONT  *logfont_k;
+LOGFONT  *logfont;
+
+#define maxlabelsize 35
+static int  __getline(char **lineptr, ssize_t *n, FILE *stream)
+{
+    int count=0;
+    int buf;
+
+    if(*lineptr == NULL) {
+        *n=maxlabelsize;
+        *lineptr = (char*)malloc(*n);
+    }
+
+    if(( buf = fgetc(stream) ) == EOF ) {
+        return -1;
+    }
+
+    do {
+        if(buf=='\n') {    
+            count += 1;
+            break;
+        }
+
+        count++;
+
+        *(*lineptr+count-1) = buf;
+        *(*lineptr+count) = '\0';
+
+        if(*n <= count)
+            *lineptr = (char*)realloc(*lineptr,count*2);
+        buf = fgetc(stream);
+    } while( buf != EOF);
+
+    return count;
+}
+
+void updatesysfont(LOGFONT  *font)
+{
+    int i;
+
+    for (i = 0; i <= WE_DESKTOP; i++) {
+        __mg_def_renderer->we_fonts[i] = font;
+    }
+    for (i = 0; i < NR_SYSLOGFONTS; i++) {
+        g_SysLogFont[i] = font;
+    }
+}
+
+int loadversion(char **model, char **version)
+{
+    FILE *fp;
+    ssize_t len = 0;
+    int pos = 0;
+    const char* versionFile;
+
+    versionFile = VERSION_FILE;
+
+    fp = fopen(versionFile, "r");
+    if (fp == NULL) {
+        printf("open file %s failed: %s\n", versionFile, strerror(errno));
+        return -1;
+    }
+
+    //fgetc(fp);
+    //fgetc(fp);
+    //fgetc(fp);
+
+    if ((__getline(model, &len, fp)) == -1)
+        return -1;
+
+    if ((__getline(version, &len, fp)) == -1)
+        return -1;
+
+    fclose(fp);
+
+    return 0;	
+}
+
+int loadstringres(void)
+{
+    FILE *fp;
+    ssize_t len = 0;
+    int pos = 0;
+    const char* langFile;
+    
+    switch (language) {
+        case LANGUAGE_CH:
+            langFile = REC_FILE_CN;
+            logfont = logfont_cej;
+            break;
+        case LANGUAGE_EN:
+            langFile = REC_FILE_EN;
+            logfont = logfont_cej;
+            break;
+        case LANGUAGE_JA:
+            langFile = REC_FILE_JA;
+            logfont = logfont_cej;
+            break;
+        case LANGUAGE_KO:
+            langFile = REC_FILE_KO;
+            logfont = logfont_k;
+            break;
+    }
+    fp = fopen(langFile, "r");
+    if (fp == NULL) {
+        printf("open file %s failed: %s\n", langFile, strerror(errno));
+        return -1;
+    }
+
+    fgetc(fp);
+    fgetc(fp);
+    fgetc(fp);
+
+    while ((__getline(&res_str[pos], &len, fp)) != -1) {
+        //printf("load line Label %d------%s\n", pos, res_str[pos]);
+        pos++;
+        if (pos >= RES_STR_MAX)
+            break;
+    }
+
+    fclose(fp);
+    updatesysfont(logfont);
+}
+
+void unloadstringres(void)
+{
+    int i;
+
+    for (i = 0; i < RES_STR_MAX; i++) {
+        if (res_str[i]) {
+            free(res_str[i]);
+            res_str[i] = 0;
+        }
+    }
+}
 
 static char* mk_time(char* buff)
 {
@@ -92,6 +239,9 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     switch (message) {
         case MSG_CREATE:
         	 loadres();
+        	 logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
+        	 logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
+           loadstringres();
            SetTimer(hWnd, _ID_TIMER, 100);
            InvalidateRect(hWnd, &msg_rcBg, TRUE);
            creat_desktop_dialog(hWnd);
@@ -119,6 +269,9 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             DestroyMainWindow(hWnd);
             PostQuitMessage(hWnd);
             unloadres();
+            unloadstringres();
+            DestroyLogFont(logfont_cej);
+            DestroyLogFont(logfont_k);
         return 0;
     }
 

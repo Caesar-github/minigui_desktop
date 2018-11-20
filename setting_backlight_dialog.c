@@ -27,15 +27,8 @@
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
-static int backlight_val = 0;
-static const char *pTitle = "背光设置";
 static int batt = 0;
-static const char *name_list[] = {
-    "等级1",
-    "等级2",
-    "等级3",
-    "等级4"
-};
+#define BACKLIGHT_MAX    4
 
 static int loadres(void)
 {
@@ -112,10 +105,11 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-        DrawText(hdc, pTitle, -1, &msg_rcTitle, DT_TOP);
+        SelectFont(hdc, logfont);
+        DrawText(hdc, res_str[RES_STR_TITLE_BACKLIGHT], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        for (i = 0; i < sizeof(name_list) / sizeof(char *); i++) {
+        for (i = 0; i < BACKLIGHT_MAX; i++) {
             RECT msg_rcFilename;
 
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
@@ -131,7 +125,7 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
             else
                 FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
 
-            DrawText(hdc, name_list[i], -1, &msg_rcFilename, DT_TOP);
+            DrawText(hdc, res_str[RES_STR_BACKLIGHT_1 + i], -1, &msg_rcFilename, DT_TOP);
         }
 
         SetBrushColor(hdc, old_brush);
@@ -141,30 +135,24 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
     case MSG_KEYDOWN:
         //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
-            case SCANCODE_MODE:
-            case SCANCODE_B:
+            case KEY_EXIT_FUNC:
                 EndDialog(hWnd, wParam);
                 break;
-            case SCANCODE_MUTE:
-                break;
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKUP:
-                if (list_sel < (sizeof(name_list) / sizeof(char *) - 1))
+            case KEY_UP_FUNC:
+                if (list_sel < (BACKLIGHT_MAX - 1))
                     list_sel++;
                 else
                     list_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKDOWN:
+            case KEY_DOWN_FUNC:
                  if (list_sel > 0)
                     list_sel--;
                 else
-                    list_sel = sizeof(name_list) / sizeof(char *) - 1;
+                    list_sel = BACKLIGHT_MAX - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_A:
+            case KEY_ENTER_FUNC:
                 backlight_val = list_sel;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;

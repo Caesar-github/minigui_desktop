@@ -26,16 +26,8 @@
 
 static BITMAP list_sel_bmap;
 static int list_sel = 0;
-static const char *pTitle = "设置";
 static int batt = 0;
-static const char *name_list[] = {
-    "语言设置",
-    "音效设置",
-    "关屏设置",
-    "背光设置",
-    "恢复默认设置",
-    "系统信息"
-};
+#define SETTING_LIST_NUM    6
 
 static int loadres(void)
 {
@@ -54,6 +46,16 @@ static int loadres(void)
 static void unloadres(void)
 {
     UnloadBitmap(&list_sel_bmap);
+}
+
+static void recovery(HWND hWnd)
+{
+    int ret = -1;
+
+    ret = MessageBox_ex(hWnd, res_str[RES_STR_WARNING_RECOVERY], 0, MB_YESNO | MB_DEFBUTTON2);
+
+    //if (ret == IDYES)
+    //    api_recovery();
 }
 
 static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -103,10 +105,11 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-        DrawText(hdc, pTitle, -1, &msg_rcTitle, DT_TOP);
+        SelectFont(hdc, logfont);
+        DrawText(hdc, res_str[RES_STR_TITLE_SETTING], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, 0, 46, LCD_W, 2);
 
-        for (i = 0; i < sizeof(name_list) / sizeof(char *); i++) {
+        for (i = 0; i < SETTING_LIST_NUM; i++) {
             RECT msg_rcFilename;
 
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
@@ -116,7 +119,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
             if (i == list_sel)
                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
-            DrawText(hdc, name_list[i], -1, &msg_rcFilename, DT_TOP);
+            DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE + i], -1, &msg_rcFilename, DT_TOP);
         }
 
         SetBrushColor(hdc, old_brush);
@@ -126,36 +129,30 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     case MSG_KEYDOWN:
         //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
-            case SCANCODE_MODE:
-            case SCANCODE_B:
+            case KEY_EXIT_FUNC:
                 EndDialog(hWnd, wParam);
                 break;
-            case SCANCODE_MUTE:
-                break;
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKDOWN:
-                if (list_sel < (sizeof(name_list) / sizeof(char *) - 1))
+            case KEY_UP_FUNC:
+                if (list_sel < (SETTING_LIST_NUM - 1))
                     list_sel++;
                 else
                     list_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKUP:
+            case KEY_DOWN_FUNC:
                  if (list_sel > 0)
                     list_sel--;
                 else
-                    list_sel = sizeof(name_list) / sizeof(char *) - 1;
+                    list_sel = SETTING_LIST_NUM - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_A:
+            case KEY_ENTER_FUNC:
                 switch (list_sel) {
                     case 0:
                         creat_setting_language_dialog(hWnd);
                         break;
                     case 1:
-                        creat_setting_eq_dialog(hWnd);
+                        creat_setting_gamedisp_dialog(hWnd);
                         break;
                     case 2:
                         creat_setting_screenoff_dialog(hWnd);
@@ -164,6 +161,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                         creat_setting_backlight_dialog(hWnd);
                         break;
                     case 4:
+                        recovery(hWnd);
                         break;
                     case 5:
                         creat_setting_version_dialog(hWnd);

@@ -53,12 +53,12 @@ static int loadres(void)
             return -1;
     }
 
-    snprintf(img, sizeof(img), "%smusic_pause.png", respath);
+    snprintf(img, sizeof(img), "%smusic_play.png", respath);
     //printf("%s\n", img);
     if (LoadBitmap(HDC_SCREEN, &playstatus_bmap[0], img))
         return -1;
 
-    snprintf(img, sizeof(img), "%smusic_play.png", respath);
+    snprintf(img, sizeof(img), "%smusic_pause.png", respath);
     //printf("%s\n", img);
     if (LoadBitmap(HDC_SCREEN, &playstatus_bmap[1], img))
         return -1;
@@ -136,8 +136,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         break;
     case MSG_KEYDOWN:
         switch (wParam) {
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKDOWN:
+            case KEY_DOWN_FUNC:
                 if (file_select != 0)
                     file_select--;
                 else
@@ -148,8 +147,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 cur_file_node = get_cur_file_node(file_select);
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKUP:
+            case KEY_UP_FUNC:
                 if (file_select < file_total - 1)
                     file_select++;
                 else
@@ -160,12 +158,10 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 cur_file_node = get_cur_file_node(file_select);
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
-            case SCANCODE_MODE:
-            case SCANCODE_B:
+            case KEY_EXIT_FUNC:
                 EndDialog(hWnd, wParam);
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_A:
+            case KEY_ENTER_FUNC:
                 play_status = play_status?0:1;
                 InvalidateRect(hWnd, &msg_rcPlayStatus, TRUE);
                 break;
@@ -179,7 +175,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         gal_pixel old_brush;
         gal_pixel pixle = 0xffffffff;
         hdc = BeginPaint(hWnd);
-
+        SelectFont(hdc, logfont);
         old_brush = SetBrushColor(hdc, pixle);
         FillBoxWithBitmap(hdc, BG_PINT_X, BG_PINT_Y, BG_PINT_W, BG_PINT_H, &background_bmap);
         FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,

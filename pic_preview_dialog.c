@@ -175,8 +175,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
     case MSG_KEYDOWN:
         switch (wParam) {
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKDOWN:
+            case KEY_DOWN_FUNC:
                 if (move_mode != 0)
                     break;
                 if (list_select != 0) {
@@ -186,8 +185,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                     move_mode = MOVE_PRE;
                 }
                 break;
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKUP:
+            case KEY_UP_FUNC:
                 if (move_mode != 0)
                     break;
                 if (list_select < file_total - 1) {
@@ -197,12 +195,10 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                     move_mode = MOVE_NEXT;
                 }
                 break;
-            case SCANCODE_MODE:
-            case SCANCODE_B:
+            case KEY_EXIT_FUNC:
                 EndDialog(hWnd, wParam);
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_A:
+            case KEY_ENTER_FUNC:
                 break;
         }
         break;
@@ -212,7 +208,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
     case MSG_PAINT: {
         int i;
         hdc = BeginPaint(hWnd);
-
+        SelectFont(hdc, logfont);
         if (move_mode == MOVE_NEXT) {
             FillBoxWithBitmap(hdc, LCD_W - (LCD_W * move_cnt / 10), 0, LCD_W, LCD_H, pic_bmap_next);
             FillBoxWithBitmap(hdc, -(LCD_W * move_cnt / 10), 0, LCD_W, LCD_H, pic_bmap_cur);

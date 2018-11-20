@@ -38,10 +38,7 @@
 #define LCD_W    480
 #define LCD_H    272
 
-#define TIME_PINT_X    LCD_W - 96
-#define TIME_PINT_Y    30
-#define TIME_PINT_W    64
-#define TIME_PINT_H    32
+#define TTF_FONT_SIZE     16
 
 #define BATT_PINT_X    LCD_W - 50
 #define BATT_PINT_Y    20
@@ -111,6 +108,8 @@
 #define GAME_ICON_SPAC      100
 #define GAME_ICON_ZOOM_W    (GAME_ICON_PINT_W / 5)
 #define GAME_ICON_ZOOM_H    (GAME_ICON_PINT_H / 5)
+
+#define GAME_ICON_NUM_PERPAGE  4
 
 #define DESKTOP_PAGE_DOT_X    (LCD_W / 2)
 #define DESKTOP_PAGE_DOT_Y    (LCD_H - 90)

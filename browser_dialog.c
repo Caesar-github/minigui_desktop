@@ -407,6 +407,7 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+        SelectFont(hdc, logfont);
         DrawText(hdc, pTitle, -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
         page = (cur_dir_node->total + FILE_NUM_PERPAGE - 1) / FILE_NUM_PERPAGE;
@@ -457,8 +458,7 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     case MSG_KEYDOWN:
         //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
-            case SCANCODE_MODE:
-            case SCANCODE_B:
+            case KEY_EXIT_FUNC:
                 cur_dir_node = free_dir_node(cur_dir_node);
                 if (cur_dir_node) {
                     InvalidateRect(hWnd, &msg_rcBg, TRUE);
@@ -467,26 +467,21 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     EndDialog(hWnd, wParam);
                 }
                 break;
-            case SCANCODE_MUTE:
-                break;
-            case SCANCODE_VOLDOWN:
-            case SCANCODE_CURSORBLOCKDOWN:
+            case KEY_UP_FUNC:
                 if (cur_dir_node->file_sel < (cur_dir_node->total - 1))
                     cur_dir_node->file_sel++;
                 else
                     cur_dir_node->file_sel = 0;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_VOLUP:
-            case SCANCODE_CURSORBLOCKUP:
+            case KEY_DOWN_FUNC:
                  if (cur_dir_node->file_sel > 0)
                     cur_dir_node->file_sel--;
                 else
                     cur_dir_node->file_sel = cur_dir_node->total - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
-            case SCANCODE_PLAY:
-            case SCANCODE_A:
+            case KEY_ENTER_FUNC:
                 enter_folder(hWnd, cur_dir_node);
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
