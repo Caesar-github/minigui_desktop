@@ -8,6 +8,8 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h> 
+#include <sys/types.h>
+#include <unistd.h>
 #include <math.h>
 
 #include <minigui/common.h>
@@ -315,12 +317,22 @@ int MiniGUIMain(int args, const char* arg[])
     MAINWINCREATE CreateInfo;
     HWND hMainWnd;
     struct sigaction sa;
+    FILE *pid_file;
 
 #ifdef _MGRM_PROCESSES
     JoinLayer (NAME_DEF_LAYER, arg[0], 0, 0);
 #endif
 
     InitCreateInfo (&CreateInfo);
+
+    pid_file = fopen("/tmp/pid", "w");
+    if (!pid_file) {
+        printf("open /tmp/pid fail...\n");
+        return -1;
+    }
+
+    fprintf(pid_file, "%d", getpid());
+    fclose(pid_file);
 
     sa.sa_sigaction = NULL;
     sa.sa_handler   = signal_func;
