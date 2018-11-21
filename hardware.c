@@ -9,6 +9,7 @@
 #define BL_SYSFS_PATH		"/sys/class/backlight/backlight"
 #define AC_SYSFS_PATH		"/sys/class/power_supply/ac"
 #define BATTERY_SYSFS_PATH	"/sys/class/power_supply/battery"
+#define ADC_SYSFS_PATH		"/sys/devices/platform/adc-pot"
 
 int set_bl_brightness(uint32_t brightness)
 {
@@ -28,4 +29,9 @@ int ac_is_online(void)
 int get_battery_capacity(void)
 {
 	return read_sysfs_posint("capacity", BATTERY_SYSFS_PATH);
+}
+
+int get_pot_scaled(void)
+{
+	return read_sysfs_posint("scaled", ADC_SYSFS_PATH);
 }
