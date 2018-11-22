@@ -222,6 +222,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
     }
     case MSG_CLOSE:
+        KillTimer(hWnd, _ID_TIMER_PICPREVIEW);
         unloadpic();
         return 0;
     }

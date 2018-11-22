@@ -165,6 +165,7 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
         break;
     }
     case MSG_DESTROY:
+        KillTimer(hWnd, _ID_TIMER_SETTING_LANGUAGE);
         unloadres();
         break;
     }

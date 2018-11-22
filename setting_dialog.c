@@ -174,6 +174,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         break;
     }
     case MSG_DESTROY:
+        KillTimer(hWnd, _ID_TIMER_SETTING);
         unloadres();
         break;
     }

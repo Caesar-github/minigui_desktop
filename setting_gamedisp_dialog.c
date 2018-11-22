@@ -162,6 +162,7 @@ static LRESULT setting_eq_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
     }
     case MSG_DESTROY:
+        KillTimer(hWnd, _ID_TIMER_SETTING_EQ);
         unloadres();
         break;
     }
