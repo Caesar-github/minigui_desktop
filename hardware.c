@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "sysfs.h"
 
+#define BL_MAX_BRIGHTNESS	255
 #define BL_SYSFS_PATH		"/sys/class/backlight/backlight"
 #define AC_SYSFS_PATH		"/sys/class/power_supply/ac"
 #define BATTERY_SYSFS_PATH	"/sys/class/power_supply/battery"
@@ -13,6 +14,8 @@
 
 int set_bl_brightness(uint32_t brightness)
 {
+	if (brightness < BL_MAX_BRIGHTNESS)
+		brightness = BL_MAX_BRIGHTNESS;
 	return write_sysfs_int_and_verify("brightness", BL_SYSFS_PATH, brightness);
 }
 
