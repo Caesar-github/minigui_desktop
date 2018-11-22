@@ -23,12 +23,14 @@
 #include <minigui/control.h>
 
 #include "common.h"
+#include "hardware.h"
 
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
 #define BACKLIGHT_MAX    4
+static int brightness_levels[BACKLIGHT_MAX] = {45, 115, 185, 255};
 
 static int loadres(void)
 {
@@ -154,6 +156,7 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                 break;
             case KEY_ENTER_FUNC:
                 backlight_val = list_sel;
+                set_bl_brightness(brightness_levels[backlight_val]);
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
         }
