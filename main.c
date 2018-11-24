@@ -34,13 +34,7 @@ RECT msg_rcDialog = {0, 0, LCD_W, LCD_H};
 BITMAP batt_bmap[6];
 BITMAP background_bmap;
 int battery = 0;
-//need save
-int language = 0;
-int screenoff_val = 0;
-int eq_val = 0;
-int backlight_val = 0;
-int gamedisp_val = 0;
-//
+
 char *res_str[RES_STR_MAX] = {0};
 LOGFONT  *logfont_cej;
 LOGFONT  *logfont_k;
@@ -62,7 +56,7 @@ static int  __getline(char **lineptr, ssize_t *n, FILE *stream)
     }
 
     do {
-        if(buf=='\n') {    
+        if(buf=='\n') {
             count += 1;
             break;
         }
@@ -124,8 +118,8 @@ int loadstringres(void)
     ssize_t len = 0;
     int pos = 0;
     const char* langFile;
-    
-    switch (language) {
+
+    switch (get_language()) {
         case LANGUAGE_CH:
             langFile = REC_FILE_CN;
             logfont = logfont_cej;
@@ -180,32 +174,32 @@ static char* mk_time(char* buff)
 {
      time_t t;
      struct tm * tm;
- 
+
      time (&t);
      tm = localtime (&t);
      sprintf (buff, "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
-     
+
      return buff;
 }
 
-void sysUsecTime(char* buff) 
-{ 
-    struct timeval    tv; 
-    struct timezone tz; 
-       
-    struct tm         *p; 
-       
-    gettimeofday(&tv, &tz); 
+void sysUsecTime(char* buff)
+{
+    struct timeval    tv;
+    struct timezone tz;
 
-    p = localtime(&tv.tv_sec); 
-    sprintf(buff, "%04d-%02d-%02d %02d:%02d:%02d %03d", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000); 
+    struct tm         *p;
+
+    gettimeofday(&tv, &tz);
+
+    p = localtime(&tv.tv_sec);
+    sprintf(buff, "%04d-%02d-%02d %02d:%02d:%02d %03d", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000);
 }
 
-static int loadres(void)
+int main_loadres(void)
 {
     int i;
     char img[128];
-    char respath[] = UI_IMAGE_PATH;
+    char *respath = get_ui_image_path();
 
     for (i = 0; i < 6; i++) {
         snprintf(img, sizeof(img), "%sbattery%d.png", respath, i);
@@ -220,14 +214,36 @@ static int loadres(void)
     return 0;
 }
 
-static void unloadres(void)
+void main_unloadres(void)
 {
     int i;
-    
+
     for (i = 0; i < 6; i++)
       UnloadBitmap(&batt_bmap[i]);
 
     UnloadBitmap(&background_bmap);
+}
+
+static void batt_update(void)
+{
+    printf("ac online:%s, battery capacity:%d%%\n",
+                   ac_is_online()? "yes": "no",
+                   get_battery_capacity());
+    if (ac_is_online()) {
+        battery = 5;
+    } else {
+        int bat = get_battery_capacity();
+        if (bat < 10)
+            battery = 0;
+        else if (bat < 30)
+            battery = 1;
+        else if (bat < 50)
+            battery = 2;
+        else if (bat < 80)
+            battery = 3;
+        else
+            battery = 4;
+    }
 }
 
 static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -236,21 +252,18 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 
     switch (message) {
         case MSG_CREATE:
-        	 loadres();
-        	 logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
-        	 logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
-           loadstringres();
-           SetTimer(hWnd, _ID_TIMER, 100);
-           InvalidateRect(hWnd, &msg_rcBg, TRUE);
-           creat_desktop_dialog(hWnd);
+            main_loadres();
+            logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
+            logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
+            loadstringres();
+            SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
+            batt_update();
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            creat_desktop_dialog(hWnd);
         break;
         case MSG_TIMER:
-           if (wParam == _ID_TIMER) {
-               if (battery < 5)
-                   battery++;
-               else
-                   battery = 0;
-           }
+            if (wParam == _ID_TIMER_MAIN) {
+            }
         break;
         case MSG_PAINT:
             hdc = BeginPaint(hWnd);
@@ -264,9 +277,10 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
             break;
         case MSG_CLOSE:
+            KillTimer(hWnd, _ID_TIMER_MAIN);
             DestroyMainWindow(hWnd);
             PostQuitMessage(hWnd);
-            unloadres();
+            main_unloadres();
             unloadstringres();
             DestroyLogFont(logfont_cej);
             DestroyLogFont(logfont_k);
@@ -289,7 +303,7 @@ static void InitCreateInfo(PMAINWINCREATE pCreateInfo)
     pCreateInfo->ty = 0;
     pCreateInfo->rx = LCD_W;
     pCreateInfo->by = LCD_H;
-    pCreateInfo->iBkColor = PIXEL_lightwhite; 
+    pCreateInfo->iBkColor = PIXEL_lightwhite;
     pCreateInfo->dwAddData = 0;
     pCreateInfo->hHosting = HWND_DESKTOP;
 }
@@ -301,6 +315,7 @@ void signal_func(int signal)
             printf("ac online:%s, battery capacity:%d%%\n",
                    ac_is_online()? "yes": "no",
                    get_battery_capacity());
+            batt_update();
             break;
         default:
             break;

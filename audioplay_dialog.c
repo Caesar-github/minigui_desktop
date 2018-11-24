@@ -44,7 +44,7 @@ static int loadres(void)
 {
     int i, j;
     char img[128];
-    char respath[] = UI_IMAGE_PATH;
+    char *respath = get_ui_image_path();
 
     for (i = 0; i < ALBUM_ICON_NUM; i++) {
         snprintf(img, sizeof(img), "%smusic_album%d.png", respath, i);
@@ -90,6 +90,17 @@ static struct file_node *get_cur_file_node(int id)
     return file_node_temp;
 }
 
+static void audio_play(HWND hWnd)
+{
+    int len;
+    char *file_path;
+    len = strlen(dir_node->patch) + strlen(cur_file_node->name) + 4;
+    file_path = malloc(len);
+    snprintf(file_path, len, "%s/%s", dir_node->patch, cur_file_node->name);
+    media_play(file_path, hWnd);
+    free(file_path);
+}
+
 static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
@@ -105,29 +116,12 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
             SetFocus(hFocus);
         loadres();
         batt = battery;
-        SetTimer(hWnd, _ID_TIMER_AUDIOPLAY, 100);
+        SetTimer(hWnd, _ID_TIMER_AUDIOPLAY, TIMER_AUDIOPLAY);
+        audio_play(hWnd);
         return 0;
     }
     case MSG_TIMER:
         if (wParam == _ID_TIMER_AUDIOPLAY) {
-            if (cur_time < total_time) {
-                if (play_status == 1) {
-                    cur_time++;
-                    InvalidateRect(hWnd, &msg_rcTime, TRUE);
-                    InvalidateRect(hWnd, &msg_rcProBar, TRUE);
-                }
-            } else {
-                if (file_select < file_total - 1) {
-                    file_select++;
-                } else {
-                    file_select = 0;
-                }
-                cur_time = 0;
-                total_time = 245;
-                play_status = 1;
-                cur_file_node = get_cur_file_node(file_select);
-                InvalidateRect(hWnd, &msg_rcDialog, TRUE);
-            }
             if (batt != battery) {
                 batt = battery;
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
@@ -142,9 +136,11 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 else
                     file_select = file_total - 1;
                 cur_time = 0;
-                total_time = 245;
+                total_time = 0;
                 play_status = 1;
                 cur_file_node = get_cur_file_node(file_select);
+                media_exit();
+                audio_play(hWnd);
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
             case KEY_DOWN_FUNC:
@@ -153,16 +149,23 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 else
                     file_select = 0;
                 cur_time = 0;
-                total_time = 245;
+                total_time = 0;
                 play_status = 1;
                 cur_file_node = get_cur_file_node(file_select);
+                media_exit();
+                audio_play(hWnd);
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
             case KEY_EXIT_FUNC:
+                media_exit();
                 EndDialog(hWnd, wParam);
                 break;
             case KEY_ENTER_FUNC:
                 play_status = play_status?0:1;
+                if (play_status)
+                    media_restore();
+                else
+                    media_pause();
                 InvalidateRect(hWnd, &msg_rcPlayStatus, TRUE);
                 break;
         }
@@ -188,7 +191,8 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         FillBox(hdc, PROGRESSBAR_PINT_X, PROGRESSBAR_PINT_Y, PROGRESSBAR_PINT_W, PROGRESSBAR_PINT_H);
         SetBrushColor(hdc, 0xffffffff);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-        FillBox(hdc, PROGRESSBAR_PINT_X, PROGRESSBAR_PINT_Y, PROGRESSBAR_PINT_W * cur_time / total_time, PROGRESSBAR_PINT_H);
+        if (total_time)
+            FillBox(hdc, PROGRESSBAR_PINT_X, PROGRESSBAR_PINT_Y, PROGRESSBAR_PINT_W * cur_time / total_time, PROGRESSBAR_PINT_H);
         if (cur_file_node)
             DrawText(hdc, cur_file_node->name, -1, &msg_rcFilename, DT_TOP | DT_CENTER);
         snprintf(time_str, sizeof(time_str), "%02d:%02d/%02d:%02d", cur_time / 60, cur_time % 60, total_time / 60, total_time % 60);
@@ -199,6 +203,21 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         EndPaint(hWnd, hdc);
         break;
     }
+    case MSG_MEDIA_UPDATE:
+        //printf("MSG_MEDIA_UPDATE cmd = %d, val = %d\n", wParam, lParam);
+        if (wParam == MEDIA_CMD_TOTAL_TIME) {
+            total_time = lParam;
+            InvalidateRect(hWnd, &msg_rcTime, TRUE);
+            InvalidateRect(hWnd, &msg_rcProBar, TRUE);
+        } else if (wParam == MEDIA_CMD_CUR_TIME) {
+            cur_time = lParam;
+            InvalidateRect(hWnd, &msg_rcTime, TRUE);
+            InvalidateRect(hWnd, &msg_rcProBar, TRUE);
+        } else if (wParam == MEDIA_CMD_END) {
+            media_exit();
+            EndDialog(hWnd, wParam);
+        }
+        break;
     case MSG_CLOSE:
         KillTimer(hWnd, _ID_TIMER_AUDIOPLAY);
         unloadres();
@@ -221,7 +240,7 @@ void creat_audioplay_dialog(HWND hWnd, struct directory_node *node)
     file_total = node->total;
     dir_node = node;
     cur_time = 0;
-    total_time = 245;
+    total_time = 0;
     play_status = 1;
     cur_file_node = get_cur_file_node(file_select);
 

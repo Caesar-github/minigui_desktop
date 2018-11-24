@@ -52,7 +52,7 @@ static int loadres(void)
 {
     int i, j;
     char img[128];
-    char respath[] = UI_IMAGE_PATH;
+    char *respath = get_ui_image_path();
 
     for (i = 0; i < MENU_ICON_NUM; i++) {
         /* load game bmp */
@@ -121,9 +121,10 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     	  DWORD bkcolor;
         HWND hFocus = GetDlgDefPushButton(hWnd);
         loadres();
+        batt = battery;
         bkcolor = GetWindowElementPixel(hWnd, WE_BGC_WINDOW);
         SetWindowBkColor(hWnd, bkcolor);
-        SetTimer(hWnd, _ID_TIMER_DESKTOP, 100);
+        SetTimer(hWnd, _ID_TIMER_DESKTOP, TIMER_DESKTOP);
         if (hFocus)
             SetFocus(hFocus);
         return 0;
@@ -208,10 +209,9 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     case MSG_KEYDOWN:
         printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
         switch (wParam) {
-            case SCANCODE_CURSORBLOCKDOWN:
-            case SCANCODE_CURSORBLOCKUP:
+            case KEY_DOWN_FUNC:
+            case KEY_UP_FUNC:
                 line_sel = line_sel ? 0 : 1;
-                batt = battery;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case KEY_RIGHT_FUNC:
@@ -265,9 +265,16 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                         case 4:
                             creat_browser_dialog(hWnd, FILTER_FILE_NO, res_str[RES_STR_TITLE_BROWSER]);
                             break;
-                        case 5:
+                        case 5: {
+                            int oldstyle = get_themestyle();
                             creat_setting_dialog(hWnd);
+                            if (oldstyle != get_themestyle()) {
+                                unloadres();
+                                loadres();
+                                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                            }
                             break;
+                        }
                     }
                 }
                 break;

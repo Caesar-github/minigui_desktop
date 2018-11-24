@@ -27,13 +27,13 @@
 static BITMAP list_sel_bmap;
 static int list_sel = 0;
 static int batt = 0;
-#define SETTING_LIST_NUM    6
+#define SETTING_LIST_NUM    (RES_STR_TITLE_INFO - RES_STR_TITLE_LANGUAGE + 1)
 
 static int loadres(void)
 {
     int i;
     char img[128];
-    char respath[] = UI_IMAGE_PATH;
+    char *respath = get_ui_image_path();
 
     snprintf(img, sizeof(img), "%slist_sel.png", respath);
     //printf("%s\n", img);
@@ -54,8 +54,10 @@ static void recovery(HWND hWnd)
 
     ret = MessageBox_ex(hWnd, res_str[RES_STR_WARNING_RECOVERY], 0, MB_YESNO | MB_DEFBUTTON2);
 
-    //if (ret == IDYES)
-    //    api_recovery();
+    if (ret == IDYES) {
+        parameter_recovery();
+        loadstringres();
+    }
 }
 
 static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -72,8 +74,9 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         SetWindowBkColor(hWnd, bkcolor);
         if (hFocus)
             SetFocus(hFocus);
-
-        SetTimer(hWnd, _ID_TIMER_SETTING, 100);
+        batt = battery;
+        list_sel = 0;
+        SetTimer(hWnd, _ID_TIMER_SETTING, TIMER_SETTING);
         return 0;
     }
     case MSG_TIMER: {
@@ -89,6 +92,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     {
         int i;
         int page;
+        int cur_page;
         struct file_node *file_node_temp;
         gal_pixel old_brush;
         gal_pixel pixle = 0xffffffff;
@@ -107,19 +111,42 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
         SelectFont(hdc, logfont);
         DrawText(hdc, res_str[RES_STR_TITLE_SETTING], -1, &msg_rcTitle, DT_TOP);
-        FillBox(hdc, 0, 46, LCD_W, 2);
+        FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        for (i = 0; i < SETTING_LIST_NUM; i++) {
+        page = (SETTING_LIST_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
+        cur_page = list_sel / SETTING_NUM_PERPAGE;
+
+        for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
             RECT msg_rcFilename;
+
+            if ((cur_page * SETTING_NUM_PERPAGE + i) >= SETTING_LIST_NUM)
+                break;
 
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
             msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * i;
             msg_rcFilename.right = LCD_W - msg_rcFilename.left;
             msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
 
-            if (i == list_sel)
+            if (i == list_sel % SETTING_NUM_PERPAGE)
                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
-            DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE + i], -1, &msg_rcFilename, DT_TOP);
+            DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+        }
+
+        if (page > 1) {
+            for (i = 0; i < page; i++) {
+                int x;
+                if (page == 1)
+                    x =  SETTING_PAGE_DOT_X;
+                else if (page % 2)
+           	        x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC;
+                else
+                    x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC + SETTING_PAGE_DOT_SPAC / 2;
+
+                if (i == cur_page)
+                    FillCircle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);
+                else
+                    Circle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);    
+            }
         }
 
         SetBrushColor(hdc, old_brush);
@@ -154,16 +181,27 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     case 1:
                         creat_setting_gamedisp_dialog(hWnd);
                         break;
-                    case 2:
+                    case 2: {
+                        int oldstyle = get_themestyle();
+                        creat_setting_themestyle_dialog(hWnd);
+                        if (oldstyle != get_themestyle()) {
+                            unloadres();
+                            loadres();
+                            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                        }
+                        break;
+                    }
+                    case 3:
                         creat_setting_screenoff_dialog(hWnd);
                         break;
-                    case 3:
+                    case 4:
                         creat_setting_backlight_dialog(hWnd);
                         break;
-                    case 4:
-                        recovery(hWnd);
-                        break;
                     case 5:
+                        recovery(hWnd);
+                        InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                        break;
+                    case 6:
                         creat_setting_version_dialog(hWnd);
                         break;
                 }

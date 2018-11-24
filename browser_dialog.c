@@ -271,7 +271,7 @@ static void enter_folder(HWND hWnd, struct directory_node *node)
     } else if (file_node_temp->type == FILE_PIC) {
         creat_picpreview_dialog(hWnd, cur_dir_node);
     } else if (file_node_temp->type == FILE_VIDEO) {
-        creat_videoplay_dialog(hWnd, cur_dir_node);
+        creat_videoplay_hw_dialog(hWnd, cur_dir_node);
     } else if (file_node_temp->type == FILE_ZIP) {
     }
 }
@@ -335,7 +335,7 @@ static int loadres(void)
 {
     int i;
     char img[128];
-    char respath[] = UI_IMAGE_PATH;
+    char *respath = get_ui_image_path();
 
     snprintf(img, sizeof(img), "%slist_sel.png", respath);
     //printf("%s\n", img);
@@ -375,7 +375,8 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             SetFocus(hFocus);
         
         file_list_init();
-        SetTimer(hWnd, _ID_TIMER_BROWSER, 100);
+        batt = battery;
+        SetTimer(hWnd, _ID_TIMER_BROWSER, TIMER_BROWSER);
         return 0;
     }
     case MSG_TIMER: {
@@ -437,19 +438,21 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 break;
         }
 
-        for (i = 0; i < page; i++) {
-            int x;
-            if (page == 1)
-                x =  BROWSER_PAGE_DOT_X;
-            else if (page % 2)
-           	    x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC;
-            else
-                x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC + BROWSER_PAGE_DOT_SPAC / 2;
+        if (page > 1) {
+            for (i = 0; i < page; i++) {
+                int x;
+                if (page == 1)
+                    x =  BROWSER_PAGE_DOT_X;
+                else if (page % 2)
+               	    x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC;
+                else
+                    x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC + BROWSER_PAGE_DOT_SPAC / 2;
 
-            if (i == cur_dir_node->file_sel / FILE_NUM_PERPAGE)
-                FillCircle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);
-            else
-                Circle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);    
+                if (i == cur_dir_node->file_sel / FILE_NUM_PERPAGE)
+                    FillCircle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);
+                else
+                    Circle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);    
+            }
         }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);

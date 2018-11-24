@@ -78,8 +78,8 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         SetWindowBkColor(hWnd, bkcolor);
         if (hFocus)
             SetFocus(hFocus);
-
-        SetTimer(hWnd, _ID_TIMER_SETTING_VERSION, 100);
+        batt = battery;
+        SetTimer(hWnd, _ID_TIMER_SETTING_VERSION, TIMER_SETTING_VERSION);
         return 0;
     }
     case MSG_TIMER: {

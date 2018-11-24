@@ -35,7 +35,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#define _ID_TIMER                       100
+#define _ID_TIMER_MAIN                  100
 #define _ID_TIMER_DESKTOP               101
 #define _ID_TIMER_AUDIOPLAY             102
 #define _ID_TIMER_BROWSER               103
@@ -47,8 +47,29 @@
 #define _ID_TIMER_SETTING_EQ            109
 #define _ID_TIMER_SETTING_BACKLIGHT     110
 #define _ID_TIMER_SETTING_SCREENOFF     111
+#define _ID_TIMER_VIDEOPLAY_HW          112
+#define _ID_TIMER_SETTING_GAMEDISP      113
+#define _ID_TIMER_SETTING_THEMESTYLE    113
 
 #define MSG_VIDEOPLAY_END         (MSG_USER + 1)
+#define MSG_MEDIA_UPDATE          (MSG_USER + 2)
+
+//500ms
+#define TIMER_MAIN                  50
+#define TIMER_DESKTOP               50
+#define TIMER_AUDIOPLAY             50
+#define TIMER_BROWSER               50
+#define TIMER_PICPREVIEW            5
+#define TIMER_VIDEOPLAY             50
+#define TIMER_SETTING               50
+#define TIMER_SETTING_VERSION       50
+#define TIMER_SETTING_LANGUAGE      50
+#define TIMER_SETTING_EQ            50
+#define TIMER_SETTING_BACKLIGHT     50
+#define TIMER_SETTING_SCREENOFF     50
+#define TIMER_VIDEOPLAY_HW          50
+#define TIMER_SETTING_GAMEDISP      50
+#define TIMER_SETTING_THEMESTYLE    50
 
 enum RES_STR_ID {
     RES_STR_RES = 0,
@@ -60,6 +81,7 @@ enum RES_STR_ID {
     RES_STR_TITLE_SETTING,
     RES_STR_TITLE_LANGUAGE,
     RES_STR_TITLE_GAMEDISP,
+    RES_STR_TITLE_THEMESTYLE,
     RES_STR_TITLE_SCREENOFF,
     RES_STR_TITLE_BACKLIGHT,
     RES_STR_TITLE_RESTORE,
@@ -101,6 +123,8 @@ enum RES_STR_ID {
     RES_STR_GAME_4,
     RES_STR_GAME_5,
     RES_STR_GAME_6,
+    RES_STR_THEMESTYLE_THEME1,
+    RES_STR_THEMESTYLE_THEME2,
     RES_STR_MAX
 };
 
@@ -150,7 +174,13 @@ struct directory_node
     int file_sel;
 };
 
-#define UI_IMAGE_PATH         "/usr/local/share/minigui/res/images/"
+enum MEDIA_CMD {
+    MEDIA_CMD_CUR_TIME = 0,
+    MEDIA_CMD_TOTAL_TIME,
+    MEDIA_CMD_END,
+    MEDIA_CMD_QUIT,
+    MEDIA_CMD_READY
+};
 
 #define BROWSER_PATH_ROOT     "/oem/file"
 #define BROWSER_PATH_PIC      "/oem/file/pic"
@@ -165,10 +195,12 @@ struct directory_node
 
 #define VERSION_FILE   "/etc/version"
         
+//#include "ui_1024x600.h"
 //#include "ui_480x320.h"
 #include "ui_480x272.h"
 #include "key_map_rk3308.h"
 
+#include "parameter.h"
 #include "desktop_dialog.h"
 #include "pic_preview_dialog.h"
 #include "browser_dialog.h"
@@ -181,12 +213,16 @@ struct directory_node
 #include "setting_backlight_dialog.h"
 #include "setting_version_dialog.h"
 #include "setting_gamedisp_dialog.h"
+#include "setting_themestyle_dialog.h"
 #include "message_dialog.h"
-#include "test_dialog.h"
+#include "videoplay_hw_dialog.h"
 #include "system.h"
+#include "ffplay_ipc.h"
 
 extern int loadstringres(void);
 extern int loadversion(char **model, char **version);
+extern int main_loadres(void);
+extern void main_unloadres(void);
 
 extern BITMAP batt_bmap[6];
 extern int battery;
@@ -199,9 +235,4 @@ extern char *res_str[RES_STR_MAX];
 extern LOGFONT *logfont_cej;
 extern LOGFONT *logfont_k;
 extern LOGFONT *logfont;
-extern int language;
-extern int screenoff_val;
-extern int eq_val;
-extern int backlight_val;
-extern int gamedisp_val;
 #endif

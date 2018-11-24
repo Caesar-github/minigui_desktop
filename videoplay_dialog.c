@@ -374,7 +374,7 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
             SetFocus(hFocus);
         loadres();
         memset(rgb_buff, 0xff, LCD_W * LCD_H*4);
-        //SetTimer(hWnd, _ID_TIMER_VIDEOPLAY, 10);
+        //SetTimer(hWnd, _ID_TIMER_VIDEOPLAY, TIMER_VIDEOPLAY);
         //InvalidateRect(hWnd, &msg_rcDialog, TRUE);
         hMainWnd = hWnd;
         pthread_mutex_init(&mutex, NULL);

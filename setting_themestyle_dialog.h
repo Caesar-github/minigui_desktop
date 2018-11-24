@@ -32,9 +32,9 @@
  * SOFTWARE.
  */
 
-#ifndef __TEST_H__
-#define __TEST_H__
+#ifndef __SETTING_THEMESTYLE_DIALOG_H__
+#define __SETTING_THEMESTYLE_DIALOG_H__
 
-void creat_test_dialog(HWND hWnd, struct directory_node *node);
+void creat_setting_themestyle_dialog(HWND hWnd);
 
 #endif
