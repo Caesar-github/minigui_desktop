@@ -14,7 +14,8 @@
 
 int set_bl_brightness(uint32_t brightness)
 {
-	if (brightness < BL_MAX_BRIGHTNESS)
+	printf("set_bl_brightness the brightness is %d\n", brightness);
+	if (brightness > BL_MAX_BRIGHTNESS)
 		brightness = BL_MAX_BRIGHTNESS;
 	return write_sysfs_int_and_verify("brightness", BL_SYSFS_PATH, brightness);
 }
