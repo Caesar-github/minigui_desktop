@@ -226,9 +226,6 @@ void main_unloadres(void)
 
 static void batt_update(void)
 {
-    printf("ac online:%s, battery capacity:%d%%\n",
-                   ac_is_online()? "yes": "no",
-                   get_battery_capacity());
     if (ac_is_online()) {
         battery = 5;
     } else {
@@ -312,9 +309,6 @@ void signal_func(int signal)
 {
     switch (signal){
         case SIGUSR1:
-            printf("ac online:%s, battery capacity:%d%%\n",
-                   ac_is_online()? "yes": "no",
-                   get_battery_capacity());
             batt_update();
             break;
         default:
