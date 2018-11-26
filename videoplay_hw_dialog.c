@@ -83,7 +83,7 @@ static struct file_node *get_cur_file_node(int id)
     return file_node_temp;
 }
 
-static LRESULT test_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
 
@@ -208,9 +208,10 @@ static LRESULT test_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
             EndDialog(hWnd, wParam);
         }
         break;
-    case MSG_CLOSE:
+    case MSG_DESTROY:
         KillTimer(hWnd, _ID_TIMER_VIDEOPLAY_HW);
         unloadres();
+        EnableScreenAutoOff();
         return 0;
     }
 
@@ -226,7 +227,7 @@ void creat_videoplay_hw_dialog(HWND hWnd, struct directory_node *node)
 
     if (node == NULL)
         return;
-
+    DisableScreenAutoOff();
     file_select = node->file_sel;
     file_total = node->total;
     dir_node = node;
@@ -235,5 +236,5 @@ void creat_videoplay_hw_dialog(HWND hWnd, struct directory_node *node)
     play_status = 1;
     cur_file_node = get_cur_file_node(file_select);
 
-    DialogBoxIndirectParam(&PicPreViewDlg, hWnd, test_dialog_proc, 0L);
+    DialogBoxIndirectParam(&PicPreViewDlg, hWnd, videoplay_hw_dialog_proc, 0L);
 }

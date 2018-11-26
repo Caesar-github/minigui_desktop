@@ -29,6 +29,7 @@ static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
 #define SCREENOFF_NUM    (RES_STR_SCREENOFF_6 - RES_STR_SCREENOFF_1 + 1)
+static int val_table[SCREENOFF_NUM] = {5, 10, 15, 30, 60, -1};
 
 static int loadres(void)
 {
@@ -178,6 +179,7 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                 break;
             case KEY_ENTER_FUNC:
                 set_screenoff(list_sel);
+                set_screenoff_val(val_table[list_sel]);
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
         }

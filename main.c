@@ -39,6 +39,8 @@ char *res_str[RES_STR_MAX] = {0};
 LOGFONT  *logfont_cej;
 LOGFONT  *logfont_k;
 LOGFONT  *logfont;
+static int screenoff_cnt = 0;
+static int screenautooff = 1;
 
 #define maxlabelsize 35
 static int  __getline(char **lineptr, ssize_t *n, FILE *stream)
@@ -243,12 +245,27 @@ static void batt_update(void)
     }
 }
 
+void DisableScreenAutoOff(void)
+{
+    screenautooff = 0;
+    screenoff_cnt = 0;
+    EnableKeyMessage();
+    screenon();
+}
+
+void EnableScreenAutoOff(void)
+{
+    screenautooff = 1;
+    screenoff_cnt = 0;
+}
+
 static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
 
     switch (message) {
         case MSG_CREATE:
+            EnableScreenAutoOff();
             main_loadres();
             logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
             logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
@@ -256,10 +273,18 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
             batt_update();
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            RegisterMainWindow(hWnd);
             creat_desktop_dialog(hWnd);
         break;
         case MSG_TIMER:
             if (wParam == _ID_TIMER_MAIN) {
+                if (screenautooff && (screenoff_cnt < get_screenoff_val())) {
+                    screenoff_cnt ++;
+                    if (screenoff_cnt == get_screenoff_val()) {
+                        DisableKeyMessage();
+                        screenoff();
+                    }
+                }
             }
         break;
         case MSG_PAINT:
@@ -271,10 +296,20 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             EndPaint(hWnd, hdc);
         break;
         case MSG_KEYDOWN:
-            printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
+            printf("%s MSG_KEYDOWN message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
+            break;
+        case MSG_MAINWIN_KEYDOWN:
+            break;
+        case MSG_MAINWIN_KEYUP:
+            if (screenoff_cnt == get_screenoff_val()) {
+                EnableKeyMessage();
+                screenon();
+            }
+            screenoff_cnt = 0;
             break;
         case MSG_CLOSE:
             KillTimer(hWnd, _ID_TIMER_MAIN);
+            UnregisterMainWindow(hWnd);
             DestroyMainWindow(hWnd);
             PostQuitMessage(hWnd);
             main_unloadres();
@@ -327,7 +362,8 @@ int MiniGUIMain(int args, const char* arg[])
 #ifdef _MGRM_PROCESSES
     JoinLayer (NAME_DEF_LAYER, arg[0], 0, 0);
 #endif
-
+    parameter_init();
+    screenon();
     InitCreateInfo (&CreateInfo);
 
     pid_file = fopen("/tmp/pid", "w");
@@ -354,6 +390,7 @@ int MiniGUIMain(int args, const char* arg[])
     }
 
     MainWindowThreadCleanup (hMainWnd);
+    parameter_deinit();
     return 0;
 }
 

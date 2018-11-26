@@ -32,6 +32,16 @@ static int batt = 0;
 #define BACKLIGHT_MAX    4
 static int brightness_levels[BACKLIGHT_MAX] = {45, 115, 185, 255};
 
+void screenon(void)
+{
+    set_bl_brightness(brightness_levels[get_backlight()]);
+}
+
+void screenoff(void)
+{
+    set_bl_brightness(0);
+}
+
 static int loadres(void)
 {
     int i;

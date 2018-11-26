@@ -55,7 +55,7 @@
 #define MSG_MEDIA_UPDATE          (MSG_USER + 2)
 
 //500ms
-#define TIMER_MAIN                  50
+#define TIMER_MAIN                  100
 #define TIMER_DESKTOP               50
 #define TIMER_AUDIOPLAY             50
 #define TIMER_BROWSER               50
@@ -198,7 +198,7 @@ enum MEDIA_CMD {
 //#include "ui_1024x600.h"
 //#include "ui_480x320.h"
 #include "ui_480x272.h"
-#include "key_map_rk3308.h"
+#include "key_map_rk3128.h"
 
 #include "parameter.h"
 #include "desktop_dialog.h"
@@ -223,6 +223,8 @@ extern int loadstringres(void);
 extern int loadversion(char **model, char **version);
 extern int main_loadres(void);
 extern void main_unloadres(void);
+extern void DisableScreenAutoOff(void);
+extern void EnableScreenAutoOff(void);
 
 extern BITMAP batt_bmap[6];
 extern int battery;

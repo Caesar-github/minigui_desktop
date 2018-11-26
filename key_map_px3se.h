@@ -32,11 +32,13 @@
  * SOFTWARE.
  */
 
-#ifndef __SETTING_BACKLIGHT_DIALOG_H__
-#define __SETTING_BACKLIGHT_DIALOG_H__
+#ifndef __KEY_MAP_PX3SE_H__
+#define __KEY_MAP_PX3SE_H__
 
-void creat_setting_backlight_dialog(HWND hWnd);
-void screenon(void);
-void screenoff(void);
-
+#define KEY_UP_FUNC       0x73
+#define KEY_DOWN_FUNC     0x72
+#define KEY_EXIT_FUNC     0x0b
+#define KEY_ENTER_FUNC    0x01
+#define KEY_LEFT_FUNC     0x66
+#define KEY_RIGHT_FUNC    0x74
 #endif
