@@ -11,8 +11,8 @@
 #define VERSION          1002
 
 #define LANGUAGE_DEF     0
-#define SCREENOFF_DEF    0
-#define SCREENOFF_VAL_DEF    5
+#define SCREENOFF_DEF    3     //list value
+#define SCREENOFF_VAL_DEF    30     //wait time
 #define EQ_DEF           0
 #define BACKLIGHT_DEF    0
 #define GAMEDISP_DEF     0
