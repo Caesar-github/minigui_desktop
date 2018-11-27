@@ -56,6 +56,7 @@ static void recovery(HWND hWnd)
 
     if (ret == IDYES) {
         parameter_recovery();
+        screenon();
         loadstringres();
     }
 }
