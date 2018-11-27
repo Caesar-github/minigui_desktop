@@ -237,7 +237,7 @@ static void deinit_ipc(IPCState *ipcs) {
 }
 
 static void handle_remote_ipc_message(char *key, char *value, int *alive) {
-    printf("recv remote message: %s %s %s\n", key, MESSAGE_SEPATATOR, value);
+    //printf("recv remote message: %s %s %s\n", key, MESSAGE_SEPATATOR, value);
     /* test code begin */
     {
         if (!strcmp(key, STATE)) {
