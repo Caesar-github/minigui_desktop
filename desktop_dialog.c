@@ -245,9 +245,11 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             case KEY_ENTER_FUNC:
                 if (line_sel == 0) {
                     char cmd[128];
+                    DisableScreenAutoOff();
                     sprintf(cmd, "/data/start.sh %d", game_sel);
                     system_fd_closexec(cmd);
                     system_fd_closexec("killall retroarch weston");
+                    EnableScreenAutoOff();
                 } else {
                     switch (menu_sel) {
                         case 0:
