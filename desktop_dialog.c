@@ -250,6 +250,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     system_fd_closexec(cmd);
                     system_fd_closexec("killall retroarch weston");
                     EnableScreenAutoOff();
+                    InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 } else {
                     switch (menu_sel) {
                         case 0:
