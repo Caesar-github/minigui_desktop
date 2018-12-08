@@ -447,7 +447,7 @@ static void* run_ffplay_thread(void *arg) {
     ipc_state.ffplay_is_quit = 0;
     //pthread_detach(pthread_self());
     // -nodisp
-    snprintf(cmd, sizeof(cmd), "/usr/bin/ffplay -hide_banner -nostats -x %d -y %d %s &", LCD_W, LCD_H, file_path);// -autoexit  -vcodec h264
+    snprintf(cmd, sizeof(cmd), "/usr/bin/ffplay -hide_banner -nostats -x %d -y %d \"%s\" &", LCD_W, LCD_H, file_path);// -autoexit  -vcodec h264
     printf("%s\n", cmd);
     ret = system(cmd);
     if (ret)
