@@ -454,6 +454,10 @@ static void* run_ffplay_thread(void *arg) {
         exit(ret);
     // wait ready
     while (!__atomic_load_n(&ready, __ATOMIC_SEQ_CST)) {
+        if(ipc_state.ffplay_is_quit == 1){
+            printf("ffplay<%s> error\n", file_path);
+            return;
+        }
         usleep(10 * 1000);
     }
     printf("ffplay<%s> ready\n", file_path);
