@@ -41,6 +41,7 @@ LOGFONT  *logfont_k;
 LOGFONT  *logfont;
 static int screenoff_cnt = 0;
 static int screenautooff = 1;
+HWND mhWnd;
 
 #define maxlabelsize 35
 static int  __getline(char **lineptr, ssize_t *n, FILE *stream)
@@ -232,7 +233,10 @@ static void batt_update(void)
         battery = 5;
     } else {
         int bat = get_battery_capacity();
-        if (bat < 10)
+        if (bat < 5) {
+            battery = 0;
+            creat_lowpower_dialog(mhWnd);
+        } else if (bat < 10)
             battery = 0;
         else if (bat < 30)
             battery = 1;
@@ -274,6 +278,7 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             batt_update();
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             RegisterMainWindow(hWnd);
+            mhWnd = hWnd;
             creat_desktop_dialog(hWnd);
         break;
         case MSG_TIMER:
@@ -285,6 +290,14 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
                         screenoff();
                     }
                 }
+		/* for lowpower test
+		int test_cnt=0
+		test_cnt ++;
+		if (test_cnt == 5) {
+			battery = 0;
+			creat_lowpower_dialog(mhWnd);
+		}
+		*/
             }
         break;
         case MSG_PAINT:
@@ -294,7 +307,7 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
                               BG_PINT_Y, BG_PINT_W,
                               BG_PINT_H, &background_bmap);
             EndPaint(hWnd, hdc);
-        break;
+            break;
         case MSG_KEYDOWN:
             printf("%s MSG_KEYDOWN message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
             break;
@@ -355,9 +368,9 @@ int MiniGUIMain(int args, const char* arg[])
 {
     MSG Msg;
     MAINWINCREATE CreateInfo;
-    HWND hMainWnd;
     struct sigaction sa;
     FILE *pid_file;
+    HWND hMainWnd;
 
 #ifdef _MGRM_PROCESSES
     JoinLayer (NAME_DEF_LAYER, arg[0], 0, 0);
@@ -388,10 +401,7 @@ int MiniGUIMain(int args, const char* arg[])
     while (GetMessage (&Msg, hMainWnd)) {
         DispatchMessage (&Msg);
     }
-
     MainWindowThreadCleanup (hMainWnd);
     parameter_deinit();
     return 0;
 }
-
-

@@ -9,6 +9,7 @@ OBJ = audioplay_dialog.o \
       desktop_dialog.o \
       ffplay_ipc.o \
       hardware.o \
+      lowpower_dialog.o \
       main.o \
       message_dialog.o \
       parameter.o \

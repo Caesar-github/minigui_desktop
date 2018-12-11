@@ -49,7 +49,8 @@
 #define _ID_TIMER_SETTING_SCREENOFF     111
 #define _ID_TIMER_VIDEOPLAY_HW          112
 #define _ID_TIMER_SETTING_GAMEDISP      113
-#define _ID_TIMER_SETTING_THEMESTYLE    113
+#define _ID_TIMER_SETTING_THEMESTYLE    114
+#define _ID_TIMER_LOWPOWER              115
 
 #define MSG_VIDEOPLAY_END         (MSG_USER + 1)
 #define MSG_MEDIA_UPDATE          (MSG_USER + 2)
@@ -70,6 +71,7 @@
 #define TIMER_VIDEOPLAY_HW          50
 #define TIMER_SETTING_GAMEDISP      50
 #define TIMER_SETTING_THEMESTYLE    50
+#define TIMER_LOWPOWER              50
 
 enum RES_STR_ID {
     RES_STR_RES = 0,
@@ -125,6 +127,7 @@ enum RES_STR_ID {
     RES_STR_GAME_6,
     RES_STR_THEMESTYLE_THEME1,
     RES_STR_THEMESTYLE_THEME2,
+    RES_STR_LOWPOWER,
     RES_STR_MAX
 };
 
@@ -218,6 +221,7 @@ enum MEDIA_CMD {
 #include "videoplay_hw_dialog.h"
 #include "system.h"
 #include "ffplay_ipc.h"
+#include "lowpower_dialog.h"
 
 extern int loadstringres(void);
 extern int loadversion(char **model, char **version);
