@@ -173,6 +173,10 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     case MSG_COMMAND: {
         break;
     }
+    case MSG_DISPLAY_CHANGED: {
+        printf("audioplay MSG_DISPLAY_CHANGED\n");
+        break;
+    }
     case MSG_PAINT: {
         int i;
         gal_pixel old_brush;

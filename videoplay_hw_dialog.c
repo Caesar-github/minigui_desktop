@@ -156,6 +156,10 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
     case MSG_COMMAND: {
         break;
     }
+    case MSG_DISPLAY_CHANGED: {
+        printf("videoplay MSG_DISPLAY_CHANGED\n");
+        break;
+    }
     case MSG_PAINT: {
         int i;
         hdc = BeginPaint(hWnd);
