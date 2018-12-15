@@ -2198,6 +2198,7 @@ typedef struct _DRAGINFO {
 
 #define MSG_FIRSTUSERMSG    0x0800
 
+#define MSG_DISPLAY_CHANGED 0x0200
 
 /**
  * \def MSG_USER

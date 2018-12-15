@@ -110,7 +110,7 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
         len = strlen(dir_node->patch) + strlen(cur_file_node->name) + 4;
         file_path = malloc(len);
         snprintf(file_path, len, "%s/%s", dir_node->patch, cur_file_node->name);
-        media_play(file_path, hWnd);
+        media_play(file_path, hWnd, 0);
         free(file_path);
         return 0;
     }
@@ -158,6 +158,18 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
     }
     case MSG_DISPLAY_CHANGED: {
         printf("videoplay MSG_DISPLAY_CHANGED\n");
+        {
+            int starttime = cur_time;
+            char *file_path;
+            int len = strlen(dir_node->patch) + strlen(cur_file_node->name) + 4;
+            file_path = malloc(len);
+            if (file_path) {
+                snprintf(file_path, len, "%s/%s", dir_node->patch, cur_file_node->name);
+                media_exit();
+                media_play(file_path, hWnd, starttime);
+                free(file_path);
+            }
+        }
         break;
     }
     case MSG_PAINT: {

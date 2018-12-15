@@ -90,14 +90,14 @@ static struct file_node *get_cur_file_node(int id)
     return file_node_temp;
 }
 
-static void audio_play(HWND hWnd)
+static void audio_play(HWND hWnd, int start_time)
 {
     int len;
     char *file_path;
     len = strlen(dir_node->patch) + strlen(cur_file_node->name) + 4;
     file_path = malloc(len);
     snprintf(file_path, len, "%s/%s", dir_node->patch, cur_file_node->name);
-    media_play(file_path, hWnd);
+    media_play(file_path, hWnd, start_time);
     free(file_path);
 }
 
@@ -117,7 +117,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         loadres();
         batt = battery;
         SetTimer(hWnd, _ID_TIMER_AUDIOPLAY, TIMER_AUDIOPLAY);
-        audio_play(hWnd);
+        audio_play(hWnd, 0);
         return 0;
     }
     case MSG_TIMER:
@@ -140,7 +140,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 play_status = 1;
                 cur_file_node = get_cur_file_node(file_select);
                 media_exit();
-                audio_play(hWnd);
+                audio_play(hWnd, 0);
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
             case KEY_DOWN_FUNC:
@@ -153,7 +153,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 play_status = 1;
                 cur_file_node = get_cur_file_node(file_select);
                 media_exit();
-                audio_play(hWnd);
+                audio_play(hWnd, 0);
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
                 break;
             case KEY_EXIT_FUNC:
@@ -175,6 +175,11 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     }
     case MSG_DISPLAY_CHANGED: {
         printf("audioplay MSG_DISPLAY_CHANGED\n");
+        {
+            int starttime = cur_time;
+            media_exit();
+            audio_play(hWnd, starttime);
+        }
         break;
     }
     case MSG_PAINT: {

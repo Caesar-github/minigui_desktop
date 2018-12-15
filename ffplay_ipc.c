@@ -15,6 +15,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <minigui/common.h>
 #include <minigui/minigui.h>
@@ -71,6 +73,7 @@ typedef struct {
     pthread_t init_tid;
     HWND hWnd;
     int ffplay_is_quit;
+    int start_time;
 } IPCState;
 
 typedef struct {
@@ -237,7 +240,7 @@ static void deinit_ipc(IPCState *ipcs) {
 }
 
 static void handle_remote_ipc_message(char *key, char *value, int *alive) {
-    //printf("recv remote message: %s %s %s\n", key, MESSAGE_SEPATATOR, value);
+    // printf("recv remote message: %s %s %s\n", key, MESSAGE_SEPATATOR, value);
     /* test code begin */
     {
         if (!strcmp(key, STATE)) {
@@ -255,11 +258,11 @@ static void handle_remote_ipc_message(char *key, char *value, int *alive) {
         } else if (!strcmp(key, DURATION)) {
             int titletime = atoi(value);
             if (ipc_state.hWnd)
-                SendMessage(ipc_state.hWnd, MSG_MEDIA_UPDATE, MEDIA_CMD_TOTAL_TIME, titletime);
+                PostMessage(ipc_state.hWnd, MSG_MEDIA_UPDATE, MEDIA_CMD_TOTAL_TIME, titletime);
         } else if (!strcmp(key, CUR_TIME)) {
             int curtime = atoi(value);
             if (ipc_state.hWnd)
-                SendMessage(ipc_state.hWnd, MSG_MEDIA_UPDATE, MEDIA_CMD_CUR_TIME, curtime);
+                PostMessage(ipc_state.hWnd, MSG_MEDIA_UPDATE, MEDIA_CMD_CUR_TIME, curtime);
         }
         // TODO
     }
@@ -437,17 +440,43 @@ out:
     return (void*)ret;
 }
 
+#define ALSA_DEVICE_CFG_PATH_ENV	"ALSA_DEVICE_CFG"
+#define ALSA_DEVICE_CFG_PATH_DEFAULT	"/tmp/alsa_device.cfg"
+
 static void* run_ffplay_thread(void *arg) {
     int ret;
     char cmd[1024];
     char value[32];
     Message *m;
     char *file_path = (char*)arg;
+    int audio_cfg_fd = -1;
+    char buf[256] = "\0";
+    const char* audio_cfg_file;
+
+    audio_cfg_file = getenv(ALSA_DEVICE_CFG_PATH_ENV);
+    if (!audio_cfg_file)
+      audio_cfg_file = ALSA_DEVICE_CFG_PATH_DEFAULT;
+
+    audio_cfg_fd = open(audio_cfg_file, O_RDONLY);
+    if (audio_cfg_fd > 0) {
+        read(audio_cfg_fd, buf, sizeof(buf));
+        close(audio_cfg_fd);
+        if (buf[strlen(buf) - 1] == '\n')
+            buf[strlen(buf) - 1] = '\0';
+    } else {
+        sprintf(buf, "default");
+    }
+    setenv("AUDIODEV", buf, 1);
 
     ipc_state.ffplay_is_quit = 0;
     //pthread_detach(pthread_self());
     // -nodisp
-    snprintf(cmd, sizeof(cmd), "/usr/bin/ffplay -hide_banner -nostats -x %d -y %d \"%s\" &", LCD_W, LCD_H, file_path);// -autoexit  -vcodec h264
+    // -autoexit  -vcodec h264
+    if (ipc_state.start_time > 0) {
+        snprintf(cmd, sizeof(cmd), "/usr/bin/ffplay -hide_banner -nostats -fs -ss %d \"%s\" &", ipc_state.start_time, file_path);
+    } else {
+        snprintf(cmd, sizeof(cmd), "/usr/bin/ffplay -hide_banner -nostats -fs \"%s\" &", file_path);
+    }
     printf("%s\n", cmd);
     ret = system(cmd);
     if (ret)
@@ -456,11 +485,12 @@ static void* run_ffplay_thread(void *arg) {
     while (!__atomic_load_n(&ready, __ATOMIC_SEQ_CST)) {
         if(ipc_state.ffplay_is_quit == 1){
             printf("ffplay<%s> error\n", file_path);
-            return;
+            pthread_exit(NULL);
         }
         usleep(10 * 1000);
     }
     printf("ffplay<%s> ready\n", file_path);
+    free(file_path);
 
     // operate after ffplay is ready
     m = alloc_ipc_message((char*)QUERY, (char*)DURATION);
@@ -501,7 +531,7 @@ void media_restore(void)
     }
 }
 
-void media_play(const char* file_path, HWND hWnd) {
+void media_play(const char* file_path, HWND hWnd, int start_time) {
     int ret;
     char *path;
 
@@ -509,10 +539,14 @@ void media_play(const char* file_path, HWND hWnd) {
     if (ret)
         return;
     ipc_state.hWnd = hWnd;
+    ipc_state.start_time = start_time;
     path = malloc(strlen(file_path) + 1);
     if (path) {
         strcpy(path, file_path);
-        pthread_create(&ipc_state.init_tid, NULL, run_ffplay_thread, path);
+        if (pthread_create(&ipc_state.init_tid, NULL, run_ffplay_thread, path)) {
+            printf("Failed to create run_ffplay_thread\n");
+            free(path);
+        }
     }
 }
 
@@ -520,21 +554,26 @@ void media_exit(void)
 {
     Message *m;
 
-    if (ipc_state.init_tid)
+    if (ipc_state.init_tid) {
         pthread_join(ipc_state.init_tid, NULL);
+        ipc_state.init_tid = 0;
+    }
     if (ipc_state.ffplay_is_quit == 0) {
         m = alloc_ipc_message((char*)SET_STATE, (char*)QUIT);
         if (m) {
            push_ipc_message(&ipc_state, m);
+        } else {
+            printf("!!! must not occur %s_%d", __FUNCTION__, __LINE__);
         }
 
         usleep(800 * 1000);
-
         // wait quit
         while (__atomic_load_n(&ready, __ATOMIC_SEQ_CST)) {
+            // printf("ipc_state.ffplay_is_quit: %d\n", ipc_state.ffplay_is_quit);
             usleep(10 * 1000);
         }
     }
     deinit_ipc(&ipc_state);
     ipc_state.hWnd = 0;
+    printf("exit %s\n", __FUNCTION__);
 }
