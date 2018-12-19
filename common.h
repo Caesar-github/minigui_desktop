@@ -185,11 +185,19 @@ enum MEDIA_CMD {
     MEDIA_CMD_READY
 };
 
+#if 1
 #define BROWSER_PATH_ROOT     "/oem/file"
 #define BROWSER_PATH_PIC      "/oem/file/pic"
 #define BROWSER_PATH_MUSIC    "/oem/file/music"
 #define BROWSER_PATH_GAME     "/oem/file/game"
 #define BROWSER_PATH_VIDEO    "/oem/file/video"
+#else
+#define BROWSER_PATH_ROOT     "/sdcard"
+#define BROWSER_PATH_PIC      "/sdcard/pic"
+#define BROWSER_PATH_MUSIC    "/sdcard/music"
+#define BROWSER_PATH_GAME     "/sdcard/game"
+#define BROWSER_PATH_VIDEO    "/sdcard/video"
+#endif
 
 #define REC_FILE_CN    "/usr/local/share/minigui/res/string/CN-UTF8.bin"
 #define REC_FILE_EN    "/usr/local/share/minigui/res/string/EN-UTF8.bin"
@@ -197,6 +205,8 @@ enum MEDIA_CMD {
 #define REC_FILE_KO    "/usr/local/share/minigui/res/string/KO-UTF8.bin"
 
 #define VERSION_FILE   "/etc/version"
+#define DEFRETROARCH   "/data/retroarch/retroarch.cfg"
+#define DEFRETROARCHNAME   ".cfg"
         
 //#include "ui_1024x600.h"
 //#include "ui_480x320.h"

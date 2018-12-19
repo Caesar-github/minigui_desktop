@@ -46,14 +46,25 @@ static char pic_file_ext_name[][6] =
 	".png"
 };
 
-static char game_file_ext_name[][6] = 
+static char game_file_ext_name[][17] = 
 {
 	".gbc",
 	".sav",
 	".smc",
 	".nes",
 	".fba",
-	".bin"
+	".bin",
+	".smd",
+	".gg",
+	".zip",
+	".gba",
+	".gb",
+	".z64",
+	".n64",
+	".v64",
+	".ccd",
+	".gen",
+	".img"
 };
 
 static char zip_file_ext_name[][6] = 
@@ -267,7 +278,72 @@ static void enter_folder(HWND hWnd, struct directory_node *node)
     } else if (file_node_temp->type == FILE_MUSIC) {
         creat_audioplay_dialog(hWnd, cur_dir_node);
     } else if (file_node_temp->type == FILE_GAME) {
+        char cmd[512];
+        int sel = 0;
+        char path[256]={0};
+        char cfgfilename[256]={0};
+        char cfgfilepath[256]={0};
+        int i=0;
+        char *tmp =path;
+        char *gamefilename = cfgfilename;
+        char *gamefilecfg = cfgfilepath;
+        sel = strlen(file_node_temp->name);
+        for(i=sel-1;i > 0; i--){
+            if(file_node_temp->name[i]!= '.')
+            {
+                *tmp = file_node_temp->name[i];
+                tmp++;
+            }
+            else
+                break;
+        }
+        for(i=0; i < sel-1; i++){
+            if(file_node_temp->name[i]!= '.')
+            {
+			    *gamefilename = file_node_temp->name[i];
+                gamefilename++;
+            }
+            else
+                break;
+        }
         
+        sprintf(cfgfilepath,"%s/%s%s",node->patch,cfgfilename,DEFRETROARCHNAME);
+
+        if ((access(cfgfilepath,F_OK)) != -1) {
+            //cfgfilepath exists
+            sprintf(cfgfilepath,"%s",DEFRETROARCH);
+        }
+        else {
+            //cfgfilepath don't exists
+            sprintf(cfgfilepath,"%s",DEFRETROARCH);
+        }
+
+        if(!strcasecmp(path,"piz"))
+            sel = 0;
+        else if(!strcasecmp(path,"dms")||!strcasecmp(path,"gg")||!strcasecmp(path,"nib")||!strcasecmp(path,"neg"))
+            sel = 5;
+        else if(!strcasecmp(path,"sen"))
+            sel = 1;
+        else if(!strcasecmp(path,"cms")||!strcasecmp(path,"cfs"))
+            sel = 6;
+        else if(!strcasecmp(path,"abg")||!strcasecmp(path,"cbg")||!strcasecmp(path,"bg"))
+            sel = 7;
+        else if(!strcasecmp(path,"46n")||!strcasecmp(path,"46z")||!strcasecmp(path,"46v"))
+            sel = 8;
+        else if(!strcasecmp(path,"dcc")||!strcasecmp(path,"gmi"))
+            sel = 9;
+        else sel = 0;
+
+        DisableKeyMessage();
+        DisableScreenAutoOff();
+        sprintf(path, "%s/%s", node->patch, file_node_temp->name);
+        sprintf(cmd, "/data/start_game.sh %d \"%s\" \"%s\"", sel,cfgfilepath,path);
+        system_fd_closexec(cmd);
+        system_fd_closexec("killall retroarch");
+        usleep(100 * 1000);
+        EnableKeyMessage();
+        EnableScreenAutoOff();
+        InvalidateRect(hWnd, &msg_rcBg, TRUE);
     } else if (file_node_temp->type == FILE_PIC) {
         creat_picpreview_dialog(hWnd, cur_dir_node);
     } else if (file_node_temp->type == FILE_VIDEO) {
