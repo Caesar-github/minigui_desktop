@@ -248,7 +248,8 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     DisableScreenAutoOff();
                     sprintf(cmd, "/data/start.sh %d", game_sel);
                     system_fd_closexec(cmd);
-                    system_fd_closexec("killall retroarch weston");
+                    system_fd_closexec("killall retroarch");
+                    system_fd_closexec("fuser -k -USR2 /dev/dri/card0");
                     EnableScreenAutoOff();
                     InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 } else {
