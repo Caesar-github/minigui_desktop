@@ -247,9 +247,9 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     char cmd[128];
                     DisableScreenAutoOff();
                     sprintf(cmd, "/data/start.sh %d", game_sel);
-                    system_fd_closexec(cmd);
-                    system_fd_closexec("killall retroarch");
-                    system_fd_closexec("fuser -k -USR2 /dev/dri/card0");
+                    system(cmd);
+                    system("killall retroarch");
+                    system("fuser -k -USR2 /dev/dri/card0");
                     EnableScreenAutoOff();
                     InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 } else {

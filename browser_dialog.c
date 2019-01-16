@@ -338,9 +338,9 @@ static void enter_folder(HWND hWnd, struct directory_node *node)
         DisableScreenAutoOff();
         sprintf(path, "%s/%s", node->patch, file_node_temp->name);
         sprintf(cmd, "/data/start_game.sh %d \"%s\" \"%s\"", sel,cfgfilepath,path);
-        system_fd_closexec(cmd);
-        system_fd_closexec("killall retroarch");
-        system_fd_closexec("fuser -k -USR2 /dev/dri/card0");
+        system(cmd);
+        system("killall retroarch");
+        system("fuser -k -USR2 /dev/dri/card0");
         EnableKeyMessage();
         EnableScreenAutoOff();
         InvalidateRect(hWnd, &msg_rcBg, TRUE);
