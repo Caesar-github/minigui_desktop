@@ -247,9 +247,9 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     char cmd[128];
                     DisableScreenAutoOff();
                     sprintf(cmd, "/data/start.sh %d", game_sel);
+                    system("touch /tmp/.minigui_freeze");
                     system(cmd);
-                    system("killall retroarch");
-                    system("fuser -k -USR2 /dev/dri/card0");
+                    system("rm /tmp/.minigui_freeze");
                     EnableScreenAutoOff();
                     InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 } else {
