@@ -41,9 +41,16 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+# define TEMP_FAILURE_RETRY(expression) \
+  (__extension__                          \
+    ({ long int __result;                       \
+       do __result = (long int) (expression);                  \
+       while (__result == -1L && errno == EINTR);              \
+       __result; }))
+
 int system_fd_closexec(const char* command)
 {
-    int wait_val = 0;
+    int status = 0;
     pid_t pid;
 
     if (command == NULL)
@@ -70,19 +77,13 @@ int system_fd_closexec(const char* command)
         }
 
         execl(_PATH_BSHELL, "sh", "-c", command, (char*)0);
-        fprintf(stderr,"%s, %d\n", __func__, __LINE__);
         _exit(127);
     }
 
-    while (waitpid(pid, &wait_val, 0) < 0) {
-        fprintf(stderr, "%s, errno: %d\n", __func__, errno);
-        if (errno != EINTR) {
-            wait_val = -1;
-            break;
-        }
-    }
+	 if (TEMP_FAILURE_RETRY (waitpid (pid, &status, 0)) != pid)
+		 status = -1;
 
-    return wait_val;
+    return status;
 }
 
 int runapp_result(char *cmd)
