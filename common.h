@@ -217,7 +217,11 @@ enum MEDIA_CMD {
 #include "desktop_dialog.h"
 #include "pic_preview_dialog.h"
 #include "browser_dialog.h"
+
+#ifdef ENABLE_VIDEO
 #include "videoplay_dialog.h"
+#endif
+
 #include "audioplay_dialog.h"
 #include "setting_dialog.h"
 #include "setting_language_dialog.h"

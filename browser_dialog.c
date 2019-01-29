@@ -347,7 +347,9 @@ static void enter_folder(HWND hWnd, struct directory_node *node)
     } else if (file_node_temp->type == FILE_PIC) {
         creat_picpreview_dialog(hWnd, cur_dir_node);
     } else if (file_node_temp->type == FILE_VIDEO) {
+#ifdef ENABLE_VIDEO
         creat_videoplay_hw_dialog(hWnd, cur_dir_node);
+#endif
     } else if (file_node_temp->type == FILE_ZIP) {
     }
 }

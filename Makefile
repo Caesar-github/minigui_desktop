@@ -24,9 +24,12 @@ OBJ = audioplay_dialog.o \
       setting_version_dialog.o \
       sysfs.o \
       system.o \
-      videoplay_hw_dialog.o \
-      videoplay_dialog.o \
 
+ifdef HAS_VIDEO
+OBJ += \
+      videoplay_hw_dialog.o \
+      videoplay_dialog.o
+endif
 
 CFLAGS ?= -I./include \
 	  -I$(STAGING_DIR)/usr/include \
@@ -35,7 +38,11 @@ CFLAGS ?= -I./include \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -lpthread  -ldrm -lminigui_ths -ljpeg -lpng -lm \
-	  -lavformat -lavcodec -lswscale -lavutil -lfreetype
+	  -lfreetype
+
+ifdef HAS_VIDEO
+CFLAGS += -lavformat -lavcodec -lswscale -lavutil -DENABLE_VIDEO
+endif
 
 $(BIN): $(OBJ)
 	$(CC) -o $(BIN) $(OBJ) $(CFLAGS)
