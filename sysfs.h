@@ -79,15 +79,4 @@ int read_sysfs_float(const char *filename, const char *basedir, float *val);
  **/
 int read_sysfs_string(const char *filename, const char *basedir, char *str);
 
-/**
- * iio_find_type_by_name() - function to match top level types by name
- * @name: top level type instance name
- * @type: the type of top level instance being searched
- *
- * Returns the device number of a matched IIO device on success, otherwise a
- * negative error code.
- * Typical types this is used for are device and trigger.
- **/
-int iio_find_type_by_name(const char *name, const char *type);
 #endif
-
