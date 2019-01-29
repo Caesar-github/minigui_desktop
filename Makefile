@@ -25,22 +25,19 @@ OBJ = audioplay_dialog.o \
       sysfs.o \
       system.o \
 
-ifdef HAS_VIDEO
-OBJ += \
-      videoplay_hw_dialog.o \
-      videoplay_dialog.o
-endif
-
 CFLAGS ?= -I./include \
 	  -I$(STAGING_DIR)/usr/include \
-          -I$(STAGING_DIR)/usr/include/libdrm \
           -I$(STAGING_DIR)/usr/include \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -L$(STAGING_DIR)/usr/lib \
-	  -lpthread  -ldrm -lminigui_ths -ljpeg -lpng -lm \
+	  -lpthread -lminigui_ths -ljpeg -lpng -lm \
 	  -lfreetype
 
-ifdef HAS_VIDEO
+ifeq ($(ENABLE_VIDEO),1)
+OBJ += \
+      videoplay_hw_dialog.o \
+      videoplay_dialog.o
+
 CFLAGS += -lavformat -lavcodec -lswscale -lavutil -DENABLE_VIDEO
 endif
 
