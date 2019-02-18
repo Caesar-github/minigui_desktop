@@ -104,6 +104,7 @@ static int loadpic(struct directory_node *node, BITMAP *pic_bmap, int id)
     if (pic_bmap) {
         snprintf(img, sizeof(img), "%s/%s", node->patch, file_node->name);
         //printf("%s\n", img);
+        UnloadBitmap(pic_bmap);
         if (LoadBitmap(HDC_SCREEN, pic_bmap, img))
             return -1;
     }
@@ -221,7 +222,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         EndPaint(hWnd, hdc);
         break;
     }
-    case MSG_CLOSE:
+    case MSG_DESTROY:
         KillTimer(hWnd, _ID_TIMER_PICPREVIEW);
         unloadpic();
         return 0;

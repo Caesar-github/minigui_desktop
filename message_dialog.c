@@ -110,7 +110,7 @@ LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
         }
         break;
 
-    case MSG_CLOSE:
+    case MSG_DESTROY:
     {
         HWND hCancel;
 
@@ -285,7 +285,7 @@ static LRESULT MsgBoxProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         break;
     }
 
-    case MSG_CLOSE:
+    case MSG_DESTROY:
         if (GetDlgItem (hWnd, IDCANCEL)) {
             EndDialog (hWnd, IDCANCEL);
         }

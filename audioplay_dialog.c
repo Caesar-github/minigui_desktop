@@ -227,7 +227,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
             EndDialog(hWnd, wParam);
         }
         break;
-    case MSG_CLOSE:
+    case MSG_DESTROY:
         KillTimer(hWnd, _ID_TIMER_AUDIOPLAY);
         unloadres();
         return 0;

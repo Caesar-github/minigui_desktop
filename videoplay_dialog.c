@@ -426,7 +426,7 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     case MSG_VIDEOPLAY_END:
         EndDialog(hWnd, wParam);
         break;
-    case MSG_CLOSE:
+    case MSG_DESTROY:
         unloadres();
         pthread_mutex_destroy(&mutex);
         return 0;
