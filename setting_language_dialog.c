@@ -24,10 +24,29 @@
 
 #include "common.h"
 
+#define SLIDE_DISTANCE 100
+#define WHOLE_BUTTON_NUM 5
+
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
+
+static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
+
+static int check_button(int x,int y)
+{
+    if((x <= BACK_PINT_X + BACK_PINT_W ) &&
+        (x >= BACK_PINT_X) &&
+        (y <= BACK_PINT_Y + BACK_PINT_H ) &&
+        (y >= BACK_PINT_Y))
+        return 0;
+    if(y > SETTING_LIST_STR_PINT_Y)
+        return (((y - SETTING_LIST_STR_PINT_Y) / SETTING_LIST_STR_PINT_SPAC)+1);
+    return -1;
+
+}
+
 
 static int loadres(void)
 {
@@ -57,6 +76,18 @@ static void unloadres(void)
     }
 }
 
+static void language_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    set_language(list_sel);
+    loadstringres();
+    InvalidateRect(hWnd, &msg_rcBg, TRUE);
+}
+
+static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    EndDialog(hWnd, wParam);
+}
+
 static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
@@ -78,10 +109,12 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
     }
     case MSG_TIMER: {
         if (wParam == _ID_TIMER_SETTING_LANGUAGE) {
+#ifdef ENABLE_BATT
             if (batt != battery) {
                 batt = battery;
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
+#endif
         }
         break;
     }
@@ -99,9 +132,28 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
         FillBoxWithBitmap(hdc, BG_PINT_X,
                                BG_PINT_Y, BG_PINT_W,
                                BG_PINT_H, &background_bmap);
+        FillBoxWithBitmap(hdc, BACK_PINT_X, BACK_PINT_Y,
+                               BACK_PINT_W, BACK_PINT_H,
+                               &back_bmap);
+#ifdef ENABLE_BATT
         FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,
                                BATT_PINT_W, BATT_PINT_H,
                                &batt_bmap[batt]);
+#endif
+#ifdef ENABLE_WIFI
+        FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                               WIFI_PINT_W, WIFI_PINT_H,
+                               &wifi_bmap);
+#endif
+        RECT msg_rcTime;
+        char *sys_time_str[6];
+        snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+        msg_rcTime.left = TIME_PINT_X;
+        msg_rcTime.top = TIME_PINT_Y;
+        msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
+        msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
+        DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+
 
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
@@ -191,6 +243,33 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
     case MSG_DESTROY:
         KillTimer(hWnd, _ID_TIMER_SETTING_LANGUAGE);
         unloadres();
+        break;
+    case MSG_LBUTTONDOWN:
+        touch_pos_down.x = LOSWORD(lParam);
+        touch_pos_down.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+        break;
+    case MSG_LBUTTONUP:
+        if (get_bl_brightness() == 0)
+        {
+            screenon();
+            break;
+        }
+        DisableScreenAutoOff();
+        touch_pos_up.x = LOSWORD(lParam);
+        touch_pos_up.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
+        int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
+        if(witch_button == 0) menu_back(hWnd,wParam,lParam);
+        if(witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
+        {
+            list_sel = witch_button - 1;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            language_enter(hWnd,wParam,list_sel);
+        }
+        touch_pos_old.x = touch_pos_up.x;
+        touch_pos_old.y = touch_pos_up.y;
+        EnableScreenAutoOff();
         break;
     }
 

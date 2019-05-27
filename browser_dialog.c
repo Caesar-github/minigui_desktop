@@ -24,6 +24,9 @@
 
 #include "common.h"
 
+#define SLIDE_DISTANCE 100
+#define WHOLE_BUTTON_NUM 1
+
 static BITMAP list_sel_bmap;
 static BITMAP type_bmap[FILE_TYPE_MAX];
 static int file_sel = 0;
@@ -32,6 +35,20 @@ static struct directory_node *cur_dir_node = 0;
 static int filter_type = 0;
 static char *pTitle = 0;
 static int batt = 0;
+static int file_page,page_choice_dir,choice_dir;
+static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
+
+static int check_button(int x,int y)
+{
+    if((x <= BACK_PINT_X + BACK_PINT_W ) &&
+        (x >= BACK_PINT_X) &&
+        (y <= BACK_PINT_Y + BACK_PINT_H ) &&
+        (y >= BACK_PINT_Y))
+        return 0;
+    if(y > BROWSER_LIST_STR_PINT_Y)
+        return (file_page * FILE_NUM_PERPAGE+((y - BROWSER_LIST_STR_PINT_Y) / BROWSER_LIST_STR_PINT_SPAC)+1);
+    return -1;
+}
 
 static char music_file_ext_name[][6] = 
 {
@@ -205,6 +222,11 @@ static struct directory_node *new_dir_node(char *dir)
 {
     int len;
     struct directory_node *dir_node_temp;
+
+    if((opendir(dir))==NULL){
+        printf("open %s error\n",dir);
+        return NULL;
+    }
 
     dir_node_temp = malloc(sizeof(struct directory_node));
     memset(dir_node_temp, 0, sizeof(struct directory_node));
@@ -395,8 +417,10 @@ static void file_list_init(void)
     else if (filter_type == FILTER_FILE_VIDEO)
         dir_node = new_dir_node(BROWSER_PATH_VIDEO);
     else
-        dir_node = new_dir_node(BROWSER_PATH_ROOT);
-
+    {
+        dir_node = 0;
+        page_choice_dir = 1;
+    }
     cur_dir_node = dir_node;
 }
 
@@ -404,7 +428,7 @@ static void file_list_deinit(void)
 {
     cur_dir_node = 0;
 
-    free_file_list(dir_node);	
+    free_file_list(dir_node);
 
     dir_node = 0;
 }
@@ -437,6 +461,77 @@ static void unloadres(void)
     }
 }
 
+static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    if(filter_type)
+    {
+        cur_dir_node = free_dir_node(cur_dir_node);
+        if (cur_dir_node) {
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+        } else {
+            dir_node = 0;
+            EndDialog(hWnd, wParam);
+        }
+    }
+    else{
+        if(page_choice_dir)
+        {
+            EndDialog(hWnd, wParam);
+        }
+        else
+        {
+            cur_dir_node = free_dir_node(cur_dir_node);
+            if (!cur_dir_node)
+                page_choice_dir = 1;
+            dir_node = 0;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+        }
+    }
+}
+
+static void browser_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    if (!page_choice_dir)
+    {
+        enter_folder(hWnd, cur_dir_node);
+        InvalidateRect(hWnd, &msg_rcBg, TRUE);
+    }
+    else
+    {
+        switch(lParam)
+        {
+            case 0:
+                menu_back(hWnd, wParam, lParam);
+                break;
+            case 1:
+                printf("open local\n");
+                page_choice_dir = 0;
+                choice_dir = 0;
+                dir_node = new_dir_node(BROWSER_PATH_ROOT);
+                cur_dir_node = dir_node;
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                break;
+            case 2:
+                printf("open sdcard\n");
+                page_choice_dir = 0;
+                choice_dir = 1;
+                dir_node = new_dir_node(SDCARD_PATH_ROOT);
+                cur_dir_node = dir_node;
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                break;
+            case 3:
+                printf("open udisk\n");
+                page_choice_dir = 0;
+                choice_dir = 2;
+                dir_node = new_dir_node(UDISK_PATH_ROOT);
+                cur_dir_node = dir_node;
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                break;
+            default:break;
+        }
+    }
+}
+
 static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
@@ -452,6 +547,9 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         if (hFocus)
             SetFocus(hFocus);
         
+        page_choice_dir = 0;
+        choice_dir = 0;
+        file_page = 0;
         file_list_init();
         batt = battery;
         SetTimer(hWnd, _ID_TIMER_BROWSER, TIMER_BROWSER);
@@ -459,10 +557,12 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     }
     case MSG_TIMER: {
         if (wParam == _ID_TIMER_BROWSER) {
+#ifdef ENABLE_BATT
             if (batt != battery) {
                 batt = battery;
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
+#endif
         }
 
         break;
@@ -480,56 +580,99 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         FillBoxWithBitmap(hdc, BG_PINT_X,
                                BG_PINT_Y, BG_PINT_W,
                                BG_PINT_H, &background_bmap);
+        FillBoxWithBitmap(hdc, BACK_PINT_X, BACK_PINT_Y,
+                               BACK_PINT_W, BACK_PINT_H,
+                               &back_bmap);
+#ifdef ENABLE_BATT
         FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,
                                BATT_PINT_W, BATT_PINT_H,
                                &batt_bmap[batt]);
+#endif
+#ifdef ENABLE_WIFI
+        FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                               WIFI_PINT_W, WIFI_PINT_H,
+                               &wifi_bmap);
+#endif
+        RECT msg_rcTime;
+        char *sys_time_str[6];
+        snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+        msg_rcTime.left = TIME_PINT_X;
+        msg_rcTime.top = TIME_PINT_Y;
+        msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
+        msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
+        DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
         SelectFont(hdc, logfont);
         DrawText(hdc, pTitle, -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
-        page = (cur_dir_node->total + FILE_NUM_PERPAGE - 1) / FILE_NUM_PERPAGE;
-
-        file_node_temp = cur_dir_node->file_node_list;
-        for (i = 0; i < (cur_dir_node->file_sel / FILE_NUM_PERPAGE) * FILE_NUM_PERPAGE; i++) {
-            if (file_node_temp->next_node)
-                file_node_temp = file_node_temp->next_node;
-        }
-
-        for (i = 0; i < FILE_NUM_PERPAGE; i++) {
+        if(!page_choice_dir)
+        {
             RECT msg_rcFilename;
+            if (cur_dir_node->total == 0)
+            {
+                msg_rcFilename.left = BROWSER_LIST_STR_PINT_X;
+                msg_rcFilename.top = BROWSER_LIST_STR_PINT_Y + BROWSER_LIST_STR_PINT_SPAC;
+                msg_rcFilename.right = LCD_W - msg_rcFilename.left;
+                msg_rcFilename.bottom = msg_rcFilename.top + BROWSER_LIST_STR_PINT_H;
+                DrawText(hdc, res_str[RES_STR_NO_CONTENT], -1, &msg_rcFilename, DT_TOP);
+            }
+            page = (cur_dir_node->total + FILE_NUM_PERPAGE - 1) / FILE_NUM_PERPAGE;
 
-            if (((cur_dir_node->file_sel / FILE_NUM_PERPAGE) * FILE_NUM_PERPAGE + i) >= cur_dir_node->total)
-                break;
-            msg_rcFilename.left = BROWSER_LIST_STR_PINT_X;
-            msg_rcFilename.top = BROWSER_LIST_STR_PINT_Y + BROWSER_LIST_STR_PINT_SPAC * i;
-            msg_rcFilename.right = LCD_W - msg_rcFilename.left;
-            msg_rcFilename.bottom = msg_rcFilename.top + BROWSER_LIST_STR_PINT_H;
-            FillBoxWithBitmap(hdc, 20, msg_rcFilename.top - 7, BROWSER_LIST_PIC_PINT_W, BROWSER_LIST_PIC_PINT_H, &type_bmap[file_node_temp->type]);
-            if (i == (cur_dir_node->file_sel % FILE_NUM_PERPAGE))
-                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, BROWSER_LIST_SEL_PINT_H, &list_sel_bmap);
-            DrawText(hdc, file_node_temp->name, -1, &msg_rcFilename, DT_TOP);
-            if (file_node_temp->next_node)
-                file_node_temp = file_node_temp->next_node;
-            else
-                break;
+            file_node_temp = cur_dir_node->file_node_list;
+            for (i = 0; i < (cur_dir_node->file_sel / FILE_NUM_PERPAGE) * FILE_NUM_PERPAGE; i++) {
+                if (file_node_temp->next_node)
+                    file_node_temp = file_node_temp->next_node;
+            }
+
+            for (i = 0; i < FILE_NUM_PERPAGE; i++) {
+
+                if (((cur_dir_node->file_sel / FILE_NUM_PERPAGE) * FILE_NUM_PERPAGE + i) >= cur_dir_node->total)
+                    break;
+                msg_rcFilename.left = BROWSER_LIST_STR_PINT_X;
+                msg_rcFilename.top = BROWSER_LIST_STR_PINT_Y + BROWSER_LIST_STR_PINT_SPAC * i;
+                msg_rcFilename.right = LCD_W - msg_rcFilename.left;
+                msg_rcFilename.bottom = msg_rcFilename.top + BROWSER_LIST_STR_PINT_H;
+                FillBoxWithBitmap(hdc, 20, msg_rcFilename.top - 7, BROWSER_LIST_PIC_PINT_W, BROWSER_LIST_PIC_PINT_H, &type_bmap[file_node_temp->type]);
+                if (i == (cur_dir_node->file_sel % FILE_NUM_PERPAGE))
+                    FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, BROWSER_LIST_SEL_PINT_H, &list_sel_bmap);
+                DrawText(hdc, file_node_temp->name, -1, &msg_rcFilename, DT_TOP);
+                if (file_node_temp->next_node)
+                    file_node_temp = file_node_temp->next_node;
+                else
+                    break;
+            }
+
+            if (page > 1) {
+                for (i = 0; i < page; i++) {
+                    int x;
+                    if (page == 1)
+                        x =  BROWSER_PAGE_DOT_X;
+                    else if (page % 2)
+                   	    x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC;
+                    else
+                        x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC + BROWSER_PAGE_DOT_SPAC / 2;
+
+                    if (i == cur_dir_node->file_sel / FILE_NUM_PERPAGE)
+                        FillCircle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);
+                    else
+                        Circle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);    
+                }
+            }
         }
-
-        if (page > 1) {
-            for (i = 0; i < page; i++) {
-                int x;
-                if (page == 1)
-                    x =  BROWSER_PAGE_DOT_X;
-                else if (page % 2)
-               	    x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC;
-                else
-                    x =  BROWSER_PAGE_DOT_X - page / 2 * BROWSER_PAGE_DOT_SPAC + BROWSER_PAGE_DOT_SPAC / 2;
-
-                if (i == cur_dir_node->file_sel / FILE_NUM_PERPAGE)
-                    FillCircle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);
-                else
-                    Circle(hdc, x + i * BROWSER_PAGE_DOT_SPAC, BROWSER_PAGE_DOT_Y, BROWSER_PAGE_DOT_DIA);    
+        else
+        {
+            RECT msg_rcDirlist;
+            for(i = 0;i < 3;i++){
+                msg_rcDirlist.left = BROWSER_LIST_STR_PINT_X;
+                msg_rcDirlist.top = BROWSER_LIST_STR_PINT_Y + BROWSER_LIST_STR_PINT_SPAC * i;
+                msg_rcDirlist.right = LCD_W - msg_rcDirlist.left;
+                msg_rcDirlist.bottom = msg_rcDirlist.top + BROWSER_LIST_STR_PINT_H;
+                if (i == choice_dir)
+                    FillBoxWithBitmap(hdc, 0, msg_rcDirlist.top - 9, LCD_W, BROWSER_LIST_SEL_PINT_H, &list_sel_bmap);
+                DrawText(hdc, res_str[RES_STR_LOCAL + i], -1, &msg_rcDirlist, DT_TOP);
             }
         }
         SetBrushColor(hdc, old_brush);
@@ -576,6 +719,69 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         file_list_deinit();
         unloadres();
         break;
+    case MSG_LBUTTONDOWN:
+        touch_pos_down.x = LOSWORD(lParam);
+        touch_pos_down.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+        break;
+    case MSG_LBUTTONUP:
+        if (get_bl_brightness() == 0)
+        {
+            screenon();
+            break;
+        }
+        DisableScreenAutoOff();
+        touch_pos_up.x = LOSWORD(lParam);
+        touch_pos_up.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
+        int witch_button;
+        if(!page_choice_dir)
+        {
+            if(touch_pos_down.y - touch_pos_up.y > SLIDE_DISTANCE)
+            {
+                //printf("slide up\n");
+                cur_dir_node->file_sel += FILE_NUM_PERPAGE;
+                if (cur_dir_node->file_sel > (cur_dir_node->total - 1))
+                    cur_dir_node->file_sel = (cur_dir_node->total - 1);
+                file_page++;
+                if (file_page > ((cur_dir_node->total + FILE_NUM_PERPAGE - 1) / FILE_NUM_PERPAGE - 1))
+                    file_page = ((cur_dir_node->total + FILE_NUM_PERPAGE - 1) / FILE_NUM_PERPAGE - 1);
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            }
+            else if(touch_pos_up.y - touch_pos_down.y > SLIDE_DISTANCE)
+            {
+                //printf("slide down\n");
+                cur_dir_node->file_sel -= FILE_NUM_PERPAGE;
+                if (cur_dir_node->file_sel < 0)
+                    cur_dir_node->file_sel = 0;
+                file_page--;
+                if (file_page < 0)
+                    file_page = 0;
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            }
+            else
+            {
+                witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
+                //printf("file %d of %d\n",witch_button,cur_dir_node->total);
+                if(witch_button == 0) menu_back(hWnd,wParam,lParam);
+                if(witch_button > 0 && witch_button <= (cur_dir_node->total))
+                {
+                    cur_dir_node->file_sel = witch_button - 1;
+                    InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                    browser_enter(hWnd,wParam,lParam);
+                }
+            }
+        }
+        else
+        {
+            witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
+            browser_enter(hWnd,wParam,witch_button);
+        }
+        touch_pos_old.x = touch_pos_up.x;
+        touch_pos_old.y = touch_pos_up.y;
+        EnableScreenAutoOff();
+        break;
+
     }
 
     return DefaultDialogProc(hWnd, message, wParam, lParam);

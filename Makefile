@@ -1,15 +1,14 @@
 PROJECT_DIR := $(shell pwd)
-CC ?= ../../buildroot/output/rockchip_rk3128_game/host/bin/arm-buildroot-linux-gnueabihf-gcc
+CC ?= ../../buildroot/output/rockchip_rk3126c/host/bin/arm-buildroot-linux-gnueabihf-gcc
 BIN = game
 
-STAGING_DIR ?= ../../buildroot/output/rockchip_rk3128_game/staging/
+STAGING_DIR ?= ../../buildroot/output/rockchip_rk3126c/staging/
 
 OBJ = audioplay_dialog.o \
       browser_dialog.o \
       desktop_dialog.o \
       ffplay_ipc.o \
       hardware.o \
-      lowpower_dialog.o \
       main.o \
       message_dialog.o \
       parameter.o \
@@ -17,7 +16,6 @@ OBJ = audioplay_dialog.o \
       setting_backlight_dialog.o \
       setting_dialog.o \
       setting_eq_dialog.o \
-      setting_gamedisp_dialog.o \
       setting_language_dialog.o \
       setting_screenoff_dialog.o \
       setting_themestyle_dialog.o \
@@ -31,7 +29,7 @@ CFLAGS ?= -I./include \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -lpthread -lminigui_ths -ljpeg -lpng -lm \
-	  -lfreetype
+	  -lfreetype -ldrm -lts
 
 ifeq ($(ENABLE_VIDEO),1)
 OBJ += \
@@ -39,6 +37,16 @@ OBJ += \
       videoplay_dialog.o
 
 CFLAGS += -lavformat -lavcodec -lswscale -lavutil -DENABLE_VIDEO
+endif
+
+ifeq ($(ENABLE_BATT),1)
+OBJ += lowpower_dialog.o 
+CFLAGS += -DENABLE_BATT
+endif
+
+ifeq ($(ENABLE_WIFI),1)
+OBJ += setting_wifi_dialog.o 
+CFLAGS += -DENABLE_WIFI
 endif
 
 $(BIN): $(OBJ)

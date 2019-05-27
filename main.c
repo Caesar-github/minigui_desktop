@@ -26,13 +26,24 @@ extern MG_EXPORT PLOGFONT g_SysLogFont [];
 
 char timebuff[100];
 static RECT msg_rcTime = {TIME_PINT_X, TIME_PINT_Y, TIME_PINT_X + TIME_PINT_W, TIME_PINT_Y + TIME_PINT_H};
+#ifdef ENABLE_BATT
 RECT msg_rcBatt = {BATT_PINT_X, BATT_PINT_Y, BATT_PINT_X + BATT_PINT_W, BATT_PINT_Y + BATT_PINT_H};
+#endif
 RECT msg_rcBg = {BG_PINT_X, BG_PINT_Y, BG_PINT_X + BG_PINT_W, BG_PINT_Y + BG_PINT_H};
 RECT msg_rcTitle = {TITLE_PINT_X, TITLE_PINT_Y, TITLE_PINT_X + TITLE_PINT_W, TITLE_PINT_Y + TITLE_PINT_H};
 RECT msg_rcDialog = {0, 0, LCD_W, LCD_H};
 
+#ifdef ENABLE_BATT
 BITMAP batt_bmap[6];
+#endif
+#ifdef ENABLE_WIFI
+BITMAP wifi_bmap;
+#endif
+BITMAP back_bmap;
 BITMAP background_bmap;
+int time_hour = 0;
+int time_min = 0;
+int time_sec = 0;
 int battery = 0;
 
 char *res_str[RES_STR_MAX] = {0};
@@ -204,11 +215,23 @@ int main_loadres(void)
     char img[128];
     char *respath = get_ui_image_path();
 
+#ifdef ENABLE_BATT
     for (i = 0; i < 6; i++) {
         snprintf(img, sizeof(img), "%sbattery%d.png", respath, i);
         if (LoadBitmap(HDC_SCREEN, &batt_bmap[i], img))
             return -1;
     }
+#endif
+
+#ifdef ENABLE_WIFI
+    snprintf(img, sizeof(img), "%swifi.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_bmap, img))
+        return -1;
+#endif
+
+    snprintf(img, sizeof(img), "%sback.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &back_bmap, img))
+        return -1;
 
     snprintf(img, sizeof(img), "%sbackground.jpg", respath);
     if (LoadBitmap(HDC_SCREEN, &background_bmap, img))
@@ -221,12 +244,15 @@ void main_unloadres(void)
 {
     int i;
 
+#ifdef ENABLE_BATT
     for (i = 0; i < 6; i++)
       UnloadBitmap(&batt_bmap[i]);
+#endif
 
     UnloadBitmap(&background_bmap);
 }
 
+#ifdef ENABLE_BATT
 static void batt_update(void)
 {
     if (ac_is_online()) {
@@ -248,6 +274,7 @@ static void batt_update(void)
             battery = 4;
     }
 }
+#endif
 
 void DisableScreenAutoOff(void)
 {
@@ -275,7 +302,9 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
             loadstringres();
             SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
+#ifdef ENABLE_BATT
             batt_update();
+#endif
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             RegisterMainWindow(hWnd);
             mhWnd = hWnd;
@@ -357,7 +386,9 @@ void signal_func(int signal)
 {
     switch (signal){
         case SIGUSR1:
+#ifdef ENABLE_BATT
             batt_update();
+#endif
             break;
         default:
             break;

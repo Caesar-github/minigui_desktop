@@ -48,7 +48,7 @@
 #define _ID_TIMER_SETTING_BACKLIGHT     110
 #define _ID_TIMER_SETTING_SCREENOFF     111
 #define _ID_TIMER_VIDEOPLAY_HW          112
-#define _ID_TIMER_SETTING_GAMEDISP      113
+#define _ID_TIMER_SETTING_WIFI          113
 #define _ID_TIMER_SETTING_THEMESTYLE    114
 #define _ID_TIMER_LOWPOWER              115
 
@@ -69,7 +69,7 @@
 #define TIMER_SETTING_BACKLIGHT     50
 #define TIMER_SETTING_SCREENOFF     50
 #define TIMER_VIDEOPLAY_HW          50
-#define TIMER_SETTING_GAMEDISP      50
+#define TIMER_SETTING_WIFI          50
 #define TIMER_SETTING_THEMESTYLE    50
 #define TIMER_LOWPOWER              50
 
@@ -82,7 +82,7 @@ enum RES_STR_ID {
     RES_STR_TITLE_BROWSER,
     RES_STR_TITLE_SETTING,
     RES_STR_TITLE_LANGUAGE,
-    RES_STR_TITLE_GAMEDISP,
+    RES_STR_TITLE_WIFI,
     RES_STR_TITLE_THEMESTYLE,
     RES_STR_TITLE_SCREENOFF,
     RES_STR_TITLE_BACKLIGHT,
@@ -111,20 +111,20 @@ enum RES_STR_ID {
     RES_STR_INFO_UDISKCAP,
     RES_STR_INFO_UDISKAVACAP,
     RES_STR_INFO_VERSION,
-    RES_STR_TITLE_GAMEDISP_FULL,
-    RES_STR_TITLE_GAMEDISP_EQUAL,
+    RES_STR_SYSTEM_UPGRAD,
+    RES_STR_WIFI_CONNECTION,
+    RES_STR_ENABLE,
+    RES_STR_DISABLE,
     RES_STR_WARNING,
     RES_STR_WARNING_RECOVERY,
     RES_STR_YES,
     RES_STR_NO,
     RES_STR_OK,
     RES_STR_CANCEL,
-    RES_STR_GAME_1,
-    RES_STR_GAME_2,
-    RES_STR_GAME_3,
-    RES_STR_GAME_4,
-    RES_STR_GAME_5,
-    RES_STR_GAME_6,
+    RES_STR_LOCAL,
+    RES_STR_SDCARD,
+    RES_STR_UDISK,
+    RES_STR_NO_CONTENT,
     RES_STR_THEMESTYLE_THEME1,
     RES_STR_THEMESTYLE_THEME2,
     RES_STR_LOWPOWER,
@@ -185,12 +185,28 @@ enum MEDIA_CMD {
     MEDIA_CMD_READY
 };
 
+typedef struct
+{
+    int x;
+    int y;
+}touch_pos;
+
 #if 1
 #define BROWSER_PATH_ROOT     "/oem/file"
 #define BROWSER_PATH_PIC      "/oem/file/pic"
 #define BROWSER_PATH_MUSIC    "/oem/file/music"
 #define BROWSER_PATH_GAME     "/oem/file/game"
 #define BROWSER_PATH_VIDEO    "/oem/file/video"
+#define SDCARD_PATH_ROOT      "/sdcard"
+#define SDCARD_PATH_PIC       "/sdcard/pic"
+#define SDCARD_PATH_MUSIC     "/sdcard/music"
+#define SDCARD_PATH_GAME      "/sdcard/game"
+#define SDCARD_PATH_VIDEO     "/sdcard/video"
+#define UDISK_PATH_ROOT       "/udisk"
+#define UDISK_PATH_PIC        "/udisk/pic"
+#define UDISK_PATH_MUSIC      "/udisk/music"
+#define UDISK_PATH_GAME       "/udisk/game"
+#define UDISK_PATH_VIDEO      "/udisk/video"
 #else
 #define BROWSER_PATH_ROOT     "/sdcard"
 #define BROWSER_PATH_PIC      "/sdcard/pic"
@@ -208,9 +224,9 @@ enum MEDIA_CMD {
 #define DEFRETROARCH   "/data/retroarch/retroarch.cfg"
 #define DEFRETROARCHNAME   ".cfg"
         
-//#include "ui_1024x600.h"
+#include "ui_1024x600.h"
 //#include "ui_480x320.h"
-#include "ui_480x272.h"
+//#include "ui_480x272.h"
 #include "key_map_rk3128.h"
 
 #include "parameter.h"
@@ -229,7 +245,7 @@ enum MEDIA_CMD {
 #include "setting_screenoff_dialog.h"
 #include "setting_backlight_dialog.h"
 #include "setting_version_dialog.h"
-#include "setting_gamedisp_dialog.h"
+#include "setting_wifi_dialog.h"
 #include "setting_themestyle_dialog.h"
 #include "message_dialog.h"
 #include "videoplay_hw_dialog.h"
@@ -245,6 +261,11 @@ extern void DisableScreenAutoOff(void);
 extern void EnableScreenAutoOff(void);
 
 extern BITMAP batt_bmap[6];
+extern BITMAP wifi_bmap;
+extern BITMAP back_bmap;
+extern int time_hour;
+extern int time_min;
+extern int time_sec;
 extern int battery;
 extern BITMAP background_bmap;
 extern RECT msg_rcBg;

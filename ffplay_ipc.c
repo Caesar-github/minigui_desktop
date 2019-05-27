@@ -83,6 +83,7 @@ typedef struct {
     pthread_t recv_tid;
 } IPCClientState;
 
+int is_media_loop = 0;
 static IPCState ipc_state;
 
 static volatile int ready = 0;
@@ -585,6 +586,27 @@ void media_play(const char* file_path, HWND hWnd, int start_time) {
             printf("Failed to create run_ffplay_thread\n");
             free(path);
         }
+    }
+}
+
+void media_seek_to(char *value)
+{
+    Message *m;
+
+    if (ipc_state.ffplay_is_quit == 0) {
+        m = alloc_ipc_message((char*)SEEK_TO, value);
+        //printf("msg:%s len:%d\n",m->msg,m->len);
+        if (m) {
+           push_ipc_message(&ipc_state, m);
+        }
+    }
+}
+
+void media_wait(void)
+{
+    if (ipc_state.init_tid) {
+        pthread_join(ipc_state.init_tid, NULL);
+        ipc_state.init_tid = 0;
     }
 }
 

@@ -17,6 +17,10 @@
 
 #include "common.h"
 
+#define SLIDE_DISTANCE 100
+#define WHOLE_BUTTON_NUM 1
+#define PHOTO_MOVE_SMOOTH  1
+
 #define MOVE_STOP     0
 #define MOVE_NEXT     1
 #define MOVE_PRE      2
@@ -29,7 +33,28 @@ static BITMAP *pic_bmap_pre;
 static BITMAP *pic_bmap_cur;
 static BITMAP *pic_bmap_next;
 static BITMAP *pic_bmap_temp;
+static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
+static int double_click_timer = 0;
+/*
+static const GAL_Rect msg_galrcMenu[] = {
+    {BACK_PINT_X,BACK_PINT_Y,BACK_PINT_W,BACK_PINT_H},
+};
 
+static int is_button(int x,int y,GAL_Rect rect)
+{
+    return ((x <= rect.x + rect.w ) && (x >= rect.x) && (y <= rect.y + rect.h ) && (y >= rect.y));
+}
+
+static int check_button(int x,int y)
+{
+    int i;
+    for(i = 0;i < WHOLE_BUTTON_NUM;i++)
+    {
+        if(is_button(x,y,msg_galrcMenu[i])) return i;
+    }
+    return -1;
+}
+*/
 static int loadpicinit(struct directory_node *node)
 {
     int i;
@@ -131,6 +156,16 @@ static void unloadpic(void)
     }
 }
 
+static void picture_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+
+}
+
+static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    EndDialog(hWnd, wParam);
+}
+
 static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
@@ -149,6 +184,9 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         return 0;
     }
     case MSG_TIMER:
+        if (double_click_timer > 0)
+            double_click_timer--;
+#if PHOTO_MOVE_SMOOTH
         if (wParam == _ID_TIMER_PICPREVIEW) {
             if (move_mode != 0) {
                 //printf("%s MSG_TIMER\n", __func__);
@@ -173,6 +211,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                 InvalidateRect(hWnd, &msg_rcDialog, TRUE);
             }
         }
+#endif
         break;
     case MSG_KEYDOWN:
         switch (wParam) {
@@ -210,6 +249,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         int i;
         hdc = BeginPaint(hWnd);
         SelectFont(hdc, logfont);
+#if PHOTO_MOVE_SMOOTH
         if (move_mode == MOVE_NEXT) {
             FillBoxWithBitmap(hdc, LCD_W - (LCD_W * move_cnt / 10), 0, LCD_W, LCD_H, pic_bmap_next);
             FillBoxWithBitmap(hdc, -(LCD_W * move_cnt / 10), 0, LCD_W, LCD_H, pic_bmap_cur);
@@ -219,6 +259,30 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         } else {
             FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, pic_bmap_cur);
         }
+#else
+        if (move_mode == MOVE_NEXT) {
+            FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, pic_bmap_next);
+            BITMAP *bmap_temp = pic_bmap_pre;
+            pic_bmap_pre = pic_bmap_cur;
+            pic_bmap_cur = pic_bmap_next;
+            pic_bmap_next = pic_bmap_temp;
+            pic_bmap_temp = bmap_temp;
+        }
+        else if (move_mode == MOVE_PRE)
+        {
+            FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, pic_bmap_pre);
+            BITMAP *bmap_temp = pic_bmap_next;
+            pic_bmap_next = pic_bmap_cur;
+            pic_bmap_cur = pic_bmap_pre;
+            pic_bmap_pre = pic_bmap_temp;
+            pic_bmap_temp = bmap_temp;
+        }
+        else
+        {
+            FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, pic_bmap_cur);
+        }
+        move_mode = MOVE_STOP;
+#endif
         EndPaint(hWnd, hdc);
         break;
     }
@@ -226,6 +290,65 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         KillTimer(hWnd, _ID_TIMER_PICPREVIEW);
         unloadpic();
         return 0;
+    case MSG_LBUTTONDOWN:
+        touch_pos_down.x = LOSWORD(lParam);
+        touch_pos_down.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+        break;
+    case MSG_LBUTTONUP:
+        if (get_bl_brightness() == 0)
+        {
+            screenon();
+            break;
+        }
+        DisableScreenAutoOff();
+        touch_pos_up.x = LOSWORD(lParam);
+        touch_pos_up.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
+        if(touch_pos_down.x - touch_pos_up.x > SLIDE_DISTANCE)
+        {
+            //printf("slide left\n");
+            if (move_mode != 0)
+                break;
+            if (list_select < file_total - 1) {
+                list_select++;
+                loadpic(dir_node, pic_bmap_temp, list_select + 1);
+                InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+                move_mode = MOVE_NEXT;
+            }
+        }
+        else if(touch_pos_up.x - touch_pos_down.x > SLIDE_DISTANCE)
+        {
+            //printf("slide right\n");
+            if (move_mode != 0)
+                break;
+            if (list_select != 0) {
+                list_select--;
+                loadpic(dir_node, pic_bmap_temp, list_select - 1);
+                InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+                move_mode = MOVE_PRE;
+            }
+        }
+        else
+        {
+            if(double_click_timer > 0 &&
+                abs(touch_pos_old.x - touch_pos_up.x) < 50 &&
+                abs(touch_pos_old.y - touch_pos_up.y) < 50)
+                menu_back(hWnd,wParam,lParam);
+            else
+                double_click_timer = 5;
+            /*
+            int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
+            if(witch_button == 0) menu_back(hWnd,wParam,lParam);
+            if(witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
+            {
+                picture_enter(hWnd,wParam,witch_button);
+            }*/
+        }
+        touch_pos_old.x = touch_pos_up.x;
+        touch_pos_old.y = touch_pos_up.y;
+        EnableScreenAutoOff();
+        break;
     }
 
     return DefaultDialogProc(hWnd, message, wParam, lParam);

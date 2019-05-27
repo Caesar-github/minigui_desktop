@@ -10,7 +10,7 @@
 /* #undef C_ALLOCA */
 
 /* MiniGUI configure file name */
-/* #undef ETCFILENAME */
+#define ETCFILENAME "MiniGUI.cfg"
 
 /* Define to 1 if you have `alloca', as a function or macro. */
 #define HAVE_ALLOCA 1
@@ -346,7 +346,7 @@
 #define _MGFONT_BMPF 1
 
 /* Define if support TrueType font based on FreeType2 */
-/* #undef _MGFONT_FT2 */
+#define _MGFONT_FT2 1
 
 /* Define if support QPF font */
 /* #undef _MGFONT_QPF */
@@ -361,7 +361,7 @@
 /* #undef _MGFONT_TTF */
 
 /* Define if include ttf cache */
-/* #undef _MGFONT_TTF_CACHE */
+#define _MGFONT_TTF_CACHE 1
 
 /* Define if support UPF font */
 #define _MGFONT_UPF 1
@@ -384,6 +384,9 @@
 /* Define if include ST7167 subdriver for NEWGAL engine of DirectFB */
 /* #undef _MGGAL_DFB_ST7167 */
 
+/* Define if include DRM console NEWGAL engine */
+#define _MGGAL_DRMCON 1
+
 /* Define if include dummy NEWGAL engine */
 #define _MGGAL_DUMMY 1
 
@@ -397,7 +400,7 @@
 /* #undef _MGGAL_EM86GFX */
 
 /* Define if include FrameBuffer console NEWGAL engine */
-#define _MGGAL_FBCON 1
+/* #undef _MGGAL_FBCON */
 
 /* Define if include GDL Video NEWGAL engine */
 /* #undef _MGGAL_GDL */
@@ -469,7 +472,7 @@
 #define _MGHAVE_MENU 1
 
 /* Define if include code for mouse calibration */
-/* #undef _MGHAVE_MOUSECALIBRATE */
+#define _MGHAVE_MOUSECALIBRATE 1
 
 /* Define if include message string names */
 /* #undef _MGHAVE_MSG_STRING */
@@ -484,10 +487,10 @@
 /* #undef _MGIAL_2440 */
 
 /* Define if include the automatic IAL engine */
-#define _MGIAL_AUTO 1
+/* #undef _MGIAL_AUTO */
 
 /* Define if include IAL engine for Cisco touchpad */
-#define _MGIAL_CISCO_TOUCHPAD 1
+/* #undef _MGIAL_CISCO_TOUCHPAD */
 
 /* Define if include the common IAL engine */
 /* #undef _MGIAL_COMM */
@@ -540,8 +543,11 @@
 /* Define if include the random IAL engine */
 /* #undef _MGIAL_RANDOM */
 
+/* Define if include IAL engine for RKKeybroad */
+#define _MGIAL_RKKeybroad 1
+
 /* Define if include IAL engine for TSLIB */
-/* #undef _MGIAL_TSLIB */
+#define _MGIAL_TSLIB 1
 
 /* Define if include the WVFB IAL engine */
 /* #undef _MGIAL_WVFB */
@@ -559,7 +565,7 @@
 /* #undef _MGIMAGE_PCX */
 
 /* Define if support PNG bmp file format */
-/* #undef _MGIMAGE_PNG */
+#define _MGIMAGE_PNG 1
 
 /* Define if support TGA bmp file format */
 /* #undef _MGIMAGE_TGA */
@@ -586,7 +592,7 @@
 #define _MGINCORERBF_LATIN1_VGAOEM 1
 
 /* Define if build MiniGUI for no file I/O system (use in-core resources) */
-#define _MGINCORE_RES 1
+/* #undef _MGINCORE_RES */
 
 /* Define if use the Arabic PC keyboard layout */
 /* #undef _MGKBDLAYOUT_ARABICPC */
@@ -625,7 +631,7 @@
 #define _MGLIB_SUFFIX "ths"
 
 /* Define if compile max ttf cahce number for 10 (default value) */
-/* #undef _MGMAX_TTF_CACHE */
+#define _MGMAX_TTF_CACHE 10
 
 /* Define if include About MiniGUI Dialog Box */
 #define _MGMISC_ABOUTDLG 1
@@ -652,7 +658,7 @@
 #define _MGTIMER_UNIT_10MS 1
 
 /* Define if compile max ttf cahce size for 256k */
-/* #undef _MGTTF_CACHE_SIZE */
+#define _MGTTF_CACHE_SIZE 256
 
 /* Define if use own implementation of malloc functions */
 /* #undef _MGUSE_OWN_MALLOC */

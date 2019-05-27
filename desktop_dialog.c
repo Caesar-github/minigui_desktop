@@ -19,34 +19,60 @@
 
 #include "common.h"
 
-static int menu_sel = 0;
-static int game_sel = 0;
-static int line_sel = 0;
+static int menu_sel = -1;
+static int photo_sel = 1;
+static int line_sel = 1;
 static int batt = 0;
 
-#define MENU_NUM        6
+#define MENU_NUM        5
 #define MENU_ICON_NUM   2
 
-#define GAME_NUM        (RES_STR_GAME_6 - RES_STR_GAME_1 + 1)
-#define GAME_ICON_NUM   1
+#define PHOTO_NUM        6
+#define PHOTO_ICON_NUM   1
+
+#define SLIDE_DISTANCE 100
+#define WHOLE_BUTTON_NUM 8
 
 static BITMAP menu_bmap[MENU_NUM][MENU_ICON_NUM];
-static BITMAP game_bmap[GAME_NUM][GAME_ICON_NUM];
+static BITMAP photo_bmap[PHOTO_NUM][PHOTO_ICON_NUM];
 
-static RECT msg_rcGame = {GAME_PINT_X, GAME_PINT_Y, GAME_PINT_X + GAME_PINT_W, GAME_PINT_Y + GAME_PINT_H};
 static RECT msg_rcMusic = {MUSIC_PINT_X, MUSIC_PINT_Y, MUSIC_PINT_X + MUSIC_PINT_W, MUSIC_PINT_Y + MUSIC_PINT_H};
 static RECT msg_rcPhoto = {PHOTO_PINT_X, PHOTO_PINT_Y, PHOTO_PINT_X + PHOTO_PINT_W, PHOTO_PINT_Y + PHOTO_PINT_H};
+static RECT msg_rcVideo = {VIDEO_PINT_X, VIDEO_PINT_Y, VIDEO_PINT_X + VIDEO_PINT_W, VIDEO_PINT_Y + VIDEO_PINT_H};
 static RECT msg_rcFolde = {FOLDE_PINT_X, FOLDE_PINT_Y, FOLDE_PINT_X + FOLDE_PINT_W, FOLDE_PINT_Y + FOLDE_PINT_H};
 static RECT msg_rcSetting = {SETTING_PINT_X, SETTING_PINT_Y, SETTING_PINT_X + SETTING_PINT_W, SETTING_PINT_Y + SETTING_PINT_H};
 
-const GAL_Rect msg_galrcMenu[] = {
-	{GAME_PINT_X, GAME_PINT_Y, GAME_PINT_W, GAME_PINT_H},
-	{MUSIC_PINT_X, MUSIC_PINT_Y, MUSIC_PINT_W, MUSIC_PINT_H},
-	{PHOTO_PINT_X, PHOTO_PINT_Y, PHOTO_PINT_W, PHOTO_PINT_H},
-	{VIDEO_PINT_X, VIDEO_PINT_Y, VIDEO_PINT_W, VIDEO_PINT_H},
-	{FOLDE_PINT_X, FOLDE_PINT_Y, FOLDE_PINT_W, FOLDE_PINT_H},
-	{SETTING_PINT_X, SETTING_PINT_Y, SETTING_PINT_W, SETTING_PINT_H}
+static const GAL_Rect msg_galrcMenu[] = {
+    {MUSIC_PINT_X, MUSIC_PINT_Y, MUSIC_PINT_W, MUSIC_PINT_H},
+    {PHOTO_PINT_X, PHOTO_PINT_Y, PHOTO_PINT_W, PHOTO_PINT_H},
+    {VIDEO_PINT_X, VIDEO_PINT_Y, VIDEO_PINT_W, VIDEO_PINT_H},
+    {FOLDE_PINT_X, FOLDE_PINT_Y, FOLDE_PINT_W, FOLDE_PINT_H},
+    {SETTING_PINT_X, SETTING_PINT_Y, SETTING_PINT_W, SETTING_PINT_H},
+    {PHOTO_PREVIEW_LEFT_X,PHOTO_PREVIEW_LEFT_Y,PHOTO_PREVIEW_LEFT_W,PHOTO_PREVIEW_LEFT_H},
+    {PHOTO_PREVIEW_CENTER_X,PHOTO_PREVIEW_CENTER_Y,PHOTO_PREVIEW_CENTER_W,PHOTO_PREVIEW_CENTER_H},
+    {PHOTO_PREVIEW_RIGHT_X,PHOTO_PREVIEW_RIGHT_Y,PHOTO_PREVIEW_RIGHT_W,PHOTO_PREVIEW_RIGHT_H}
 };
+
+static int full_screen = 0,double_click_timer = 0;
+static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
+
+static int is_button(int x,int y,GAL_Rect rect)
+{
+    return ((x <= rect.x + rect.w ) && (x >= rect.x) && (y <= rect.y + rect.h ) && (y >= rect.y));
+}
+
+static int check_button(int x,int y)
+{
+    int rect_num;
+    for(rect_num = 0;rect_num < WHOLE_BUTTON_NUM;rect_num++)
+    {
+        if(is_button(x,y,msg_galrcMenu[rect_num]))
+        {
+            return rect_num;
+        }
+    }
+    return -1;
+}
 
 static int loadres(void)
 {
@@ -55,42 +81,36 @@ static int loadres(void)
     char *respath = get_ui_image_path();
 
     for (i = 0; i < MENU_ICON_NUM; i++) {
-        /* load game bmp */
-        snprintf(img, sizeof(img), "%sgame%d.png", respath, i);
+        snprintf(img, sizeof(img), "%smusic%d.png", respath, i);
         //printf("%s\n", img);
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[0][i], img))
             return -1;
 
-        snprintf(img, sizeof(img), "%smusic%d.png", respath, i);
+        snprintf(img, sizeof(img), "%sphoto%d.png", respath, i);
         //printf("%s\n", img);
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[1][i], img))
             return -1;
 
-        snprintf(img, sizeof(img), "%sphoto%d.png", respath, i);
-        //printf("%s\n", img);
-        if (LoadBitmap(HDC_SCREEN, &menu_bmap[2][i], img))
-            return -1;
-
         snprintf(img, sizeof(img), "%svideo%d.png", respath, i);
         //printf("%s\n", img);
-        if (LoadBitmap(HDC_SCREEN, &menu_bmap[3][i], img))
+        if (LoadBitmap(HDC_SCREEN, &menu_bmap[2][i], img))
             return -1;  
 
         snprintf(img, sizeof(img), "%sfolde%d.png", respath, i);
         //printf("%s\n", img);
-        if (LoadBitmap(HDC_SCREEN, &menu_bmap[4][i], img))
+        if (LoadBitmap(HDC_SCREEN, &menu_bmap[3][i], img))
             return -1;  
 
         snprintf(img, sizeof(img), "%ssetting%d.png", respath, i);
         //printf("%s\n", img);
-        if (LoadBitmap(HDC_SCREEN, &menu_bmap[5][i], img))
+        if (LoadBitmap(HDC_SCREEN, &menu_bmap[4][i], img))
             return -1;
     }
-    for (j = 0; j < GAME_NUM; j++) {
-        for (i = 0; i < GAME_ICON_NUM; i++) {
-            snprintf(img, sizeof(img), "%sgame_%d_%d.png", respath, j, i);
+    for (j = 0; j < PHOTO_NUM; j++) {
+        for (i = 0; i < PHOTO_ICON_NUM; i++) {
+            snprintf(img, sizeof(img), "%spic%d.jpg", respath, j);
             //printf("%s\n", img);
-            if (LoadBitmap(HDC_SCREEN, &game_bmap[j][i], img))
+            if (LoadBitmap(HDC_SCREEN, &photo_bmap[j][i], img))
                 return -1;
         }
     }
@@ -106,9 +126,54 @@ static void unloadres(void)
         for (i = 0; i < MENU_ICON_NUM; i ++)
             UnloadBitmap(&menu_bmap[j][i]);
 
-    for (j = 0; j < GAME_NUM; j++)
-        for (i = 0; i < GAME_ICON_NUM; i ++)
-            UnloadBitmap(&game_bmap[j][i]); 
+    for (j = 0; j < PHOTO_NUM; j++)
+        for (i = 0; i < PHOTO_ICON_NUM; i ++)
+            UnloadBitmap(&photo_bmap[j][i]);
+}
+
+static void desktop_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    switch(lParam)
+    {
+        case 0:
+            creat_browser_dialog(hWnd, FILTER_FILE_MUSIC, res_str[RES_STR_TITLE_MUSIC]);
+            break;
+        case 1:
+            creat_browser_dialog(hWnd, FILTER_FILE_PIC, res_str[RES_STR_TITLE_PIC]);
+            break;
+        case 2:
+            creat_browser_dialog(hWnd, FILTER_FILE_VIDEO, res_str[RES_STR_TITLE_VIDEO]);
+            break;
+        case 3:
+            creat_browser_dialog(hWnd, FILTER_FILE_NO, res_str[RES_STR_TITLE_BROWSER]);
+            break;
+        case 4:{
+            int oldstyle = get_themestyle();
+            creat_setting_dialog(hWnd);
+            if (oldstyle != get_themestyle()) {
+                unloadres();
+                loadres();
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            }
+            break;
+        }
+        case 5:
+            photo_sel -= 1;
+            if (photo_sel < 0)
+                photo_sel = 0;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            break;
+        case 6:
+            full_screen = 1;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            break;
+        case 7:
+            photo_sel += 1;
+            if (photo_sel > (PHOTO_NUM - 1))
+                photo_sel = PHOTO_NUM - 1;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            break;
+    }
 }
 
 static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -118,7 +183,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
     switch (message) {
     case MSG_INITDIALOG: {
-    	  DWORD bkcolor;
+        DWORD bkcolor;
         HWND hFocus = GetDlgDefPushButton(hWnd);
         loadres();
         batt = battery;
@@ -130,17 +195,20 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         return 0;
     }
     case MSG_TIMER: {
+        if (double_click_timer > 0) double_click_timer = 0;
         if (wParam == _ID_TIMER_DESKTOP) {
+#ifdef ENABLE_BATT
             if (batt != battery) {
-                batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
-            }
+                            batt = battery;
+                            InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                        }
+#endif
         }
         break;
     }
     case MSG_PAINT:
     {
-        int i;
+        int i,j;
         int page;
         gal_pixel old_brush;
         gal_pixel pixle = 0xff000000;
@@ -148,59 +216,55 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         hdc = BeginPaint(hWnd);
         SelectFont(hdc, logfont);
         old_brush = SetBrushColor(hdc, pixle);
-        FillBoxWithBitmap(hdc, BG_PINT_X,
-                               BG_PINT_Y, BG_PINT_W,
-                               BG_PINT_H, &background_bmap);
-        FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,
-                               BATT_PINT_W, BATT_PINT_H,
-                               &batt_bmap[batt]);
-        for (i = 0; i < GAME_ICON_NUM_PERPAGE; i++) {
-            RECT msg_rcName;
+        if (full_screen)
+            FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, &photo_bmap[photo_sel][0]);
+        else
+        {
+            FillBoxWithBitmap(hdc, BG_PINT_X,
+                                   BG_PINT_Y, BG_PINT_W,
+                                   BG_PINT_H, &background_bmap);
+#ifdef ENABLE_BATT
+            FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,
+                                   BATT_PINT_W, BATT_PINT_H,
+                                   &batt_bmap[batt]);
+#endif
+#ifdef ENABLE_WIFI
+            FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                                   WIFI_PINT_W, WIFI_PINT_H,
+                                   &wifi_bmap);
+#endif
+            RECT msg_rcTime;
+            char *sys_time_str[6];
+            snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+            msg_rcTime.left = TIME_PINT_X;
+            msg_rcTime.top = TIME_PINT_Y;
+            msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
+            msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
+            SetBkColor(hdc, COLOR_transparent);
+            SetBkMode(hdc,BM_TRANSPARENT);
+            SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+            SelectFont(hdc, logfont);
+            DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
 
-            if (((game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i) >= GAME_NUM)
-                break;
-            if ((i == game_sel % GAME_ICON_NUM_PERPAGE) && (line_sel == 0))
-                FillBoxWithBitmap(hdc, GAME_ICON_PINT_X + GAME_ICON_SPAC * i - (GAME_ICON_ZOOM_W / 2),
-                                       GAME_ICON_PINT_Y - GAME_ICON_ZOOM_H, GAME_ICON_PINT_W + GAME_ICON_ZOOM_W,
-                                       GAME_ICON_PINT_H + GAME_ICON_ZOOM_H, &game_bmap[(game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i][0]);
-            else
-                FillBoxWithBitmap(hdc, GAME_ICON_PINT_X + GAME_ICON_SPAC * i,
-                                       GAME_ICON_PINT_Y, GAME_ICON_PINT_W,
-                                       GAME_ICON_PINT_H, &game_bmap[(game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i][0]);
-           msg_rcName.left = GAME_ICON_PINT_X + GAME_ICON_SPAC * i;
-           msg_rcName.top = GAME_ICON_PINT_Y + GAME_ICON_PINT_H + 20;
-           msg_rcName.right = msg_rcName.left + GAME_ICON_PINT_W;
-           msg_rcName.bottom = msg_rcName.top + 24;
-           SetBkColor(hdc, COLOR_transparent);
-           SetBkMode(hdc,BM_TRANSPARENT);
-           SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-           DrawText (hdc, res_str[RES_STR_GAME_1 + (game_sel / GAME_ICON_NUM_PERPAGE) * GAME_ICON_NUM_PERPAGE + i], -1, &msg_rcName, DT_TOP | DT_CENTER);
-        }
-        page = (GAME_NUM + GAME_ICON_NUM_PERPAGE - 1) / GAME_ICON_NUM_PERPAGE;
-
-        for (i = 0; i < page; i++) {
-            int x;
-            if (page == 1)
-                x =  DESKTOP_PAGE_DOT_X;
-            else if (page % 2)
-           	    x =  DESKTOP_PAGE_DOT_X - page / 2 * DESKTOP_PAGE_DOT_SPAC;
-            else
-                x =  DESKTOP_PAGE_DOT_X - page / 2 * DESKTOP_PAGE_DOT_SPAC + DESKTOP_PAGE_DOT_SPAC / 2;
-
-            if (i == game_sel / GAME_ICON_NUM_PERPAGE)
-                FillCircle(hdc, x + i * DESKTOP_PAGE_DOT_SPAC, DESKTOP_PAGE_DOT_Y, DESKTOP_PAGE_DOT_DIA);
-            else
-                Circle(hdc, x + i * DESKTOP_PAGE_DOT_SPAC, DESKTOP_PAGE_DOT_Y, DESKTOP_PAGE_DOT_DIA);    
-        }
-        for (i = 0; i < MENU_NUM; i++) {
-            if ((i == menu_sel) && (line_sel == 1))
-                FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
-                                  msg_galrcMenu[i].y, msg_galrcMenu[i].w,
-                                  msg_galrcMenu[i].h, &menu_bmap[i][1]);
-            else
-                FillBoxWithBitmap(hdc, msg_galrcMenu[i].x + MENU_ICON_ZOOM_W / 2,
-                                  msg_galrcMenu[i].y + MENU_ICON_ZOOM_H, msg_galrcMenu[i].w - MENU_ICON_ZOOM_W,
-                                  msg_galrcMenu[i].h - MENU_ICON_ZOOM_H, &menu_bmap[i][0]);
+            for (i = 5,j = (-(PHOTO_ICON_NUM_PERPAGE - 1) / 2);(i - 5) < PHOTO_ICON_NUM_PERPAGE;i++,j++)
+            {
+                if ((photo_sel + j) >= 0 && (photo_sel + j) < PHOTO_NUM)
+                {
+                    FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
+                      msg_galrcMenu[i].y, msg_galrcMenu[i].w,
+                      msg_galrcMenu[i].h, &photo_bmap[photo_sel + j][0]);
+                }
+            }
+            for (i = 0; i < MENU_NUM; i++) {
+                if (i == menu_sel && line_sel == 1)
+                    FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
+                                      msg_galrcMenu[i].y, msg_galrcMenu[i].w,
+                                      msg_galrcMenu[i].h, &menu_bmap[i][1]);
+                else
+                    FillBoxWithBitmap(hdc, msg_galrcMenu[i].x + MENU_ICON_ZOOM_W / 2,
+                                      msg_galrcMenu[i].y + MENU_ICON_ZOOM_H, msg_galrcMenu[i].w - MENU_ICON_ZOOM_W,
+                                      msg_galrcMenu[i].h - MENU_ICON_ZOOM_H, &menu_bmap[i][0]);
+            }
         }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
@@ -221,10 +285,10 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     else
                         menu_sel = 0;
                 } else {
-                    if (game_sel < (GAME_NUM - 1))
-                        game_sel++;
+                    if (photo_sel < (PHOTO_NUM - 1))
+                        photo_sel++;
                     else
-                        game_sel = 0;
+                        photo_sel = 0;
                 }
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
@@ -235,10 +299,10 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     else
                         menu_sel = MENU_NUM - 1;
                 } else {
-                    if (game_sel > 0)
-                        game_sel--;
+                    if (photo_sel > 0)
+                        photo_sel--;
                     else
-                        game_sel = GAME_NUM - 1;
+                        photo_sel = PHOTO_NUM - 1;
                 }
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
@@ -246,7 +310,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 if (line_sel == 0) {
                     char cmd[128];
                     DisableScreenAutoOff();
-                    sprintf(cmd, "/data/start.sh %d", game_sel);
+                    sprintf(cmd, "/data/start.sh %d", photo_sel);
                     system("touch /tmp/.minigui_freeze");
                     system(cmd);
                     system("rm /tmp/.minigui_freeze");
@@ -255,21 +319,18 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 } else {
                     switch (menu_sel) {
                         case 0:
-                            creat_browser_dialog(hWnd, FILTER_FILE_GAME, res_str[RES_STR_TITLE_GAME]);
-                            break;
-                        case 1:
                             creat_browser_dialog(hWnd, FILTER_FILE_MUSIC, res_str[RES_STR_TITLE_MUSIC]);
                             break;
-                        case 2:
+                        case 1:
                             creat_browser_dialog(hWnd, FILTER_FILE_PIC, res_str[RES_STR_TITLE_PIC]);
                             break;
-                        case 3:
+                        case 2:
                             creat_browser_dialog(hWnd, FILTER_FILE_VIDEO, res_str[RES_STR_TITLE_VIDEO]);
                             break;
-                        case 4:
+                        case 3:
                             creat_browser_dialog(hWnd, FILTER_FILE_NO, res_str[RES_STR_TITLE_BROWSER]);
                             break;
-                        case 5: {
+                        case 4: {
                             int oldstyle = get_themestyle();
                             creat_setting_dialog(hWnd);
                             if (oldstyle != get_themestyle()) {
@@ -291,6 +352,82 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     case MSG_DESTROY:
         KillTimer(hWnd, _ID_TIMER_DESKTOP);
         unloadres();
+        break;
+    case MSG_LBUTTONDOWN:
+        touch_pos_down.x = LOSWORD(lParam);
+        touch_pos_down.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+        break;
+    case MSG_LBUTTONUP:
+        if (get_bl_brightness() == 0)
+        {
+            screenon();
+            break;
+        }
+        DisableScreenAutoOff();
+        touch_pos_up.x = LOSWORD(lParam);
+        touch_pos_up.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
+        if(touch_pos_down.x - touch_pos_up.x > SLIDE_DISTANCE)
+        {
+            //printf("slide left\n");
+            photo_sel += 1;
+            line_sel = 0;
+            if (photo_sel > (PHOTO_NUM - 1))
+                photo_sel = PHOTO_NUM - 1;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+        }
+        else if(touch_pos_up.x - touch_pos_down.x > SLIDE_DISTANCE)
+        {
+            //printf("slide right\n");
+            photo_sel -= 1;
+            line_sel = 0;
+            if (photo_sel < 0)
+                photo_sel = 0;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+        }
+        else
+        {
+            if (full_screen == 0)
+            {
+                int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
+                if (witch_button >= 0 && witch_button < 5)
+                {
+                    if (menu_sel == witch_button && line_sel == 1)
+                    {
+                        desktop_enter(hWnd,wParam,witch_button);
+                    }
+                    else
+                    {
+                        menu_sel = witch_button;
+                        line_sel = 1;
+                        InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                    }
+                }
+                else if (witch_button >= 5 && witch_button < WHOLE_BUTTON_NUM)
+                {
+                    line_sel = 0;
+                    desktop_enter(hWnd,wParam,witch_button);
+                }
+            }
+            else
+            {
+                if(double_click_timer > 0 &&
+                    abs(touch_pos_old.x - touch_pos_up.x) < 50 &&
+                    abs(touch_pos_old.y - touch_pos_up.y) < 50)
+                {
+                    full_screen = 0;
+                    InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                }
+                else
+                {
+                    double_click_timer = 2;
+                }
+            }
+        }
+        touch_pos_old.x = touch_pos_up.x;
+        touch_pos_old.y = touch_pos_up.y;
+        EnableScreenAutoOff();
         break;
     }
 

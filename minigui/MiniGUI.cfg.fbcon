@@ -22,7 +22,7 @@ gal_engine=shadow
 
 # IAL engine
 ial_engine=RKKeybroad
-mdev=/dev/input/event1
+mdev=/dev/input/event0
 mtype=IMPS2
 
 [fbcon]
@@ -48,7 +48,8 @@ defaultmode=800x600-32bpp
 #{{ifdef _MGGAL_SHADOW
 [shadow]
 real_engine=fbcon
-defaultmode=480x272-16bpp
+#defaultmode=480x272-16bpp
+defaultmode=1024x600-16bpp
 #rotate_screen=ccw
 #}}
 

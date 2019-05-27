@@ -24,6 +24,9 @@
 
 #include "common.h"
 
+#define SLIDE_DISTANCE 100
+#define WHOLE_BUTTON_NUM 1
+
 static pthread_t videoplay_t = NULL;
 static BITMAP mBitMap;
 static unsigned char rgb_buff[LCD_W*LCD_H*4];
@@ -33,6 +36,27 @@ pthread_mutex_t mutex;
 static int file_total;
 static int list_select = 0;
 static struct directory_node *dir_node = 0;
+
+static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
+
+static const GAL_Rect msg_galrcMenu[] = {
+    {BACK_PINT_X,BACK_PINT_Y,BACK_PINT_W,BACK_PINT_H},
+};
+
+static int is_button(int x,int y,GAL_Rect rect)
+{
+    return ((x <= rect.x + rect.w ) && (x >= rect.x) && (y <= rect.y + rect.h ) && (y >= rect.y));
+}
+
+static int check_button(int x,int y)
+{
+    int i;
+    for(i = 0;i < WHOLE_BUTTON_NUM;i++)
+    {
+        if(is_button(x,y,msg_galrcMenu[i])) return i;
+    }
+    return -1;
+}
 
 static void decodeYUV420SP(int* rgba, unsigned char* yuv420sp, int width, int height)
 {
@@ -359,6 +383,23 @@ static void unloadres(void)
 
 }
 
+static void videoplay_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    //videoplay();
+    if (videoplay_t == NULL) {
+        videoplay_exit = 0;
+        pthread_create(&videoplay_t, NULL, videoplay, (void *)"videoplay");
+    }
+}
+
+static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    videoplay_exit = 1;
+    //if (videoplay_t != NULL)
+    //    pthread_join(videoplay_t, NULL);
+    EndDialog(hWnd, wParam);
+}
+
 static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
@@ -415,6 +456,9 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     case MSG_PAINT: {
         int i;
         pthread_mutex_lock(&mutex);
+        FillBoxWithBitmap(hdc, BACK_PINT_X, BACK_PINT_Y,
+                               BACK_PINT_W, BACK_PINT_H,
+                               &back_bmap);
         hdc = BeginPaint(hWnd);
         SelectFont(hdc, logfont);
         InitBitmap(HDC_SCREEN, LCD_W, LCD_H, LCD_W*4, rgb_buff, &mBitMap);
@@ -430,6 +474,31 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         unloadres();
         pthread_mutex_destroy(&mutex);
         return 0;
+    case MSG_LBUTTONDOWN:
+        touch_pos_down.x = LOSWORD(lParam);
+        touch_pos_down.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+        break;
+    case MSG_LBUTTONUP:
+        if (get_bl_brightness() == 0)
+        {
+            screenon();
+            break;
+        }
+        DisableScreenAutoOff();
+        touch_pos_up.x = LOSWORD(lParam);
+        touch_pos_up.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
+        int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
+        if(witch_button == 0) menu_back(hWnd,wParam,lParam);
+        if(witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
+        {
+            videoplay_enter(hWnd,wParam,lParam);
+        }
+        touch_pos_old.x = touch_pos_up.x;
+        touch_pos_old.y = touch_pos_up.y;
+        EnableScreenAutoOff();
+        break;
     }
 
     return DefaultDialogProc(hWnd, message, wParam, lParam);

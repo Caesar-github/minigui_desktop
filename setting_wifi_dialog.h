@@ -32,9 +32,9 @@
  * SOFTWARE.
  */
 
-#ifndef __SETTING_GAMEDISP_DIALOG_H__
-#define __SETTING_GAMEDISP_DIALOG_H__
+#ifndef __SETTING_WIFI_DIALOG_H__
+#define __SETTING_WIFI_DIALOG_H__
 
-void creat_setting_gamedisp_dialog(HWND hWnd);
+void creat_setting_wifi_dialog(HWND hWnd);
 
 #endif
