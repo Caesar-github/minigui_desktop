@@ -223,11 +223,6 @@ static struct directory_node *new_dir_node(char *dir)
     int len;
     struct directory_node *dir_node_temp;
 
-    if((opendir(dir))==NULL){
-        printf("open %s error\n",dir);
-        return NULL;
-    }
-
     dir_node_temp = malloc(sizeof(struct directory_node));
     memset(dir_node_temp, 0, sizeof(struct directory_node));
     len = strlen(dir) + 2;
