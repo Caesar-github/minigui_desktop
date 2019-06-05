@@ -18,7 +18,10 @@ OBJ = audioplay_dialog.o \
       setting_eq_dialog.o \
       setting_language_dialog.o \
       setting_screenoff_dialog.o \
+      setting_systemtime_dialog.o \
       setting_themestyle_dialog.o \
+      setting_volume_dialog.o \
+      setting_recovery_dialog.o \
       setting_version_dialog.o \
       sysfs.o \
       system.o \

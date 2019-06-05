@@ -6,10 +6,12 @@ Video
 Browser
 Setting
 Language
+Volume
 WiFi setting
 Theme style
 Screen off
 BackLight
+System time
 Restore
 Info
 中文
@@ -37,6 +39,7 @@ U disk remaining capacity:
 Firmware version:
 system upgrade
 WiFi network connection
+AirKiss mode
 Enable
 Disable
 Warning!
@@ -51,4 +54,13 @@ Udisk
 No content
 Theme 1
 Theme 2
+Date Setting
+Time Setting
+Time Format
+Regular Power ON 1
+Regular Power OFF 1
+Regular Power ON 2
+Regular Power OFF 2
+Regular Power ON 3
+Regular Power OFF 3
 Low battery, will shut down!

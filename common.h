@@ -50,7 +50,11 @@
 #define _ID_TIMER_VIDEOPLAY_HW          112
 #define _ID_TIMER_SETTING_WIFI          113
 #define _ID_TIMER_SETTING_THEMESTYLE    114
-#define _ID_TIMER_LOWPOWER              115
+#define _ID_TIMER_SETTING_SYSTEMTIME    115
+#define _ID_TIMER_LOWPOWER              116
+#define _ID_TIMER_SETTING_VOLUME        117
+#define _ID_TIMER_SETTING_RECOVERY      118
+
 
 #define MSG_VIDEOPLAY_END         (MSG_USER + 1)
 #define MSG_MEDIA_UPDATE          (MSG_USER + 2)
@@ -71,6 +75,9 @@
 #define TIMER_VIDEOPLAY_HW          50
 #define TIMER_SETTING_WIFI          50
 #define TIMER_SETTING_THEMESTYLE    50
+#define TIMER_SETTING_VOLUME        50
+#define TIMER_SETTING_RECOVERY      50
+#define TIMER_SETTING_SYSTEMTIME    50
 #define TIMER_LOWPOWER              50
 
 enum RES_STR_ID {
@@ -82,10 +89,12 @@ enum RES_STR_ID {
     RES_STR_TITLE_BROWSER,
     RES_STR_TITLE_SETTING,
     RES_STR_TITLE_LANGUAGE,
+    RES_STR_TITLE_VOLUME,
     RES_STR_TITLE_WIFI,
     RES_STR_TITLE_THEMESTYLE,
     RES_STR_TITLE_SCREENOFF,
     RES_STR_TITLE_BACKLIGHT,
+    RES_STR_TITLE_SYSTEMTIME,
     RES_STR_TITLE_RESTORE,
     RES_STR_TITLE_INFO,
     RES_STR_LANGUAGE_CN,
@@ -113,6 +122,7 @@ enum RES_STR_ID {
     RES_STR_INFO_VERSION,
     RES_STR_SYSTEM_UPGRAD,
     RES_STR_WIFI_CONNECTION,
+    RES_STR_WIFI_AIRKISS,
     RES_STR_ENABLE,
     RES_STR_DISABLE,
     RES_STR_WARNING,
@@ -127,6 +137,15 @@ enum RES_STR_ID {
     RES_STR_NO_CONTENT,
     RES_STR_THEMESTYLE_THEME1,
     RES_STR_THEMESTYLE_THEME2,
+    RES_STR_SYSTEMTIME_DATA,
+    RES_STR_SYSTEMTIME_TIME,
+    RES_STR_SYSTEMTIME_FORMAT,
+    RES_STR_SYSTEMTIME_ON1,
+    RES_STR_SYSTEMTIME_OFF1,
+    RES_STR_SYSTEMTIME_ON2,
+    RES_STR_SYSTEMTIME_OFF2,
+    RES_STR_SYSTEMTIME_ON3,
+    RES_STR_SYSTEMTIME_OFF3,
     RES_STR_LOWPOWER,
     RES_STR_MAX
 };
@@ -263,17 +282,31 @@ extern void EnableScreenAutoOff(void);
 extern BITMAP batt_bmap[6];
 extern BITMAP wifi_bmap;
 extern BITMAP back_bmap;
+extern BITMAP volume_0;
+extern BITMAP volume_1;
+extern BITMAP volume_2;
+extern BITMAP volume_3;
+
 extern int time_hour;
 extern int time_min;
 extern int time_sec;
 extern int battery;
+extern int systemtime_year;
+extern int systemtime_month;
+extern int systemtime_day;
 extern BITMAP background_bmap;
 extern RECT msg_rcBg;
 extern RECT msg_rcBatt;
 extern RECT msg_rcTitle;
 extern RECT msg_rcDialog;
 extern char *res_str[RES_STR_MAX];
-extern LOGFONT *logfont_cej;
-extern LOGFONT *logfont_k;
-extern LOGFONT *logfont;
+
+extern LOGFONT  *logfont_cej;
+extern LOGFONT  *logfont_k;
+extern LOGFONT  *logfont_cej_title;
+extern LOGFONT  *logfont_k_title;
+extern LOGFONT  *logfont;
+extern LOGFONT  *logfont_title;
+
+
 #endif

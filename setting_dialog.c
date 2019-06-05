@@ -25,7 +25,7 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 8
+#define WHOLE_BUTTON_NUM 10
 
 static BITMAP list_sel_bmap;
 static int list_sel = 0;
@@ -71,11 +71,26 @@ static void recovery(HWND hWnd)
     int ret = -1;
 
     ret = MessageBox_ex(hWnd, res_str[RES_STR_WARNING_RECOVERY], 0, MB_YESNO | MB_DEFBUTTON2);
+		printf("0\n");
+		printf("0\n");
+		printf("0\n");
 
     if (ret == IDYES) {
+		printf("1\n");
+		printf("1\n");
+		printf("1\n");
         parameter_recovery();
+		printf("2\n");
+		printf("2\n");
+		printf("2\n");
         screenon();
+		printf("3\n");
+		printf("3\n");
+		printf("3v");
         loadstringres();
+		printf("4\n");
+		printf("4\n");
+		printf("4\n");
     }
 }
 
@@ -85,10 +100,15 @@ static void setting_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
         case 0:
             creat_setting_language_dialog(hWnd);
             break;
-        case 1:
+
+		case 1:
+            creat_setting_volume_dialog(hWnd);
+            break;
+		
+        case 2:
             creat_setting_wifi_dialog(hWnd);
             break;
-        case 2: {
+        case 3: {
             int oldstyle = get_themestyle();
             creat_setting_themestyle_dialog(hWnd);
             if (oldstyle != get_themestyle()) {
@@ -98,17 +118,21 @@ static void setting_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
             }
             break;
         }
-        case 3:
+        case 4:
             creat_setting_screenoff_dialog(hWnd);
             break;
-        case 4:
+        case 5:
             creat_setting_backlight_dialog(hWnd);
             break;
-        case 5:
-            //recovery(hWnd);
-            //InvalidateRect(hWnd, &msg_rcBg, TRUE);
+		case 6:
+            creat_setting_systemtime_dialog(hWnd);
             break;
-        case 6:
+        case 7:	
+//            recovery(hWnd);
+ //           InvalidateRect(hWnd, &msg_rcBg, TRUE);
+ 			creat_setting_recovery_dialog(hWnd);
+            break;
+        case 8:
             creat_setting_version_dialog(hWnd);
             break;
     }
@@ -177,14 +201,32 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                                WIFI_PINT_W, WIFI_PINT_H,
                                &wifi_bmap);
 #endif
-        RECT msg_rcTime;
-        char *sys_time_str[6];
-        snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-        msg_rcTime.left = TIME_PINT_X;
-        msg_rcTime.top = TIME_PINT_Y;
-        msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
-        msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
-        DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+		RECT msg_rcTime;
+		char *sys_time_str[6];
+		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+		msg_rcTime.left = REALTIME_PINT_X;
+		msg_rcTime.top = REALTIME_PINT_Y;
+		msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+		msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+		SetBkColor(hdc, COLOR_transparent);
+		SetBkMode(hdc,BM_TRANSPARENT);
+		SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+		SelectFont(hdc, logfont_title);
+		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+
+//==================display volume icon============================
+
+		BITMAP *volume_display;
+
+			
+		if(get_volume()==0) volume_display=&volume_0;
+		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
+		else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
+		else volume_display=&volume_3;
+
+		FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
+							   VOLUME_PINT_W, VOLUME_PINT_H,
+							   volume_display);
 
 
         SetBkColor(hdc, COLOR_transparent);
@@ -212,6 +254,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
             if (i == list_sel % SETTING_NUM_PERPAGE)
                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+			SelectFont(hdc, logfont);
             DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
         }
 #else
@@ -223,6 +266,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         if (i == 0)
             FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
         DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE], -1, &msg_rcFilename, DT_TOP);
+		
         for (i = 0; i < SETTING_NUM_PERPAGE - 2; i++) {
 
             if ((cur_page * SETTING_NUM_PERPAGE + i) >= SETTING_LIST_NUM)
@@ -285,10 +329,14 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     case 0:
                         creat_setting_language_dialog(hWnd);
                         break;
-                    case 1:
+				  case 1:
+                       creat_setting_volume_dialog(hWnd);
+                    break;
+	
+                    case 2:
                         creat_setting_wifi_dialog(hWnd);
                         break;
-                    case 2: {
+                    case 3: {
                         int oldstyle = get_themestyle();
                         creat_setting_themestyle_dialog(hWnd);
                         if (oldstyle != get_themestyle()) {
@@ -298,17 +346,20 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                         }
                         break;
                     }
-                    case 3:
+                    case 4:
                         creat_setting_screenoff_dialog(hWnd);
                         break;
-                    case 4:
+                    case 5:
                         creat_setting_backlight_dialog(hWnd);
                         break;
-                    case 5:
+					case 6:
+						creat_setting_systemtime_dialog(hWnd);
+                        break;
+                    case 7:
                         recovery(hWnd);
                         InvalidateRect(hWnd, &msg_rcBg, TRUE);
                         break;
-                    case 6:
+                    case 8:
                         creat_setting_version_dialog(hWnd);
                         break;
                 }

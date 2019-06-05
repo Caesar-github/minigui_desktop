@@ -584,6 +584,13 @@ int MessageBox_ex(HWND hParentWnd, const char* pszText,
 
     MsgBoxData.controls = CtrlData;
 
-    return DialogBoxIndirectParam (&MsgBoxData, hParentWnd, MsgBoxProc, 
-            (LPARAM)dwStyle);
+	printf("0.0\n");
+	printf("0.0\n");
+	printf("0.0\n");
+
+   return DialogBoxIndirectParam (&MsgBoxData, hParentWnd, MsgBoxProc, 
+           (LPARAM)dwStyle);
+
+
+
 }

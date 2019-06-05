@@ -25,14 +25,28 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 7
+
+#define SYSTEMTIME_WHOLE_BUTTON_NUM 10
 
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
-#define SCREENOFF_NUM    (RES_STR_SCREENOFF_6 - RES_STR_SCREENOFF_1 + 1)
-static int val_table[SCREENOFF_NUM] = {5, 10, 15, 30, 60, -1};
+#define SYSTEMTIME_NUM    (RES_STR_SYSTEMTIME_OFF3 - RES_STR_SYSTEMTIME_DATA + 1)
+
+static int on_1 = 0;
+static int off_1 = 0;
+static int on_2 = 0;
+static int off_2 = 0;
+static int on_3 = 0;
+static int off_3 = 0;
+
+
+
+
+
+
+
 
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
 
@@ -77,19 +91,12 @@ static void unloadres(void)
     }
 }
 
-static void screenoff_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
-{
-    set_screenoff(list_sel);
-    set_screenoff_val(val_table[list_sel]);
-    InvalidateRect(hWnd, &msg_rcBg, TRUE);
-}
-
 static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
     EndDialog(hWnd, wParam);
 }
 
-static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
 
@@ -105,11 +112,11 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
             SetFocus(hFocus);
         batt = battery;
         list_sel = 0;
-        SetTimer(hWnd, _ID_TIMER_SETTING_SCREENOFF, TIMER_SETTING_SCREENOFF);
+        SetTimer(hWnd, _ID_TIMER_SETTING_SYSTEMTIME, TIMER_SETTING_SYSTEMTIME);
         return 0;
     }
     case MSG_TIMER: {
-        if (wParam == _ID_TIMER_SETTING_SCREENOFF) {
+        if (wParam == TIMER_SETTING_SYSTEMTIME) {
 #ifdef ENABLE_BATT
             if (batt != battery) {
                 batt = battery;
@@ -159,11 +166,11 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
 		SelectFont(hdc, logfont_title);
 		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
 
-		//==================display volume icon============================
+//==================display volume icon============================
 
 		BITMAP *volume_display;
 
-			
+		
 		if(get_volume()==0) volume_display=&volume_0;
 		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
 		else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
@@ -174,20 +181,24 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
 							   volume_display);
 
 
+
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
         SelectFont(hdc, logfont);
-        DrawText(hdc, res_str[RES_STR_TITLE_SCREENOFF], -1, &msg_rcTitle, DT_TOP);
+        DrawText(hdc, res_str[RES_STR_TITLE_SYSTEMTIME], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        page = (SCREENOFF_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
+        page = (SYSTEMTIME_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
         cur_page = list_sel / SETTING_NUM_PERPAGE;
 
+		RECT msg_temp;
+		char *sys_data_str[11];
+			
         for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
             RECT msg_rcFilename;
 
-            if ((cur_page * SETTING_NUM_PERPAGE + i) >= SCREENOFF_NUM)
+            if ((cur_page * SETTING_NUM_PERPAGE + i) >= SYSTEMTIME_NUM)
                 break;
 
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
@@ -196,14 +207,115 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
             msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
 
             if (i == list_sel % SETTING_NUM_PERPAGE)
-                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+               FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
 
-            if ((cur_page * SETTING_NUM_PERPAGE + i) == get_screenoff())
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
-            else
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
+  //         if ((cur_page * SETTING_NUM_PERPAGE + i) == get_themestyle())
+  //             FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
+   //        else
+   //           FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
             SelectFont(hdc, logfont);
-            DrawText(hdc, res_str[RES_STR_SCREENOFF_1 + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+            DrawText(hdc, res_str[RES_STR_SYSTEMTIME_DATA + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+
+		//==========================================//
+		
+		    snprintf(sys_data_str, sizeof(sys_data_str), "%04d-%02d-%02d", systemtime_year, systemtime_month,systemtime_day);
+			msg_temp = msg_rcFilename;
+			
+			switch (RES_STR_SYSTEMTIME_DATA + cur_page * SETTING_NUM_PERPAGE + i)
+				{
+					case RES_STR_SYSTEMTIME_DATA:
+						msg_temp.left = msg_rcFilename.left+825;
+						DrawText(hdc, sys_data_str, -1, &msg_temp, DT_TOP);
+					break;
+
+
+					case RES_STR_SYSTEMTIME_TIME:
+						msg_temp.left = msg_rcFilename.left+900;
+						DrawText(hdc, sys_time_str, -1, &msg_temp, DT_TOP);						
+					break;
+
+					
+					case RES_STR_SYSTEMTIME_FORMAT:
+						msg_temp.left = msg_rcFilename.left+900;
+						SelectFont(hdc, logfont);
+						DrawText(hdc, "24", -1, &msg_temp, DT_TOP);	
+					break;
+
+					
+					case RES_STR_SYSTEMTIME_ON1:
+						msg_temp.left = msg_rcFilename.left+500;
+						SelectFont(hdc, logfont);
+						if(on_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
+						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
+						
+						msg_temp.left = msg_rcFilename.left+900;
+						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);	
+					break;
+
+
+					case RES_STR_SYSTEMTIME_ON2:
+						SelectFont(hdc, logfont);
+						msg_temp.left = msg_rcFilename.left+500;
+						
+						if(on_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
+						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
+						
+						msg_temp.left = msg_rcFilename.left+900;
+						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);							
+					break;
+
+
+					case RES_STR_SYSTEMTIME_ON3:
+						SelectFont(hdc, logfont);
+						msg_temp.left = msg_rcFilename.left+500;
+						
+						if(on_3) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
+						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
+					
+						msg_temp.left = msg_rcFilename.left+900;
+						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);								
+					break;
+
+					
+					case RES_STR_SYSTEMTIME_OFF1:
+						SelectFont(hdc, logfont);
+						msg_temp.left = msg_rcFilename.left+500;
+						
+						if(off_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
+						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
+					
+						msg_temp.left = msg_rcFilename.left+900;
+						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);						
+					break;
+
+					
+					case RES_STR_SYSTEMTIME_OFF2:
+						SelectFont(hdc, logfont);
+						msg_temp.left = msg_rcFilename.left+500;
+						
+						if(off_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
+						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
+					
+
+						msg_temp.left = msg_rcFilename.left+900;
+						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);						
+					break;
+
+					
+					case RES_STR_SYSTEMTIME_OFF3:
+						SelectFont(hdc, logfont);
+						msg_temp.left = msg_rcFilename.left+500;
+						
+						if(off_3) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
+						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
+					
+						msg_temp.left = msg_rcFilename.left+900;
+						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);						
+					break;
+					
+						
+				}
+			
         }
 
         if (page > 1) {
@@ -233,7 +345,7 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                 EndDialog(hWnd, wParam);
                 break;
             case KEY_DOWN_FUNC:
-                if (list_sel < (SCREENOFF_NUM - 1))
+                if (list_sel < (SYSTEMTIME_NUM - 1))
                     list_sel++;
                 else
                     list_sel = 0;
@@ -243,13 +355,12 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                  if (list_sel > 0)
                     list_sel--;
                 else
-                    list_sel = SCREENOFF_NUM - 1;
+                    list_sel = SYSTEMTIME_NUM - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case KEY_ENTER_FUNC:
-                set_screenoff(list_sel);
-                set_screenoff_val(val_table[list_sel]);
-                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+				
+
                 break;
         }
         break;
@@ -257,7 +368,7 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         break;
     }
     case MSG_DESTROY:
-        KillTimer(hWnd, _ID_TIMER_SETTING_SCREENOFF);
+        KillTimer(hWnd, _ID_TIMER_SETTING_SYSTEMTIME);
         unloadres();
         break;
     case MSG_LBUTTONDOWN:
@@ -277,23 +388,66 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
         int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
         if(witch_button == 0) menu_back(hWnd,wParam,lParam);
-        if(witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
+        if(witch_button > 0 && witch_button < SYSTEMTIME_WHOLE_BUTTON_NUM)
         {
             list_sel = witch_button - 1;
+            switch (list_sel) {
+					case 0:
+						break;
+					
+					
+					case 1:
+						break;
+						
+						
+					case 2:
+						break;
+						
+
+					case 3:
+						on_1 = !on_1;
+						printf("on_1 = %d",on_1);
+						printf("on_1 = %d",on_1);
+						printf("on_1 = %d",on_1);
+						break;
+
+					
+					case 4:
+						off_1 = !off_1;
+						break;
+
+					
+					case 5:
+						on_2 = !on_2;
+						break;
+
+					
+					case 6:
+						off_2 = !off_2;
+						break;
+
+					
+					case 7:						
+						on_3 = !on_3;
+						break;
+
+					case 8:						
+						off_3 = !off_3;
+						break;
+				}
+			
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            screenoff_enter(hWnd,wParam,list_sel);
         }
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
         EnableScreenAutoOff();
         break;
-
     }
 
     return DefaultDialogProc(hWnd, message, wParam, lParam);
 }
 
-void creat_setting_screenoff_dialog(HWND hWnd)
+void creat_setting_systemtime_dialog(HWND hWnd)
 {
     DLGTEMPLATE DesktopDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
     	                        0, 0,
@@ -301,5 +455,5 @@ void creat_setting_screenoff_dialog(HWND hWnd)
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0};
     //DesktopDlg.controls = DesktopCtrl;
 
-    DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_screenoff_dialog_proc, 0L);
+    DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_systemtime_dialog_proc, 0L);
 }

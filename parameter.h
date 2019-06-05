@@ -23,4 +23,11 @@ void set_themestyle(int val);
 char *get_ui_image_path(void);
 int parameter_init(void);
 void parameter_deinit(void);
+int get_volume(void);
+void set_volume(int val);
+int get_wifi(void);
+void set_wifi(char*   val);
+
+
+
 #endif

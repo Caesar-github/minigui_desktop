@@ -25,15 +25,18 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 1
+#define WIFI_WHOLE_BUTTON_NUM 10
 
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
 #define WIFI_NUM    1
+
 static int is_wifi_open = 0;
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
+
+char *net_list[]={"WIFI_TEST_1","WIFI_TEST_2","WIFI_TEST_3","WIFI_TEST_4"};
 
 static int check_button(int x,int y)
 {
@@ -77,8 +80,38 @@ static void unloadres(void)
 }
 
 static void wifi_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
-{
-    is_wifi_open = !is_wifi_open;
+{  
+
+
+	switch (lParam) {
+		
+			case 0:
+				is_wifi_open = !is_wifi_open;
+	
+				if(is_wifi_open){
+				}else{}
+				
+				break;
+				
+				
+			case 1:
+				if(is_wifi_open)  set_wifi(net_list[lParam-1]);
+				break;
+
+			case 2:
+				if(is_wifi_open)  set_wifi(net_list[lParam-1]);
+				break;
+			
+			case 3:
+				if(is_wifi_open)  set_wifi(net_list[lParam-1]);
+				break;
+			
+			case 4:
+				if(is_wifi_open)  set_wifi(net_list[lParam-1]);
+				break;
+
+			
+				}
     InvalidateRect(hWnd, &msg_rcBg, TRUE);
 }
 
@@ -119,7 +152,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
     }
     case MSG_PAINT:
     {
-        int i;
+        int i,j;
         int page;
         int cur_page;
         struct file_node *file_node_temp;
@@ -144,14 +177,34 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                                WIFI_PINT_W, WIFI_PINT_H,
                                &wifi_bmap);
 #endif
-        RECT msg_rcTime;
-        char *sys_time_str[6];
-        snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-        msg_rcTime.left = TIME_PINT_X;
-        msg_rcTime.top = TIME_PINT_Y;
-        msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
-        msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
-        DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+		RECT msg_rcTime;
+		char *sys_time_str[6];
+		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+		msg_rcTime.left = REALTIME_PINT_X;
+		msg_rcTime.top = REALTIME_PINT_Y;
+		msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+		msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+		SetBkColor(hdc, COLOR_transparent);
+		SetBkMode(hdc,BM_TRANSPARENT);
+		SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+		SelectFont(hdc, logfont_title);
+		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+
+//==================display volume icon============================
+
+		BITMAP *volume_display;
+
+			
+		if(get_volume()==0) volume_display=&volume_0;
+		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
+		else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
+		else volume_display=&volume_3;
+
+		FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
+							   VOLUME_PINT_W, VOLUME_PINT_H,
+									   volume_display);
+
+
 
 
         SetBkColor(hdc, COLOR_transparent);
@@ -161,11 +214,12 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
         DrawText(hdc, res_str[RES_STR_TITLE_WIFI], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        page = (WIFI_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
+        page = (WIFI_NUM + (sizeof(net_list)/sizeof(net_list[0])) -1 + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
         cur_page = list_sel / SETTING_NUM_PERPAGE;
 
         RECT msg_rcFilename;
-        msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
+		
+/*        msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
         msg_rcFilename.top = SETTING_LIST_STR_PINT_Y;
         msg_rcFilename.right = LCD_W - msg_rcFilename.left;
         msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
@@ -176,8 +230,9 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
             DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcFilename, DT_TOP);
         else
             DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcFilename, DT_TOP);
+*/
 
-        /*for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
+        for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
 
             if ((cur_page * SETTING_NUM_PERPAGE + i) >= WIFI_NUM)
                 break;
@@ -187,11 +242,46 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
             msg_rcFilename.right = LCD_W - msg_rcFilename.left;
             msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
 
-            if (i == list_sel)
-                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+            if (is_wifi_open)
+                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);				
+            SelectFont(hdc, logfont);
+            DrawText(hdc, res_str[RES_STR_WIFI_CONNECTION + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
 
-            DrawText(hdc, res_str[RES_STR_TITLE_WIFI + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
-        }*/
+			if (i == 0){	
+				msg_rcFilename.left = LCD_W - 100;
+				if (is_wifi_open){
+                    SelectFont(hdc, logfont);
+					DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcFilename, DT_TOP);
+					
+					// ==================display all wifi =======================
+                    for( j=0; j< (sizeof(net_list)/sizeof(net_list[0])); j++){
+ 
+                        msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
+						msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC*(j+1);
+						msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
+				        FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+						SelectFont(hdc, logfont);
+					    DrawText(hdc, net_list[j], -1, &msg_rcFilename, DT_TOP); 
+
+						msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
+           				msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC *(j+1);
+          				msg_rcFilename.right = LCD_W - msg_rcFilename.left;
+           				msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
+
+			            if (strcmp(get_wifi(), net_list[j]) == 0)  
+			                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
+			            else
+			                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
+
+					} 
+				}
+				else{
+					DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcFilename, DT_TOP);
+				}	
+			}
+        }
+
+	
 
         if (page > 1) {
             for (i = 0; i < page; i++) {
@@ -262,7 +352,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
         printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
         int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
         if(witch_button == 0) menu_back(hWnd,wParam,lParam);
-        if (witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
+        if (witch_button > 0 && witch_button < WIFI_WHOLE_BUTTON_NUM)
         {
             list_sel = witch_button - 1;
             InvalidateRect(hWnd, &msg_rcBg, TRUE);

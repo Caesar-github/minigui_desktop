@@ -588,14 +588,34 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                                WIFI_PINT_W, WIFI_PINT_H,
                                &wifi_bmap);
 #endif
-        RECT msg_rcTime;
-        char *sys_time_str[6];
-        snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-        msg_rcTime.left = TIME_PINT_X;
-        msg_rcTime.top = TIME_PINT_Y;
-        msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
-        msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
-        DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+		RECT msg_rcTime;
+		char *sys_time_str[6];
+		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+		msg_rcTime.left = REALTIME_PINT_X;
+		msg_rcTime.top = REALTIME_PINT_Y;
+		msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+		msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+		SetBkColor(hdc, COLOR_transparent);
+		SetBkMode(hdc,BM_TRANSPARENT);
+		SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+		SelectFont(hdc, logfont_title);
+		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+
+//==================display volume icon============================
+
+		BITMAP *volume_display;
+
+		
+		if(get_volume()==0) volume_display=&volume_0;
+		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
+		else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
+		else volume_display=&volume_3;
+
+		FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
+							   VOLUME_PINT_W, VOLUME_PINT_H,
+							   volume_display);
+
+
 
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
@@ -626,11 +646,11 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
                 if (((cur_dir_node->file_sel / FILE_NUM_PERPAGE) * FILE_NUM_PERPAGE + i) >= cur_dir_node->total)
                     break;
-                msg_rcFilename.left = BROWSER_LIST_STR_PINT_X;
+                msg_rcFilename.left = BROWSER_LIST_STR_PINT_X+BROWSER_LIST_PIC_PINT_W;
                 msg_rcFilename.top = BROWSER_LIST_STR_PINT_Y + BROWSER_LIST_STR_PINT_SPAC * i;
                 msg_rcFilename.right = LCD_W - msg_rcFilename.left;
                 msg_rcFilename.bottom = msg_rcFilename.top + BROWSER_LIST_STR_PINT_H;
-                FillBoxWithBitmap(hdc, 20, msg_rcFilename.top - 7, BROWSER_LIST_PIC_PINT_W, BROWSER_LIST_PIC_PINT_H, &type_bmap[file_node_temp->type]);
+                FillBoxWithBitmap(hdc, 20, msg_rcFilename.top, BROWSER_LIST_PIC_PINT_W, BROWSER_LIST_PIC_PINT_H, &type_bmap[file_node_temp->type]);
                 if (i == (cur_dir_node->file_sel % FILE_NUM_PERPAGE))
                     FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, BROWSER_LIST_SEL_PINT_H, &list_sel_bmap);
                 DrawText(hdc, file_node_temp->name, -1, &msg_rcFilename, DT_TOP);

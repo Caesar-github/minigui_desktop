@@ -38,16 +38,25 @@
 #define LCD_W    1024
 #define LCD_H    600
 
-#define TTF_FONT_SIZE     16
+#define TTF_FONT_SIZE    24
+#define TTF_TITLE_FONT_SIZE    16
+
 
 #define STATUS_BAR_ICO_SPAC    40
 
+
+#define REALTIME_PINT_X    (LCD_W - 50)
+#define REALTIME_PINT_Y    21
+#define REALTIME_PINT_W    100
+#define REALTIME_PINT_H    24
+
+
 #ifdef ENABLE_BATT
-#define BATT_PINT_X    LCD_W - 50
+#define BATT_PINT_X    (REALTIME_PINT_X -STATUS_BAR_ICO_SPAC)
 #else
 #define BATT_PINT_X    LCD_W
 #endif
-#define BATT_PINT_Y    20
+#define BATT_PINT_Y    25
 #define BATT_PINT_W    28
 #define BATT_PINT_H    15
 
@@ -56,17 +65,19 @@
 #else
 #define WIFI_PINT_X    BATT_PINT_X
 #endif
-#define WIFI_PINT_Y    15
+#define WIFI_PINT_Y    20
 #define WIFI_PINT_W    28
 #define WIFI_PINT_H    20
 
-#define TIME_PINT_X    (WIFI_PINT_X - STATUS_BAR_ICO_SPAC)
-#define TIME_PINT_Y    15
-#define TIME_PINT_W    28
-#define TIME_PINT_H    20
+#define VOLUME_PINT_X    (WIFI_PINT_X - STATUS_BAR_ICO_SPAC+3)
+#define VOLUME_PINT_Y    20
+#define VOLUME_PINT_W    28
+#define VOLUME_PINT_H    20
+
+
 
 #define BACK_PINT_X    10
-#define BACK_PINT_Y    10
+#define BACK_PINT_Y    15
 #define BACK_PINT_W    50
 #define BACK_PINT_H    30
 
@@ -82,12 +93,12 @@
 #define DESKTOP_DLG_STRING    "desktop"
 
 #define TITLE_PINT_X    80
-#define TITLE_PINT_Y    20
+#define TITLE_PINT_Y    15
 #define TITLE_PINT_W    130
-#define TITLE_PINT_H    24
+#define TITLE_PINT_H    40
 
 #define TITLE_LINE_PINT_X    0
-#define TITLE_LINE_PINT_Y    46
+#define TITLE_LINE_PINT_Y    60
 #define TITLE_LINE_PINT_W    LCD_W
 #define TITLE_LINE_PINT_H    2
 
@@ -196,16 +207,16 @@
 #define PLAYNEXT_PINT_Y     PLAYPREV_PINT_Y
 
 //browser_dialog
-#define BROWSER_LIST_STR_PINT_X    70
-#define BROWSER_LIST_STR_PINT_Y    57
+#define BROWSER_LIST_STR_PINT_X    30
+#define BROWSER_LIST_STR_PINT_Y    (TITLE_LINE_PINT_Y +TITLE_LINE_PINT_H + 9)
 #define BROWSER_LIST_STR_PINT_W    24
-#define BROWSER_LIST_STR_PINT_H    24
-#define BROWSER_LIST_STR_PINT_SPAC      36
+#define BROWSER_LIST_STR_PINT_H    44
+#define BROWSER_LIST_STR_PINT_SPAC      56
 
 #define BROWSER_LIST_PIC_PINT_W    32
 #define BROWSER_LIST_PIC_PINT_H    32
 
-#define BROWSER_LIST_SEL_PINT_H    36
+#define BROWSER_LIST_SEL_PINT_H    56
 
 #define FILE_NUM_PERPAGE  14
 
@@ -214,15 +225,15 @@
 #define BROWSER_PAGE_DOT_DIA  4
 #define BROWSER_PAGE_DOT_SPAC  40
 //setting
-#define SETTING_NUM_PERPAGE    14
+#define SETTING_NUM_PERPAGE    10
 
 #define SETTING_LIST_STR_PINT_X    30
-#define SETTING_LIST_STR_PINT_Y    57
+#define SETTING_LIST_STR_PINT_Y    (TITLE_LINE_PINT_Y +TITLE_LINE_PINT_H+9)
 #define SETTING_LIST_STR_PINT_W    24
-#define SETTING_LIST_STR_PINT_H    24
-#define SETTING_LIST_STR_PINT_SPAC      36
+#define SETTING_LIST_STR_PINT_H    44
+#define SETTING_LIST_STR_PINT_SPAC      56
 
-#define SETTING_LIST_SEL_PINT_H    36
+#define SETTING_LIST_SEL_PINT_H    56
 
 #define SETTING_LIST_DOT_PINT_X    LCD_W - 40
 #define SETTING_LIST_DOT_PINT_W    16
@@ -231,16 +242,33 @@
 #define SETTING_INFO_PINT_X    30
 #define SETTING_INFO_PINT_Y    70
 #define SETTING_INFO_PINT_W    LCD_W - SETTING_INFO_PINT_X *2
-#define SETTING_INFO_PINT_H    24
-#define SETTING_INFO_PINT_SPAC      30
+#define SETTING_INFO_PINT_H    44
+#define SETTING_INFO_PINT_SPAC      50
 
 #define SETTING_PAGE_DOT_X    (LCD_W / 2)
 #define SETTING_PAGE_DOT_Y    (LCD_H - 10)
 #define SETTING_PAGE_DOT_DIA  4
 #define SETTING_PAGE_DOT_SPAC  40
+
+//setting_volume_dialog
+#define VOLUME_LINE_X (LCD_W-500)/2
+#define VOLUME_LINE_Y (LCD_H-TITLE_LINE_PINT_Y)/2+TITLE_LINE_PINT_Y 
+#define VOLUME_LINE_W (500)
+#define VOLUME_LINE_H 4
+
+#define VOLUME_DATA_X (VOLUME_LINE_X + VOLUME_LINE_W +40)
+#define VOLUME_DATA_Y (VOLUME_LINE_Y -VOLUME_DATA_H/2)
+#define VOLUME_DATA_W 56
+#define VOLUME_DATA_H 30
+
+#define DOT_PINT_H 24
+#define DOT_PINT_W 24
+
+
+
 //videoplay_hw_dialog
 #define VIDEO_TOPBAR_H           48
-#define VIDEO_BOTTOMBAR_H        80
+#define VIDEO_BOTTOMBAR_H        120
 
 #define VIDEO_FILENAME_PINT_W    LCD_W
 #define VIDEO_FILENAME_PINT_H    24
@@ -278,4 +306,7 @@
 #define VIDEO_PLAYNEXT_PINT_H    48
 #define VIDEO_PLAYNEXT_PINT_X    (VIDEO_PLAYSTATUS_PINT_X + VIDEO_BUTTON_SPAC)
 #define VIDEO_PLAYNEXT_PINT_Y    VIDEO_PLAYPREV_PINT_Y
+
+
+
 #endif

@@ -25,13 +25,17 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 1
+#define WHOLE_BUTTON_NUM 3
 
 static int batt = 0;
 static char *model = 0;
 static char *verstion = 0;
 static char *model_disp = 0;
 static char *verstion_disp = 0;
+static BITMAP list_sel_bmap;
+static int list_sel = 0;
+
+
 
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
 
@@ -50,6 +54,8 @@ static int check_button(int x,int y)
 static int loadres(void)
 {
     int len;
+	char img[128];
+    char *respath = get_ui_image_path();
 
     loadversion(&model, &verstion);
     if (model) {
@@ -67,6 +73,11 @@ static int loadres(void)
         free(verstion);
         verstion = 0;
     }
+
+	snprintf(img, sizeof(img), "%slist_sel.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &list_sel_bmap, img))
+        return -1;
+	
     return 0;
 }
 
@@ -83,6 +94,8 @@ static void unloadres(void)
 
 static void version_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
+	InvalidateRect(hWnd, &msg_rcBg, TRUE);
+
     //todo
 }
 
@@ -147,14 +160,34 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
                                WIFI_PINT_W, WIFI_PINT_H,
                                &wifi_bmap);
 #endif
-        RECT msg_rcTime;
-        char *sys_time_str[6];
-        snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-        msg_rcTime.left = TIME_PINT_X;
-        msg_rcTime.top = TIME_PINT_Y;
-        msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
-        msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
-        DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+		RECT msg_rcTime;
+		char *sys_time_str[6];
+		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+		msg_rcTime.left = REALTIME_PINT_X;
+		msg_rcTime.top = REALTIME_PINT_Y;
+		msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+		msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+		SetBkColor(hdc, COLOR_transparent);
+		SetBkMode(hdc,BM_TRANSPARENT);
+		SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+		SelectFont(hdc, logfont_title);
+		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+
+//==================display volume icon============================
+
+		BITMAP *volume_display;
+
+			
+		if(get_volume()==0) volume_display=&volume_0;
+		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
+		else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
+		else volume_display=&volume_3;
+
+		FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
+							   VOLUME_PINT_W, VOLUME_PINT_H,
+							   volume_display);
+
+
 
 
         SetBkColor(hdc, COLOR_transparent);
@@ -169,16 +202,39 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         msg_rcInfo.right = LCD_W - msg_rcInfo.left;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
         if (model_disp)
+			SelectFont(hdc, logfont);
             DrawText(hdc, model_disp, -1, &msg_rcInfo, DT_TOP);
 
         msg_rcInfo.top += SETTING_INFO_PINT_SPAC;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
         if (verstion_disp)
+			SelectFont(hdc, logfont);
             DrawText(hdc, verstion_disp, -1, &msg_rcInfo, DT_TOP);
 
         msg_rcInfo.top += SETTING_INFO_PINT_SPAC;
+		msg_rcInfo.left = SETTING_INFO_PINT_X+9;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
+		SelectFont(hdc, logfont);
         DrawText(hdc, res_str[RES_STR_SYSTEM_UPGRAD], -1, &msg_rcInfo, DT_TOP);
+		FillBoxWithBitmap(hdc, SETTING_INFO_PINT_X, msg_rcInfo.top - 9, 112, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+
+
+		//==================if select upgrade============================
+
+//		RECT msg_rcFilename;
+
+//        msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
+//        msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * 2;
+//        msg_rcFilename.right = LCD_W - msg_rcFilename.left;
+//        msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
+
+//        for (i = 0; i < WHOLE_BUTTON_NUM; i++) {
+			
+//			if ( i == list_sel % SETTING_NUM_PERPAGE && i==2 )
+//				FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+  //      }
+		//==================if select upgrade============================
+
 /*
         msg_rcInfo.top += SETTING_INFO_PINT_SPAC;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
@@ -232,11 +288,13 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         if(witch_button == 0) menu_back(hWnd,wParam,lParam);
         if(witch_button == 3)
         {
+        	list_sel = witch_button - 1;
             printf("system upgrade!\n");
         }
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
         EnableScreenAutoOff();
+		InvalidateRect(hWnd, &msg_rcBg, TRUE);
         break;
     }
 

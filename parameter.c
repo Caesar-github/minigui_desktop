@@ -17,6 +17,7 @@
 #define BACKLIGHT_DEF    0
 #define GAMEDISP_DEF     0
 #define THEMESTYLE_DEF   0
+#define VOLUME_DEF       20
 
 struct parameter_data
 {
@@ -28,6 +29,8 @@ struct parameter_data
     int backlight_val;
     int gamedisp_val;
     int themestyle_val;
+	int volume_val;
+	char wifi_val[32];
 };
 
 static struct parameter_data para_data;
@@ -103,6 +106,9 @@ int parameter_recovery(void)
     set_backlight(BACKLIGHT_DEF);
     set_gamedisp(GAMEDISP_DEF);
     set_themestyle(THEMESTYLE_DEF);
+
+	set_volume(VOLUME_DEF);
+	set_wifi("");
 
     fpFile = fopen(PARAMETER_FILE, "wb+");
     if (fpFile <= 0) {
@@ -189,6 +195,29 @@ int get_themestyle(void)
 void set_themestyle(int val)
 {
     para_data.themestyle_val = val;
+    parameter_save();
+}
+
+int get_volume(void)
+{
+    return para_data.volume_val;
+}
+
+void set_volume(int val)
+{
+    para_data.volume_val = val;
+    parameter_save();
+}
+
+int get_wifi(void)
+{
+    return para_data.wifi_val;
+}
+
+void set_wifi(char* val)
+{
+
+    snprintf(para_data.wifi_val, sizeof(para_data.wifi_val), "%s",val);
     parameter_save();
 }
 

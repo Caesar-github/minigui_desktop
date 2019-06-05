@@ -128,14 +128,19 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
                                WIFI_PINT_W, WIFI_PINT_H,
                                &wifi_bmap);
 #endif
-        RECT msg_rcTime;
-        char *sys_time_str[6];
-        snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-        msg_rcTime.left = TIME_PINT_X;
-        msg_rcTime.top = TIME_PINT_Y;
-        msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
-        msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
-        DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+		RECT msg_rcTime;
+		char *sys_time_str[6];
+		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
+		msg_rcTime.left = REALTIME_PINT_X;
+		msg_rcTime.top = REALTIME_PINT_Y;
+		msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+		msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+		SetBkColor(hdc, COLOR_transparent);
+		SetBkMode(hdc,BM_TRANSPARENT);
+		SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+		SelectFont(hdc, logfont_title);
+		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+
 
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);

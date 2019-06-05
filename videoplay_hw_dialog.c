@@ -145,46 +145,56 @@ static void videoplayhw_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
     switch(lParam)
     {
         case 0:
-            menu_back(hWnd,wParam,lParam);
+            if (ui_hide_cnt != UI_HIDE_TIME) menu_back(hWnd,wParam,lParam);
             break;
         case 1:
-            printf("prev video\n");
-            if (file_select != 0)
-                file_select--;
-            else
-                file_select = file_total - 1;
-            cur_time = 0;
-            total_time = 0;
-            play_status = 1;
-            cur_file_node = get_cur_file_node(file_select);
-            media_exit();
-            video_play(hWnd, 0);
-            InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+			if (ui_hide_cnt != UI_HIDE_TIME) 
+			{
+	            printf("prev video\n");
+	            if (file_select != 0)
+	                file_select--;
+	            else
+	                file_select = file_total - 1;
+	            cur_time = 0;
+	            total_time = 0;
+	            play_status = 1;
+	            cur_file_node = get_cur_file_node(file_select);
+	            media_exit();
+	            video_play(hWnd, 0);
+	            InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+			}
             break;
         case 2:
-            printf("pause video\n");
-            play_status = play_status?0:1;
-            if (play_status)
-                media_restore();
-            else
-                media_pause();
-            InvalidateRect(hWnd, &msg_rcPlayStatus, TRUE);
+			if (ui_hide_cnt != UI_HIDE_TIME) 
+			{
+	            printf("pause video\n");
+	            play_status = play_status?0:1;
+	            if (play_status)
+	                media_restore();
+	            else
+	                media_pause();
+	            InvalidateRect(hWnd, &msg_rcPlayStatus, TRUE);
+			}
             break;
         case 3:
-            printf("next video\n");
-            if (file_select < file_total - 1)
-                file_select++;
-            else
-                file_select = 0;
-            cur_time = 0;
-            total_time = 0;
-            play_status = 1;
-            cur_file_node = get_cur_file_node(file_select);
-            media_exit();
-            video_play(hWnd, 0);
-            InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+			if (ui_hide_cnt != UI_HIDE_TIME) 
+			{
+	            printf("next video\n");
+	            if (file_select < file_total - 1)
+	                file_select++;
+	            else
+	                file_select = 0;
+	            cur_time = 0;
+	            total_time = 0;
+	            play_status = 1;
+	            cur_file_node = get_cur_file_node(file_select);
+	            media_exit();
+	            video_play(hWnd, 0);
+	            InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+			}
             break;
         case 10:
+			ui_hide_cnt = 0;
             if((cur_time - wParam / 10) < 0)
                 snprintf(seek_time, sizeof(seek_time), "%d", 0);
             else
@@ -194,6 +204,7 @@ static void videoplayhw_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
             media_seek_to((char*)seek_time);
             break;
         case 11:
+			ui_hide_cnt = 0;
             if((cur_time + wParam / 10) > total_time)
                 snprintf(seek_time, sizeof(seek_time), "%d", total_time - 1);
             else
@@ -327,29 +338,53 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
             RECT msg_rcTime;
             char *sys_time_str[6];
             snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-            msg_rcTime.left = TIME_PINT_X;
+            msg_rcTime.left = REALTIME_PINT_X;
+            msg_rcTime.top = REALTIME_PINT_Y;
+            msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+            msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+		    SetBkColor(hdc, COLOR_transparent);
+            SetBkMode(hdc,BM_TRANSPARENT);
+            SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+            SelectFont(hdc, logfont_title);
+            DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP); // real time
+
+			BITMAP *volume_display;
+
+			
+			if(get_volume()==0) volume_display=&volume_0;
+			else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
+			else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
+			else volume_display=&volume_3;
+
+			FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
+							   	VOLUME_PINT_W, VOLUME_PINT_H,
+							  	 volume_display);
+
+
+			msg_rcTime.left = TIME_PINT_X;
             msg_rcTime.top = TIME_PINT_Y;
             msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
             msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
-            DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
-
-
             SetBkColor(hdc, COLOR_transparent);
             SetBkMode(hdc,BM_TRANSPARENT);
             SetBrushColor(hdc, 0xff4f4f4f);
-            FillBox(hdc, VIDEO_PROGRESSBAR_PINT_X, VIDEO_PROGRESSBAR_PINT_Y, VIDEO_PROGRESSBAR_PINT_W, VIDEO_PROGRESSBAR_PINT_H);
+            FillBox(hdc, VIDEO_PROGRESSBAR_PINT_X, VIDEO_PROGRESSBAR_PINT_Y, VIDEO_PROGRESSBAR_PINT_W, VIDEO_PROGRESSBAR_PINT_H); //progressbar
             SetBrushColor(hdc, 0xffffffff);
             SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
             if (total_time)
-                FillBox(hdc, VIDEO_PROGRESSBAR_PINT_X, VIDEO_PROGRESSBAR_PINT_Y, VIDEO_PROGRESSBAR_PINT_W * cur_time / total_time, VIDEO_PROGRESSBAR_PINT_H);
+                FillBox(hdc, VIDEO_PROGRESSBAR_PINT_X, VIDEO_PROGRESSBAR_PINT_Y, VIDEO_PROGRESSBAR_PINT_W * cur_time / total_time, VIDEO_PROGRESSBAR_PINT_H);  //progressbar
             if (cur_file_node)
+				SelectFont(hdc, logfont_title);
                 DrawText(hdc, cur_file_node->name, -1, &msg_rcFilename, DT_TOP | DT_CENTER);
             snprintf(time_str, sizeof(time_str), "%02d:%02d/%02d:%02d", cur_time / 60, cur_time % 60, total_time / 60, total_time % 60);
-            DrawText(hdc, time_str, -1, &msg_rcTime, DT_TOP | DT_RIGHT);
+			SelectFont(hdc, logfont_title);
+			DrawText(hdc, time_str, -1, &msg_rcTime, DT_TOP | DT_RIGHT); //progress time 
+			
             FillBoxWithBitmap(hdc, VIDEO_PLAYSTATUS_PINT_X, VIDEO_PLAYSTATUS_PINT_Y, VIDEO_PLAYSTATUS_PINT_W, VIDEO_PLAYSTATUS_PINT_H, &playstatus_bmap[play_status]);
             FillBoxWithBitmap(hdc, VIDEO_PLAYPREV_PINT_X, VIDEO_PLAYPREV_PINT_Y, VIDEO_PLAYPREV_PINT_W, VIDEO_PLAYPREV_PINT_H, &playprev_bmap);
             FillBoxWithBitmap(hdc, VIDEO_PLAYNEXT_PINT_X, VIDEO_PLAYNEXT_PINT_Y, VIDEO_PLAYNEXT_PINT_W, VIDEO_PLAYNEXT_PINT_H, &playnext_bmap);
-            snprintf(filenum_str, sizeof(filenum_str), "%d/%d", file_select + 1, file_total);
+			snprintf(filenum_str, sizeof(filenum_str), "%d/%d", file_select + 1, file_total);
+			SelectFont(hdc, logfont_title);
             DrawText(hdc, filenum_str, -1, &msg_rcFileNum, DT_TOP | DT_CENTER);
         }
         EndPaint(hWnd, hdc);
@@ -361,10 +396,12 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
             total_time = lParam;
             InvalidateRect(hWnd, &msg_rcTime, TRUE);
             InvalidateRect(hWnd, &msg_rcProBar, TRUE);
+			InvalidateRect(hWnd, &msg_rcDialog, TRUE);
         } else if (wParam == MEDIA_CMD_CUR_TIME) {
             cur_time = lParam;
             InvalidateRect(hWnd, &msg_rcTime, TRUE);
             InvalidateRect(hWnd, &msg_rcProBar, TRUE);
+			InvalidateRect(hWnd, &msg_rcDialog, TRUE);
         } else if (wParam == MEDIA_CMD_END) {
             media_exit();
             EndDialog(hWnd, wParam);
@@ -384,24 +421,28 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
         touch_pos_up.x = LOSWORD(lParam);
         touch_pos_up.y = HISWORD(lParam);
         printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
-        ui_hide_cnt = 0;
-        if((touch_pos_down.x - touch_pos_up.x) > SLIDE_DISTANCE)
+		
+        if((touch_pos_down.x - touch_pos_up.x) > SLIDE_DISTANCE && ui_hide_cnt != UI_HIDE_TIME)
         {
             printf("seek back\n");
             videoplayhw_enter(hWnd, (touch_pos_down.x - touch_pos_up.x), 10);
         }
-        else if((touch_pos_up.x - touch_pos_down.x) > SLIDE_DISTANCE)
+        else if((touch_pos_up.x - touch_pos_down.x) > SLIDE_DISTANCE && ui_hide_cnt != UI_HIDE_TIME)
         {
             printf("seek forward\n");
             videoplayhw_enter(hWnd, (touch_pos_up.x - touch_pos_down.x), 11);
         }
         else
-        {
+        {			
             int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
             videoplayhw_enter(hWnd,wParam,witch_button);
+
+			if (ui_hide_cnt == UI_HIDE_TIME) ui_hide_cnt = 0;
+			else ui_hide_cnt = UI_HIDE_TIME;
         }
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
+		InvalidateRect(hWnd, &msg_rcDialog, TRUE);
         break;
     }
 

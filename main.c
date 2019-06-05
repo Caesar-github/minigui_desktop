@@ -41,15 +41,30 @@ BITMAP wifi_bmap;
 #endif
 BITMAP back_bmap;
 BITMAP background_bmap;
+
+BITMAP volume_0;
+BITMAP volume_1;
+BITMAP volume_2;
+BITMAP volume_3;
+
 int time_hour = 0;
 int time_min = 0;
 int time_sec = 0;
 int battery = 0;
+int systemtime_year = 2019;
+int systemtime_month = 5;
+int systemtime_day = 30;
+
+
 
 char *res_str[RES_STR_MAX] = {0};
 LOGFONT  *logfont_cej;
 LOGFONT  *logfont_k;
+LOGFONT  *logfont_cej_title;
+LOGFONT  *logfont_k_title;
 LOGFONT  *logfont;
+LOGFONT  *logfont_title;
+
 static int screenoff_cnt = 0;
 static int screenautooff = 1;
 HWND mhWnd;
@@ -137,18 +152,22 @@ int loadstringres(void)
         case LANGUAGE_CH:
             langFile = REC_FILE_CN;
             logfont = logfont_cej;
+		    logfont_title = logfont_cej_title;
             break;
         case LANGUAGE_EN:
             langFile = REC_FILE_EN;
             logfont = logfont_cej;
+			logfont_title = logfont_cej_title;
             break;
         case LANGUAGE_JA:
             langFile = REC_FILE_JA;
             logfont = logfont_cej;
+			logfont_title = logfont_cej_title;
             break;
         case LANGUAGE_KO:
             langFile = REC_FILE_KO;
             logfont = logfont_k;
+			logfont_title = logfont_k_title;
             break;
     }
     fp = fopen(langFile, "r");
@@ -237,6 +256,26 @@ int main_loadres(void)
     if (LoadBitmap(HDC_SCREEN, &background_bmap, img))
         return -1;
 
+//=================add vulume icon=======================
+	
+    snprintf(img, sizeof(img), "%svolume_0.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &volume_0, img))
+        return -1;
+	
+	snprintf(img, sizeof(img), "%svolume_1.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &volume_1, img))
+        return -1;
+	
+	snprintf(img, sizeof(img), "%svolume_2.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &volume_2, img))
+        return -1;
+	
+	snprintf(img, sizeof(img), "%svolume_3.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &volume_3, img))
+        return -1;
+
+
+	
     return 0;
 }
 
@@ -300,6 +339,10 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             main_loadres();
             logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
             logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
+			
+			logfont_cej_title = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_TITLE_FONT_SIZE, 0);
+			logfont_k_title = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_TITLE_FONT_SIZE, 0);
+		
             loadstringres();
             SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
 #ifdef ENABLE_BATT

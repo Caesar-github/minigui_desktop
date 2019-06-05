@@ -9389,6 +9389,9 @@ MG_EXPORT int GUIAPI DialogBoxIndirectParamEx (PDLGTEMPLATE pDlgTemplate,
 static inline int GUIAPI DialogBoxIndirectParam (PDLGTEMPLATE pDlgTemplate,
                 HWND hOwner, WNDPROC DlgProc, LPARAM lParam)
 {
+	printf("0.03/n");
+	printf("0.03/n");
+	printf("0.03/n");
     return DialogBoxIndirectParamEx (pDlgTemplate, hOwner, DlgProc, lParam,
                 NULL, NULL, NULL, NULL);
 }

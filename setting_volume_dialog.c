@@ -25,14 +25,13 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 7
+#define WHOLE_BUTTON_NUM 3
 
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
-#define SCREENOFF_NUM    (RES_STR_SCREENOFF_6 - RES_STR_SCREENOFF_1 + 1)
-static int val_table[SCREENOFF_NUM] = {5, 10, 15, 30, 60, -1};
+#define VOLUME_NUM    2
 
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
 
@@ -77,10 +76,9 @@ static void unloadres(void)
     }
 }
 
-static void screenoff_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
+static void volume_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
-    set_screenoff(list_sel);
-    set_screenoff_val(val_table[list_sel]);
+
     InvalidateRect(hWnd, &msg_rcBg, TRUE);
 }
 
@@ -89,7 +87,7 @@ static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
     EndDialog(hWnd, wParam);
 }
 
-static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT setting_volume_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
 
@@ -105,11 +103,11 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
             SetFocus(hFocus);
         batt = battery;
         list_sel = 0;
-        SetTimer(hWnd, _ID_TIMER_SETTING_SCREENOFF, TIMER_SETTING_SCREENOFF);
+        SetTimer(hWnd, _ID_TIMER_SETTING_VOLUME, TIMER_SETTING_VOLUME);
         return 0;
     }
     case MSG_TIMER: {
-        if (wParam == _ID_TIMER_SETTING_SCREENOFF) {
+        if (wParam == _ID_TIMER_SETTING_VOLUME) {
 #ifdef ENABLE_BATT
             if (batt != battery) {
                 batt = battery;
@@ -159,10 +157,9 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
 		SelectFont(hdc, logfont_title);
 		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
 
-		//==================display volume icon============================
+//==================display volume icon============================
 
 		BITMAP *volume_display;
-
 			
 		if(get_volume()==0) volume_display=&volume_0;
 		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
@@ -174,39 +171,59 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
 							   volume_display);
 
 
+
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
         SelectFont(hdc, logfont);
-        DrawText(hdc, res_str[RES_STR_TITLE_SCREENOFF], -1, &msg_rcTitle, DT_TOP);
+        DrawText(hdc, res_str[RES_STR_TITLE_VOLUME], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        page = (SCREENOFF_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
+        page = (VOLUME_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
         cur_page = list_sel / SETTING_NUM_PERPAGE;
 
-        for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
-            RECT msg_rcFilename;
+//        for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
+//            RECT msg_rcFilename;
 
-            if ((cur_page * SETTING_NUM_PERPAGE + i) >= SCREENOFF_NUM)
-                break;
+//            if ((cur_page * SETTING_NUM_PERPAGE + i) >= VOLUME_NUM)
+//                break;
 
-            msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
-            msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * i;
-            msg_rcFilename.right = LCD_W - msg_rcFilename.left;
-            msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
+//            msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
+//            msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * i;
+//            msg_rcFilename.right = LCD_W - msg_rcFilename.left;
+//            msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
 
-            if (i == list_sel % SETTING_NUM_PERPAGE)
-                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+//            if (i == list_sel % SETTING_NUM_PERPAGE)
+//                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
 
-            if ((cur_page * SETTING_NUM_PERPAGE + i) == get_screenoff())
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
-            else
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
-            SelectFont(hdc, logfont);
-            DrawText(hdc, res_str[RES_STR_SCREENOFF_1 + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
-        }
+ //           if ((cur_page * SETTING_NUM_PERPAGE + i) == get_volume())
+ //               FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
+ //           else
+ //               FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
 
-        if (page > 1) {
+ //           DrawText(hdc, res_str[RES_STR_VOLUME + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+ //       }
+
+      FillBox(hdc,VOLUME_LINE_X,VOLUME_LINE_Y,VOLUME_LINE_W,VOLUME_LINE_H );
+	  FillBoxWithBitmap(hdc, VOLUME_LINE_X+((get_volume())*VOLUME_LINE_W/100)-(DOT_PINT_W/2),VOLUME_LINE_Y-(DOT_PINT_H/2)+2,DOT_PINT_W, DOT_PINT_H, &seldot_bmap[1]);
+
+      char *volume_str[4];
+	  snprintf(volume_str, sizeof(volume_str), "%d", get_volume());
+	  
+      RECT msg_rcFilename;
+      msg_rcFilename.left = VOLUME_DATA_X;
+      msg_rcFilename.top = VOLUME_DATA_Y;
+      msg_rcFilename.right = VOLUME_DATA_X+VOLUME_DATA_W;
+      msg_rcFilename.bottom = VOLUME_DATA_Y+VOLUME_DATA_H;  
+
+      SetBkColor(hdc, COLOR_transparent);
+	  SetBkMode(hdc,BM_TRANSPARENT);
+      SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+	  SelectFont(hdc, logfont);
+	  DrawText(hdc, volume_str, -1, &msg_rcFilename, DT_TOP);
+
+
+       if (page > 1) {
             for (i = 0; i < page; i++) {
                 int x;
                 if (page == 1)
@@ -233,7 +250,7 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                 EndDialog(hWnd, wParam);
                 break;
             case KEY_DOWN_FUNC:
-                if (list_sel < (SCREENOFF_NUM - 1))
+                if (list_sel < (VOLUME_NUM - 1))
                     list_sel++;
                 else
                     list_sel = 0;
@@ -243,12 +260,14 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                  if (list_sel > 0)
                     list_sel--;
                 else
-                    list_sel = SCREENOFF_NUM - 1;
+                    list_sel = VOLUME_NUM - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case KEY_ENTER_FUNC:
-                set_screenoff(list_sel);
-                set_screenoff_val(val_table[list_sel]);
+  //
+  //
+  //
+  //
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
         }
@@ -257,13 +276,28 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         break;
     }
     case MSG_DESTROY:
-        KillTimer(hWnd, _ID_TIMER_SETTING_SCREENOFF);
+        KillTimer(hWnd, _ID_TIMER_SETTING_VOLUME);
         unloadres();
         break;
     case MSG_LBUTTONDOWN:
         touch_pos_down.x = LOSWORD(lParam);
         touch_pos_down.y = HISWORD(lParam);
         printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+
+
+		int button = check_button(touch_pos_down.x,touch_pos_down.y);
+        if(button !=0 )  // exclude exit button
+        {
+
+
+			if (touch_pos_down.x <= VOLUME_LINE_X) set_volume(0);
+			else if ( touch_pos_down.x >= VOLUME_LINE_X +VOLUME_LINE_W ) set_volume(100);
+			else set_volume( (touch_pos_down.x-VOLUME_LINE_X)*100/VOLUME_LINE_W);
+			
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+        }
+
+		
         break;
     case MSG_LBUTTONUP:
         if (get_bl_brightness() == 0)
@@ -281,19 +315,18 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         {
             list_sel = witch_button - 1;
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            screenoff_enter(hWnd,wParam,list_sel);
+            volume_enter(hWnd,wParam,list_sel);
         }
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
         EnableScreenAutoOff();
         break;
-
     }
 
     return DefaultDialogProc(hWnd, message, wParam, lParam);
 }
 
-void creat_setting_screenoff_dialog(HWND hWnd)
+void creat_setting_volume_dialog(HWND hWnd)
 {
     DLGTEMPLATE DesktopDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
     	                        0, 0,
@@ -301,5 +334,6 @@ void creat_setting_screenoff_dialog(HWND hWnd)
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0};
     //DesktopDlg.controls = DesktopCtrl;
 
-    DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_screenoff_dialog_proc, 0L);
+    DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_volume_dialog_proc, 0L);
 }
+
