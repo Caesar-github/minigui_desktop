@@ -30,7 +30,7 @@
 static BITMAP list_sel_bmap;
 static int list_sel = 0;
 static int batt = 0;
-#define SETTING_LIST_NUM    (RES_STR_TITLE_INFO - RES_STR_TITLE_LANGUAGE + 1)
+#define SETTING_LIST_NUM    (RES_STR_TITLE_INFO - RES_STR_TITLE_GENERAL + 1)
 
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
 
@@ -57,7 +57,6 @@ static int loadres(void)
     //printf("%s\n", img);
     if (LoadBitmap(HDC_SCREEN, &list_sel_bmap, img))
         return -1;
-
     return 0;
 }
 
@@ -71,26 +70,16 @@ static void recovery(HWND hWnd)
     int ret = -1;
 
     ret = MessageBox_ex(hWnd, res_str[RES_STR_WARNING_RECOVERY], 0, MB_YESNO | MB_DEFBUTTON2);
-		printf("0\n");
-		printf("0\n");
-		printf("0\n");
+
 
     if (ret == IDYES) {
-		printf("1\n");
-		printf("1\n");
-		printf("1\n");
+
         parameter_recovery();
-		printf("2\n");
-		printf("2\n");
-		printf("2\n");
+
         screenon();
-		printf("3\n");
-		printf("3\n");
-		printf("3v");
+
         loadstringres();
-		printf("4\n");
-		printf("4\n");
-		printf("4\n");
+
     }
 }
 
@@ -98,41 +87,26 @@ static void setting_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
     switch (lParam) {
         case 0:
-            creat_setting_language_dialog(hWnd);
+            creat_setting_general_dialog(hWnd);
             break;
 
 		case 1:
-            creat_setting_volume_dialog(hWnd);
-            break;
-		
-        case 2:
             creat_setting_wifi_dialog(hWnd);
             break;
-        case 3: {
-            int oldstyle = get_themestyle();
-            creat_setting_themestyle_dialog(hWnd);
-            if (oldstyle != get_themestyle()) {
-                unloadres();
-                loadres();
-                InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            }
+		
+        case 2:			
+            creat_setting_airkiss_dialog(hWnd);	
             break;
-        }
-        case 4:
-            creat_setting_screenoff_dialog(hWnd);
-            break;
-        case 5:
-            creat_setting_backlight_dialog(hWnd);
-            break;
-		case 6:
-            creat_setting_systemtime_dialog(hWnd);
-            break;
-        case 7:	
-//            recovery(hWnd);
- //           InvalidateRect(hWnd, &msg_rcBg, TRUE);
+		 
+		case 3:
+             creat_setting_systemtime_dialog(hWnd);
+             break;
+		
+        case 4:	
+
  			creat_setting_recovery_dialog(hWnd);
             break;
-        case 8:
+        case 5:
             creat_setting_version_dialog(hWnd);
             break;
     }
@@ -171,6 +145,11 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
+#ifdef ENABLE_WIFI
+				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
+#endif
+
+
         }
         break;
     }
@@ -197,10 +176,25 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                                &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-        FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                               WIFI_PINT_W, WIFI_PINT_H,
-                               &wifi_bmap);
+		if(get_wifi()==RK_WIFI_State_IDLE) 
+		{
+        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_disabled_bmap);
+			}
+		else if(get_wifi()==RK_WIFI_State_CONNECTED){
+			        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_connected_bmap);
+		}
+		else{
+			FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+									 WIFI_PINT_W, WIFI_PINT_H,
+									&wifi_disconnected_bmap);
+		}
+		
 #endif
+
 		RECT msg_rcTime;
 		char *sys_time_str[6];
 		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
@@ -255,7 +249,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             if (i == list_sel % SETTING_NUM_PERPAGE)
                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
 			SelectFont(hdc, logfont);
-            DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+            DrawText(hdc, res_str[RES_STR_TITLE_GENERAL + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
         }
 #else
         RECT msg_rcFilename;
@@ -265,9 +259,9 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
         if (i == 0)
             FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
-        DrawText(hdc, res_str[RES_STR_TITLE_LANGUAGE], -1, &msg_rcFilename, DT_TOP);
+        DrawText(hdc, res_str[RES_STR_TITLE_GENERAL], -1, &msg_rcFilename, DT_TOP);
 		
-        for (i = 0; i < SETTING_NUM_PERPAGE - 2; i++) {
+        for (i = 0; i < SETTING_NUM_PERPAGE - 3; i++) {
 
             if ((cur_page * SETTING_NUM_PERPAGE + i) >= SETTING_LIST_NUM)
                 break;
@@ -279,7 +273,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
             if (i == list_sel % SETTING_NUM_PERPAGE)
                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
-            DrawText(hdc, res_str[RES_STR_TITLE_WIFI + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+            DrawText(hdc, res_str[RES_STR_TITLE_SYSTEMTIME + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
         }
 #endif
 

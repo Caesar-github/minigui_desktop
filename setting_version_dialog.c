@@ -35,6 +35,11 @@ static char *verstion_disp = 0;
 static BITMAP list_sel_bmap;
 static int list_sel = 0;
 
+int update_flag = -1;  // -1 means do not find update files yet
+					   // 0 means find no update file 
+					   // 1 meas update file exist	
+
+char update_cmd[128];
 
 
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
@@ -94,6 +99,51 @@ static void unloadres(void)
 
 static void version_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
+	switch (lParam) 
+	{	
+			printf("1Param: %d\n",lParam);
+			printf("1Param: %d\n",lParam);
+			printf("1Param: %d\n",lParam);
+			printf("1Param: %d\n",lParam);
+		case 2:
+		{
+			int ret1,ret2,ret3;
+			char cmd[128] = "ls /udisk/update.img" ;
+			ret1 = system(cmd);
+			if (ret1)  fprintf(stderr, "no update file in udisk  ret1= %d  \n ", ret1);
+
+			snprintf(cmd, sizeof(cmd), "ls /sdcard/update.img");
+			ret2 = system(cmd);
+			if (ret2)  fprintf(stderr, "no update file in sdcard  ret2= %d  \n", ret2);
+
+			snprintf(cmd, sizeof(cmd), "ls /userdata/update.img");
+			ret3 = system(cmd);
+			if (ret3)  fprintf(stderr, "no update file in userdata  ret3= %d  \n", ret3);
+
+
+			if ((ret1 ==512) && (ret2 ==512) && (ret3 == 512)) 
+			{
+				update_flag = 0;	
+			}
+			else if (ret1 ==0 || ret2 ==0 || ret3 ==0 )
+			{
+				update_flag = 1;
+
+				if (!ret1) snprintf(update_cmd, sizeof(update_cmd), "update ota /udisk/update.img");
+				else if (!ret2) snprintf(update_cmd, sizeof(update_cmd), "update ota /sdcard/update.img");
+				else if (!ret3) snprintf(update_cmd, sizeof(update_cmd), "update ota /userdata/update.img");
+			}
+
+			printf("update_flag: %d \n",update_flag);
+			printf("update_flag: %d \n",update_flag);
+			printf("update_flag: %d \n",update_flag);
+			printf("update_flag: %d \n",update_flag);
+			
+			break;
+		}
+			
+	}
+
 	InvalidateRect(hWnd, &msg_rcBg, TRUE);
 
     //todo
@@ -130,6 +180,23 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
+#ifdef ENABLE_WIFI
+				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
+#endif
+		static int l;
+		if(update_flag==1)
+		{
+		 	l++;
+			
+			InvalidateRect(hWnd, &msg_rcBg, TRUE);
+			if(l==3)   //delay 3s
+				{
+					update_flag =-1;
+					l=0;
+					system(update_cmd);
+				}
+		}
+
         }
         break;
     }
@@ -156,10 +223,25 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
                                &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-        FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                               WIFI_PINT_W, WIFI_PINT_H,
-                               &wifi_bmap);
+		if(get_wifi()==RK_WIFI_State_IDLE) 
+		{
+        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_disabled_bmap);
+			}
+		else if(get_wifi()==RK_WIFI_State_CONNECTED){
+			        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_connected_bmap);
+		}
+		else{
+			FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+									 WIFI_PINT_W, WIFI_PINT_H,
+									&wifi_disconnected_bmap);
+		}
+		
 #endif
+
 		RECT msg_rcTime;
 		char *sys_time_str[6];
 		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
@@ -219,31 +301,25 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
 		FillBoxWithBitmap(hdc, SETTING_INFO_PINT_X, msg_rcInfo.top - 9, 112, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
 
 
-		//==================if select upgrade============================
-
-//		RECT msg_rcFilename;
-
-//        msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
-//        msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * 2;
-//        msg_rcFilename.right = LCD_W - msg_rcFilename.left;
-//        msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
-
-//        for (i = 0; i < WHOLE_BUTTON_NUM; i++) {
-			
-//			if ( i == list_sel % SETTING_NUM_PERPAGE && i==2 )
-//				FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
-  //      }
-		//==================if select upgrade============================
-
-/*
-        msg_rcInfo.top += SETTING_INFO_PINT_SPAC;
+        msg_rcInfo.left = SETTING_INFO_PINT_X;
+        msg_rcInfo.top = SETTING_INFO_PINT_Y+ SETTING_INFO_PINT_SPAC*4;
+        msg_rcInfo.right = LCD_W ;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
-        DrawText(hdc, res_str[RES_STR_INFO_UDISKCAP], -1, &msg_rcInfo, DT_TOP);
+		SelectFont(hdc, logfont);
 
-        msg_rcInfo.top += SETTING_INFO_PINT_SPAC;
-        msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
-        DrawText(hdc, res_str[RES_STR_INFO_UDISKAVACAP], -1, &msg_rcInfo, DT_TOP);
-*/
+
+		if(update_flag==1) 
+		{
+			DrawText(hdc, res_str[RES_STR_RECOVERY_SOON], -1, &msg_rcInfo, DT_TOP);
+		}
+		else if (update_flag==0)
+		{
+			DrawText(hdc, res_str[RES_STR_NO_UPDATE_FILE], -1, &msg_rcInfo, DT_TOP);
+			update_flag =-1;
+		}
+
+
+
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
         break;
@@ -289,6 +365,7 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         if(witch_button == 3)
         {
         	list_sel = witch_button - 1;
+			version_enter(hWnd,wParam,list_sel);
             printf("system upgrade!\n");
         }
         touch_pos_old.x = touch_pos_up.x;

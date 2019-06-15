@@ -5,6 +5,9 @@
 #ifndef _PARAMETER_H_
 #define _PARAMETER_H_
 
+#include <DeviceIo/Rk_wifi.h>
+
+
 int parameter_recovery(void);
 int get_language(void);
 void set_language(int val);
@@ -26,8 +29,10 @@ void parameter_deinit(void);
 int get_volume(void);
 void set_volume(int val);
 int get_wifi(void);
-void set_wifi(char*   val);
-
-
+void set_wifi(RK_WIFI_RUNNING_State_e   val);
+void set_wifi_date(char *ssid, char*psk);
+char* get_wifi_ssid(void);
+char* get_wifi_psk(void);
+int test_wifi_pwd(void);
 
 #endif

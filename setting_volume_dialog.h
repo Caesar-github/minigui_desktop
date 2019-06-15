@@ -37,4 +37,7 @@
 
 void creat_setting_volume_dialog(HWND hWnd);
 
+void *get_available_wifi( void *ptr );
+	
+
 #endif

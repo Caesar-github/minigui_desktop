@@ -24,11 +24,22 @@ extern MG_EXPORT PLOGFONT g_SysLogFont [];
 #include "desktop_dialog.h"
 #include "hardware.h"
 
+#include <DeviceIo/Rk_wifi.h>
+
+
+
 char timebuff[100];
 static RECT msg_rcTime = {TIME_PINT_X, TIME_PINT_Y, TIME_PINT_X + TIME_PINT_W, TIME_PINT_Y + TIME_PINT_H};
 #ifdef ENABLE_BATT
 RECT msg_rcBatt = {BATT_PINT_X, BATT_PINT_Y, BATT_PINT_X + BATT_PINT_W, BATT_PINT_Y + BATT_PINT_H};
 #endif
+
+#ifdef ENABLE_WIFI
+RECT msg_rcWifi = {WIFI_PINT_X, WIFI_PINT_Y, WIFI_PINT_X + WIFI_PINT_W, WIFI_PINT_Y + WIFI_PINT_H};
+#endif
+
+
+
 RECT msg_rcBg = {BG_PINT_X, BG_PINT_Y, BG_PINT_X + BG_PINT_W, BG_PINT_Y + BG_PINT_H};
 RECT msg_rcTitle = {TITLE_PINT_X, TITLE_PINT_Y, TITLE_PINT_X + TITLE_PINT_W, TITLE_PINT_Y + TITLE_PINT_H};
 RECT msg_rcDialog = {0, 0, LCD_W, LCD_H};
@@ -38,7 +49,11 @@ BITMAP batt_bmap[6];
 #endif
 #ifdef ENABLE_WIFI
 BITMAP wifi_bmap;
+BITMAP wifi_connected_bmap;
+BITMAP wifi_disconnected_bmap;
+BITMAP wifi_disabled_bmap;
 #endif
+
 BITMAP back_bmap;
 BITMAP background_bmap;
 
@@ -46,6 +61,15 @@ BITMAP volume_0;
 BITMAP volume_1;
 BITMAP volume_2;
 BITMAP volume_3;
+BITMAP airkiss_bmap;
+BITMAP list_sel1_bmap;
+BITMAP wifi_signal_3;
+BITMAP wifi_signal_2;
+BITMAP wifi_signal_1;
+BITMAP input_box;
+
+
+
 
 int time_hour = 0;
 int time_min = 0;
@@ -228,6 +252,41 @@ void sysUsecTime(char* buff)
     sprintf(buff, "%04d-%02d-%02d %02d:%02d:%02d %03d", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000);
 }
 
+
+#ifdef ENABLE_WIFI
+
+int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
+{
+	printf("%s state: %d\n", __func__, state);
+
+	set_wifi(state);
+ //   if (get_bl_brightness() == 0)
+ //   {
+ //       screenon();
+ //   }
+//	DesktopUpdateAllWindow();
+
+	if (state == RK_WIFI_State_CONNECTED) {
+		printf("RK_WIFI_State_CONNECTED\n");
+	
+	} else if (state == RK_WIFI_State_CONNECTFAILED) {
+		printf("RK_WIFI_State_CONNECTFAILED\n");
+	} else if (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY) {
+		printf("RK_WIFI_State_CONNECTFAILED_WRONG_KEY\n");
+	}
+	 else if (state == RK_WIFI_State_CONNECTING) {
+		printf("RK_WIFI_State_CONNECTING\n");
+		set_wifi_date(wifi_date.ssid,wifi_date.psk);
+	}
+
+	return 0;
+
+}
+
+#endif
+
+
+
 int main_loadres(void)
 {
     int i;
@@ -243,9 +302,23 @@ int main_loadres(void)
 #endif
 
 #ifdef ENABLE_WIFI
-    snprintf(img, sizeof(img), "%swifi.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &wifi_bmap, img))
-        return -1;
+   snprintf(img, sizeof(img), "%swifi.png", respath);
+   if (LoadBitmap(HDC_SCREEN, &wifi_bmap, img)) 
+		return -1;
+
+   snprintf(img, sizeof(img), "%swifi_connected.png", respath);
+   if (LoadBitmap(HDC_SCREEN, &wifi_connected_bmap, img)) 
+   	    return -1;
+   
+   snprintf(img, sizeof(img), "%swifi_disconnected.png", respath);
+   if (LoadBitmap(HDC_SCREEN, &wifi_disconnected_bmap, img)) 
+   	    return -1;   
+   
+   snprintf(img, sizeof(img), "%swifi_disabled.png", respath);
+   if (LoadBitmap(HDC_SCREEN, &wifi_disabled_bmap, img)) 
+   	    return -1;  
+
+	
 #endif
 
     snprintf(img, sizeof(img), "%sback.png", respath);
@@ -275,6 +348,30 @@ int main_loadres(void)
         return -1;
 
 
+	snprintf(img, sizeof(img), "%sairkiss.jpg", respath);
+    if (LoadBitmap(HDC_SCREEN, &airkiss_bmap, img))
+        return -1;
+
+
+	snprintf(img, sizeof(img), "%swifi_signal_3.png", respath);
+	if (LoadBitmap(HDC_SCREEN, &wifi_signal_3, img))
+		return -1;
+
+	snprintf(img, sizeof(img), "%swifi_signal_2.png", respath);
+	if (LoadBitmap(HDC_SCREEN, &wifi_signal_2, img))
+		return -1;
+
+	snprintf(img, sizeof(img), "%swifi_signal_1.png", respath);
+	if (LoadBitmap(HDC_SCREEN, &wifi_signal_1, img))
+		return -1;
+
+	snprintf(img, sizeof(img), "%sinput_box.png", respath);
+	if (LoadBitmap(HDC_SCREEN, &input_box, img))
+		return -1;
+
+	snprintf(img, sizeof(img), "%slist_sel1.png", respath);
+	if (LoadBitmap(HDC_SCREEN, &list_sel1_bmap, img))
+		return -1;
 	
     return 0;
 }
@@ -345,9 +442,35 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		
             loadstringres();
             SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
+
+
 #ifdef ENABLE_BATT
             batt_update();
 #endif
+
+#ifdef ENABLE_WIFI
+			
+				if(get_wifi())
+				{
+					RK_wifi_enable(1);
+					set_wifi(RK_WIFI_State_DISCONNECTED);
+					int iret1;
+					iret1 = pthread_create( &thread1, NULL, get_available_wifi, (void*) message1);
+				//	pthread_detach(&thread1);
+					printf("Thread 1 returns: %d\n",iret1);  // return 0 if seccuess
+			
+				}
+				else
+				{
+					RK_wifi_enable(0);
+					set_wifi(RK_WIFI_State_IDLE);
+			
+				}
+			
+				
+#endif
+
+
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             RegisterMainWindow(hWnd);
             mhWnd = hWnd;
@@ -449,7 +572,10 @@ int MiniGUIMain(int args, const char* arg[])
 #ifdef _MGRM_PROCESSES
     JoinLayer (NAME_DEF_LAYER, arg[0], 0, 0);
 #endif
+
+
     parameter_init();
+	keyboard_init();
     screenon();
     InitCreateInfo (&CreateInfo);
 

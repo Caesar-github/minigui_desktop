@@ -131,6 +131,9 @@ static void unloadres(void)
             UnloadBitmap(&photo_bmap[j][i]);
 }
 
+
+
+
 static void desktop_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     switch(lParam)
@@ -203,6 +206,10 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                             InvalidateRect(hWnd, &msg_rcBatt, TRUE);
                         }
 #endif
+#ifdef ENABLE_WIFI
+				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
+#endif
+
         }
         break;
     }
@@ -229,10 +236,25 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                                    &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-            FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                                   WIFI_PINT_W, WIFI_PINT_H,
-                                   &wifi_bmap);
+		if(get_wifi()==RK_WIFI_State_IDLE) 
+		{
+        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_disabled_bmap);
+			}
+		else if(get_wifi()==RK_WIFI_State_CONNECTED){
+			        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_connected_bmap);
+		}
+		else{
+			FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+									 WIFI_PINT_W, WIFI_PINT_H,
+									&wifi_disconnected_bmap);
+		}
+		
 #endif
+
             RECT msg_rcTime;
             char *sys_time_str[6];
             snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);

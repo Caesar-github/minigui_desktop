@@ -32,11 +32,13 @@
  * SOFTWARE.
  */
 
-#ifndef __SETTING_WIFI_DIALOG_H__
-#define __SETTING_WIFI_DIALOG_H__
+#ifndef __INPUT_DIALOG_H__
+#define __INPUT_DIALOG_H__
 
-void creat_setting_wifi_dialog(HWND hWnd);
-void *get_available_wifi( void *ptr );
+void creat_input_dialog(HWND hWnd);
+
+void keyboard_init();
 
 
 #endif
+

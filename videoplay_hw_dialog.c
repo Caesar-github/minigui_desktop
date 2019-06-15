@@ -157,11 +157,12 @@ static void videoplayhw_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 	                file_select = file_total - 1;
 	            cur_time = 0;
 	            total_time = 0;
+				ui_hide_cnt = 0;
 	            play_status = 1;
 	            cur_file_node = get_cur_file_node(file_select);
 	            media_exit();
 	            video_play(hWnd, 0);
-	            InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+	  //          InvalidateRect(hWnd, &msg_rcDialog, TRUE);
 			}
             break;
         case 2:
@@ -169,11 +170,12 @@ static void videoplayhw_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 			{
 	            printf("pause video\n");
 	            play_status = play_status?0:1;
+				ui_hide_cnt = 0;
 	            if (play_status)
 	                media_restore();
 	            else
 	                media_pause();
-	            InvalidateRect(hWnd, &msg_rcPlayStatus, TRUE);
+	  //          InvalidateRect(hWnd, &msg_rcPlayStatus, TRUE);
 			}
             break;
         case 3:
@@ -186,11 +188,12 @@ static void videoplayhw_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 	                file_select = 0;
 	            cur_time = 0;
 	            total_time = 0;
+				ui_hide_cnt = 0;
 	            play_status = 1;
 	            cur_file_node = get_cur_file_node(file_select);
 	            media_exit();
 	            video_play(hWnd, 0);
-	            InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+	   //         InvalidateRect(hWnd, &msg_rcDialog, TRUE);
 			}
             break;
         case 10:
@@ -213,7 +216,10 @@ static void videoplayhw_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
             //                seek_time,cur_time,wParam / 10,total_time);
             media_seek_to((char*)seek_time);
             break;
-        default:break;
+        default:
+        	if (ui_hide_cnt == UI_HIDE_TIME) ui_hide_cnt = 0;
+			else ui_hide_cnt = UI_HIDE_TIME;
+			break;
     }
 }
 
@@ -261,6 +267,10 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
+#ifdef ENABLE_WIFI
+				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
+#endif
+
         }
         break;
     case MSG_KEYDOWN:
@@ -331,10 +341,25 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                                    &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-            FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                                   WIFI_PINT_W, WIFI_PINT_H,
-                                   &wifi_bmap);
+		if(get_wifi()==RK_WIFI_State_IDLE) 
+		{
+        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_disabled_bmap);
+			}
+		else if(get_wifi()==RK_WIFI_State_CONNECTED){
+			        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_connected_bmap);
+		}
+		else{
+			FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+									 WIFI_PINT_W, WIFI_PINT_H,
+									&wifi_disconnected_bmap);
+		}
+		
 #endif
+
             RECT msg_rcTime;
             char *sys_time_str[6];
             snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
@@ -433,12 +458,10 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
             videoplayhw_enter(hWnd, (touch_pos_up.x - touch_pos_down.x), 11);
         }
         else
-        {			
+        {		
+			
             int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
             videoplayhw_enter(hWnd,wParam,witch_button);
-
-			if (ui_hide_cnt == UI_HIDE_TIME) ui_hide_cnt = 0;
-			else ui_hide_cnt = UI_HIDE_TIME;
         }
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;

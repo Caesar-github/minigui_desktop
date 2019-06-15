@@ -558,6 +558,10 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
+#ifdef ENABLE_WIFI
+				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
+#endif
+
         }
 
         break;
@@ -584,9 +588,23 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                                &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-        FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                               WIFI_PINT_W, WIFI_PINT_H,
-                               &wifi_bmap);
+		if(get_wifi()==RK_WIFI_State_IDLE) 
+		{
+        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_disabled_bmap);
+			}
+		else if(get_wifi()==RK_WIFI_State_CONNECTED){
+			        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_connected_bmap);
+		}
+		else{
+			FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+									 WIFI_PINT_W, WIFI_PINT_H,
+									&wifi_disconnected_bmap);
+		}
+		
 #endif
 		RECT msg_rcTime;
 		char *sys_time_str[6];

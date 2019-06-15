@@ -23,6 +23,10 @@ OBJ = audioplay_dialog.o \
       setting_volume_dialog.o \
       setting_recovery_dialog.o \
       setting_version_dialog.o \
+      setting_airkiss_dialog.o \
+      setting_general_dialog.o \
+      input_dialog.o \
+      cJSON.o \
       sysfs.o \
       system.o \
 
@@ -32,7 +36,7 @@ CFLAGS ?= -I./include \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -L$(STAGING_DIR)/usr/lib \
 	  -lpthread -lminigui_ths -ljpeg -lpng -lm \
-	  -lfreetype -ldrm -lts
+	  -lfreetype -ldrm -lts -lDeviceIo -lasound
 
 ifeq ($(ENABLE_VIDEO),1)
 OBJ += \

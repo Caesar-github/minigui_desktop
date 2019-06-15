@@ -23,17 +23,15 @@
 #include <minigui/control.h>
 
 #include "common.h"
-#include "hardware.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 5
+#define WHOLE_BUTTON_NUM 3
 
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
-#define BACKLIGHT_MAX    4
-static int brightness_levels[BACKLIGHT_MAX] = {45, 115, 185, 255};
+#define AIRKISS_NUM    2
 
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
 
@@ -47,18 +45,10 @@ static int check_button(int x,int y)
     if(y > SETTING_LIST_STR_PINT_Y)
         return (((y - SETTING_LIST_STR_PINT_Y) / SETTING_LIST_STR_PINT_SPAC)+1);
     return -1;
+
 }
 
 
-void screenon(void)
-{
-    set_bl_brightness(brightness_levels[get_backlight()]);
-}
-
-void screenoff(void)
-{
-    set_bl_brightness(0);
-}
 
 static int loadres(void)
 {
@@ -88,19 +78,31 @@ static void unloadres(void)
     }
 }
 
-static void backlight_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
-{
-    set_backlight(list_sel);
-    set_bl_brightness(brightness_levels[list_sel]);
-    InvalidateRect(hWnd, &msg_rcBg, TRUE);
-}
-
 static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
     EndDialog(hWnd, wParam);
 }
 
-static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+
+static void airkiss_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+	switch (lParam) {
+			case 0:
+	
+				break;
+	
+			case 1:
+				
+				break;
+			
+		}
+
+    InvalidateRect(hWnd, &msg_rcBg, TRUE);
+}
+
+
+
+static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
 
@@ -116,22 +118,17 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
             SetFocus(hFocus);
         batt = battery;
         list_sel = 0;
-        SetTimer(hWnd, _ID_TIMER_SETTING_BACKLIGHT, TIMER_SETTING_BACKLIGHT);
+        SetTimer(hWnd, _ID_TIMER_SETTING_AIRKISS, TIMER_SETTING_AIRKISS);
         return 0;
     }
     case MSG_TIMER: {
-        if (wParam == _ID_TIMER_SETTING_BACKLIGHT) {
+        if (wParam == _ID_TIMER_SETTING_AIRKISS) {
 #ifdef ENABLE_BATT
             if (batt != battery) {
                 batt = battery;
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
-#ifdef ENABLE_WIFI
-				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
-#endif
-
-
         }
         break;
     }
@@ -193,7 +190,6 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
 //==================display volume icon============================
 
 		BITMAP *volume_display;
-
 			
 		if(get_volume()==0) volume_display=&volume_0;
 		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
@@ -205,41 +201,25 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
 							   volume_display);
 
 
+		msg_rcTitle.right +=30; //
 
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
         SelectFont(hdc, logfont);
-        DrawText(hdc, res_str[RES_STR_TITLE_BACKLIGHT], -1, &msg_rcTitle, DT_TOP);
+        DrawText(hdc, res_str[RES_STR_TITLE_AIRKISS], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        page = (BACKLIGHT_MAX + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
+        page = (AIRKISS_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
         cur_page = list_sel / SETTING_NUM_PERPAGE;
 
-        for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
-            RECT msg_rcFilename;
+        msg_rcTitle.right -=30; //
 
-            if ((cur_page * SETTING_NUM_PERPAGE + i) >= BACKLIGHT_MAX)
-                break;
+		
+	   FillBoxWithBitmap(hdc, SETTING_AIRKISS_PINT_X,SETTING_AIRKISS_PINT_Y,SETTING_AIRKISS_PINT_W, SETTING_AIRKISS_PINT_H, &airkiss_bmap);
 
-            msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
-            msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * i;
-            msg_rcFilename.right = LCD_W - msg_rcFilename.left;
-            msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
 
-            if (i == list_sel % SETTING_NUM_PERPAGE)
-                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
-
-            if ((cur_page * SETTING_NUM_PERPAGE + i) == get_backlight())
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
-            else
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
-
-			SelectFont(hdc, logfont);
-            DrawText(hdc, res_str[RES_STR_BACKLIGHT_1 + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
-        }
-
-        if (page > 1) {
+       if (page > 1) {
             for (i = 0; i < page; i++) {
                 int x;
                 if (page == 1)
@@ -257,6 +237,17 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
+
+		int ret;
+		char cmd[] = "rk_airkiss &";
+
+	    printf("%s\n", cmd);
+	    ret = system(cmd);
+	    if (ret) {
+//	        fprintf(stderr, "Fail to system %s, exit game\n", cmd);
+//	        exit(ret);
+	    }
+		
         break;
     }
     case MSG_KEYDOWN:
@@ -266,7 +257,7 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                 EndDialog(hWnd, wParam);
                 break;
             case KEY_DOWN_FUNC:
-                if (list_sel < (BACKLIGHT_MAX - 1))
+                if (list_sel < (AIRKISS_NUM - 1))
                     list_sel++;
                 else
                     list_sel = 0;
@@ -276,12 +267,14 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
                  if (list_sel > 0)
                     list_sel--;
                 else
-                    list_sel = BACKLIGHT_MAX - 1;
+                    list_sel = AIRKISS_NUM - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case KEY_ENTER_FUNC:
-                set_backlight(list_sel);
-                set_bl_brightness(brightness_levels[list_sel]);
+  //
+  //
+  //
+  //
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
         }
@@ -290,13 +283,17 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         break;
     }
     case MSG_DESTROY:
-        KillTimer(hWnd, _ID_TIMER_SETTING_BACKLIGHT);
+        KillTimer(hWnd, _ID_TIMER_SETTING_AIRKISS);
         unloadres();
         break;
     case MSG_LBUTTONDOWN:
         touch_pos_down.x = LOSWORD(lParam);
         touch_pos_down.y = HISWORD(lParam);
         printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+        touch_pos_old.x = touch_pos_up.x;
+        touch_pos_old.y = touch_pos_up.y;
+        EnableScreenAutoOff();
+
         break;
     case MSG_LBUTTONUP:
         if (get_bl_brightness() == 0)
@@ -308,14 +305,30 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         touch_pos_up.x = LOSWORD(lParam);
         touch_pos_up.y = HISWORD(lParam);
         printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
-        int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
-        if(witch_button == 0) menu_back(hWnd,wParam,lParam);
+
+		
+		int witch_button = check_button(touch_pos_down.x,touch_pos_down.y);
+        if(witch_button == 0) 
+		{
+			int ret;
+			char cmd1[] = "killall rk_airkiss";
+
+		    printf("%s\n", cmd1);
+		    ret = system(cmd1);
+		    if (ret) {
+		        fprintf(stderr, "Fail to system %s, exit game\n", cmd1);
+//		        exit(ret);
+		    }
+
+			menu_back(hWnd,wParam,lParam);
+		}
         if(witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
         {
             list_sel = witch_button - 1;
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            backlight_enter(hWnd,wParam,list_sel);
+            airkiss_enter(hWnd,wParam,list_sel);
         }
+
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
         EnableScreenAutoOff();
@@ -325,7 +338,7 @@ static LRESULT setting_backlight_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
     return DefaultDialogProc(hWnd, message, wParam, lParam);
 }
 
-void creat_setting_backlight_dialog(HWND hWnd)
+void creat_setting_airkiss_dialog(HWND hWnd)
 {
     DLGTEMPLATE DesktopDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
     	                        0, 0,
@@ -333,5 +346,6 @@ void creat_setting_backlight_dialog(HWND hWnd)
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0};
     //DesktopDlg.controls = DesktopCtrl;
 
-    DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_backlight_dialog_proc, 0L);
+    DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_airkiss_dialog_proc, 0L);
 }
+

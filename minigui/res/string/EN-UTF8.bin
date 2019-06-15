@@ -5,15 +5,17 @@ Picture
 Video
 Browser
 Setting
-Language
-Volume
+Gennral 
 WiFi setting
-Theme style
-Screen off
-BackLight
+Airkiss mode
 System time
 Restore
 Info
+Language
+Volume
+Theme style
+Screen off
+BackLight
 中文
 English
 日本語
@@ -39,7 +41,6 @@ U disk remaining capacity:
 Firmware version:
 system upgrade
 WiFi network connection
-AirKiss mode
 Enable
 Disable
 Warning!
@@ -64,3 +65,12 @@ Regular Power OFF 2
 Regular Power ON 3
 Regular Power OFF 3
 Low battery, will shut down!
+Connected
+Connecting ...
+Wrong Password
+Too Short Password ！
+SSID
+PASSWORD 
+Scan ...
+No update.img
+Recovering,reboot soon ...

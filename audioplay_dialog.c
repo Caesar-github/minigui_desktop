@@ -237,6 +237,10 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
+#ifdef ENABLE_WIFI
+				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
+#endif
+
         }
         break;
     case MSG_KEYDOWN:
@@ -307,10 +311,40 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                                &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-        FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                               WIFI_PINT_W, WIFI_PINT_H,
-                               &wifi_bmap);
+		if(get_wifi()==RK_WIFI_State_IDLE) 
+		{
+        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_disabled_bmap);
+			}
+		else if(get_wifi()==RK_WIFI_State_CONNECTED){
+			        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+                              	 WIFI_PINT_W, WIFI_PINT_H,
+                               	&wifi_connected_bmap);
+		}
+		else{
+			FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+									 WIFI_PINT_W, WIFI_PINT_H,
+									&wifi_disconnected_bmap);
+		}
+		
 #endif
+//==================display volume icon============================
+	
+			BITMAP *volume_display;
+	
+				
+			if(get_volume()==0) volume_display=&volume_0;
+			else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
+			else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
+			else volume_display=&volume_3;
+	
+			FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
+								   VOLUME_PINT_W, VOLUME_PINT_H,
+										   volume_display);
+				
+
+
         RECT msg_rcTime;
         char *sys_time_str[6];
         snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);

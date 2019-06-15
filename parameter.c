@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "parameter.h"
+#include <DeviceIo/Rk_wifi.h>
 
 #define PARAMETER_FILE    "/data/parameter"
 #define VERSION          1002
@@ -30,7 +31,9 @@ struct parameter_data
     int gamedisp_val;
     int themestyle_val;
 	int volume_val;
-	char wifi_val[32];
+	RK_WIFI_RUNNING_State_e wifi_state;
+	char wifi_ssid[128];
+	char wifi_psk[128];
 };
 
 static struct parameter_data para_data;
@@ -85,12 +88,13 @@ int parameter_init(void)
     if (para_data.version != VERSION) {
         parameter_recovery();
     }
-
+	
     return 0;
 }
 
 void parameter_deinit(void)
 {
+
 
 }
 
@@ -108,7 +112,8 @@ int parameter_recovery(void)
     set_themestyle(THEMESTYLE_DEF);
 
 	set_volume(VOLUME_DEF);
-	set_wifi("");
+	set_wifi(0);
+	set_wifi_date(" ", " ");
 
     fpFile = fopen(PARAMETER_FILE, "wb+");
     if (fpFile <= 0) {
@@ -211,15 +216,46 @@ void set_volume(int val)
 
 int get_wifi(void)
 {
-    return para_data.wifi_val;
+    return para_data.wifi_state;
 }
 
-void set_wifi(char* val)
+void set_wifi(RK_WIFI_RUNNING_State_e val)
 {
 
-    snprintf(para_data.wifi_val, sizeof(para_data.wifi_val), "%s",val);
+	para_data.wifi_state = val;
     parameter_save();
 }
+
+
+void set_wifi_date(char *ssid, char *psk)
+{
+
+	snprintf(para_data.wifi_ssid, 128, "%s", ssid);
+	snprintf(para_data.wifi_psk, 128, "%s", psk);
+    parameter_save();
+}
+
+
+char* get_wifi_ssid(void)
+{
+    return para_data.wifi_ssid;
+}
+
+char* get_wifi_psk(void)
+{
+    return para_data.wifi_psk;
+}
+
+
+int test_wifi_pwd(void) // exist retuen 1 ,esle 0 
+{
+
+	if(strcmp(para_data.wifi_psk, " ") == 0) 
+		return 0;
+	return 1;
+
+}
+
 
 char *get_ui_image_path(void)
 {

@@ -54,6 +54,10 @@
 #define _ID_TIMER_LOWPOWER              116
 #define _ID_TIMER_SETTING_VOLUME        117
 #define _ID_TIMER_SETTING_RECOVERY      118
+#define _ID_TIMER_SETTING_AIRKISS       119
+#define _ID_TIMER_SETTING_GENERAL       120
+#define _ID_TIMER_INPUT       121
+
 
 
 #define MSG_VIDEOPLAY_END         (MSG_USER + 1)
@@ -73,12 +77,16 @@
 #define TIMER_SETTING_BACKLIGHT     50
 #define TIMER_SETTING_SCREENOFF     50
 #define TIMER_VIDEOPLAY_HW          50
-#define TIMER_SETTING_WIFI          50
+#define TIMER_SETTING_WIFI          20
 #define TIMER_SETTING_THEMESTYLE    50
 #define TIMER_SETTING_VOLUME        50
 #define TIMER_SETTING_RECOVERY      50
 #define TIMER_SETTING_SYSTEMTIME    50
+#define TIMER_SETTING_AIRKISS       50
+#define TIMER_SETTING_GENERAL       50
 #define TIMER_LOWPOWER              50
+#define TIMER_INPUT                 50
+
 
 enum RES_STR_ID {
     RES_STR_RES = 0,
@@ -88,15 +96,17 @@ enum RES_STR_ID {
     RES_STR_TITLE_VIDEO,
     RES_STR_TITLE_BROWSER,
     RES_STR_TITLE_SETTING,
-    RES_STR_TITLE_LANGUAGE,
-    RES_STR_TITLE_VOLUME,
+    RES_STR_TITLE_GENERAL,
     RES_STR_TITLE_WIFI,
-    RES_STR_TITLE_THEMESTYLE,
-    RES_STR_TITLE_SCREENOFF,
-    RES_STR_TITLE_BACKLIGHT,
+    RES_STR_TITLE_AIRKISS,
     RES_STR_TITLE_SYSTEMTIME,
     RES_STR_TITLE_RESTORE,
     RES_STR_TITLE_INFO,
+    RES_STR_TITLE_LANGUAGE,
+    RES_STR_TITLE_VOLUME,
+    RES_STR_TITLE_THEMESTYLE,
+    RES_STR_TITLE_SCREENOFF,
+    RES_STR_TITLE_BACKLIGHT,
     RES_STR_LANGUAGE_CN,
     RES_STR_LANGUAGE_EN,
     RES_STR_LANGUAGE_JP,
@@ -122,7 +132,6 @@ enum RES_STR_ID {
     RES_STR_INFO_VERSION,
     RES_STR_SYSTEM_UPGRAD,
     RES_STR_WIFI_CONNECTION,
-    RES_STR_WIFI_AIRKISS,
     RES_STR_ENABLE,
     RES_STR_DISABLE,
     RES_STR_WARNING,
@@ -147,6 +156,15 @@ enum RES_STR_ID {
     RES_STR_SYSTEMTIME_ON3,
     RES_STR_SYSTEMTIME_OFF3,
     RES_STR_LOWPOWER,
+    RES_STR_CONNECTED,
+    RES_STR_CONNECTING,
+    RES_STR_WRONG_PWD,
+    RES_STR_TOO_SHORT,
+    RES_STR_WIFI_SSID,
+    RES_STR_WIFI_PWD,
+    RES_STR_SCANING,
+    RES_STR_NO_UPDATE_FILE,
+    RES_STR_RECOVERY_SOON,
     RES_STR_MAX
 };
 
@@ -266,11 +284,20 @@ typedef struct
 #include "setting_version_dialog.h"
 #include "setting_wifi_dialog.h"
 #include "setting_themestyle_dialog.h"
+#include "setting_volume_dialog.h"
+#include "setting_systemtime_dialog.h"
+#include "setting_airkiss_dialog.h"
+#include "setting_general_dialog.h"
 #include "message_dialog.h"
 #include "videoplay_hw_dialog.h"
 #include "system.h"
 #include "ffplay_ipc.h"
 #include "lowpower_dialog.h"
+#include "input_dialog.h"
+
+#include <DeviceIo/Rk_wifi.h>
+#include <pthread.h> 
+
 
 extern int loadstringres(void);
 extern int loadversion(char **model, char **version);
@@ -281,11 +308,41 @@ extern void EnableScreenAutoOff(void);
 
 extern BITMAP batt_bmap[6];
 extern BITMAP wifi_bmap;
+extern BITMAP wifi_connected_bmap;
+extern BITMAP wifi_disconnected_bmap;
+extern BITMAP wifi_disabled_bmap;
 extern BITMAP back_bmap;
 extern BITMAP volume_0;
 extern BITMAP volume_1;
 extern BITMAP volume_2;
 extern BITMAP volume_3;
+extern BITMAP airkiss_bmap;
+extern BITMAP list_sel1_bmap;
+extern BITMAP wifi_signal_3;
+extern BITMAP wifi_signal_2;
+extern BITMAP wifi_signal_1;
+extern BITMAP input_box;
+
+
+
+
+struct wifi_info {
+	char ssid[128];
+	char psk[128];
+	int modify_flag;
+};
+
+struct wifi_avaiable {
+	char ssid[128];
+	int rssi;
+};
+
+extern HWND mhWnd;
+
+extern struct wifi_info wifi_date;  // user`s wifi ssid and pwd
+extern struct wifi_avaiable wifiavaiable_list[100];  // result of scan
+extern int wifiavaiable_size;  // size of wifiavaiable_list
+
 
 extern int time_hour;
 extern int time_min;
@@ -299,6 +356,10 @@ extern RECT msg_rcBg;
 extern RECT msg_rcBatt;
 extern RECT msg_rcTitle;
 extern RECT msg_rcDialog;
+
+extern RECT msg_rcWifi;
+
+
 extern char *res_str[RES_STR_MAX];
 
 extern LOGFONT  *logfont_cej;
@@ -307,6 +368,25 @@ extern LOGFONT  *logfont_cej_title;
 extern LOGFONT  *logfont_k_title;
 extern LOGFONT  *logfont;
 extern LOGFONT  *logfont_title;
+
+
+enum INPUT_TYPE {
+    WIFI_PWD = 1,
+    SYSTEMTIME_DATE,
+};
+
+extern int input_dialog_type;
+extern int pwd_short_flag;
+extern int wifi_connect_flag;
+
+
+
+#define BUTTON_MAXNUM    41
+extern CTRLDATA KeyboardCtrl[BUTTON_MAXNUM];
+
+
+extern pthread_t thread1;
+extern char *message1;
 
 
 #endif
