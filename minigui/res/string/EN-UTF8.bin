@@ -5,7 +5,7 @@ Picture
 Video
 Browser
 Setting
-Gennral 
+Gennral
 WiFi setting
 Airkiss mode
 System time
@@ -55,6 +55,7 @@ Udisk
 No content
 Theme 1
 Theme 2
+Synchronize network time
 Date Setting
 Time Setting
 Time Format
@@ -64,6 +65,8 @@ Regular Power ON 2
 Regular Power OFF 2
 Regular Power ON 3
 Regular Power OFF 3
+24-hour
+12-hour
 Low battery, will shut down!
 Connected
 Connecting ...

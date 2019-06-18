@@ -6,14 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h> 
+#include <sys/time.h>
 #include <math.h>
 #include <sys/ioctl.h>
 #include <sys/prctl.h>
 
-#include<sys/stat.h>
-#include<sys/types.h>
-#include<dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <unistd.h>
 
 #include <minigui/common.h>
@@ -25,14 +25,13 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-
-#define SYSTEMTIME_WHOLE_BUTTON_NUM 10
+#define SYSTEMTIME_WHOLE_BUTTON_NUM 7
+#define SYSTEMTIME_NUM    (RES_STR_SYSTEMTIME_OFF2 - RES_STR_SYNC_NET_TIME + 1)
 
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
-#define SYSTEMTIME_NUM    (RES_STR_SYSTEMTIME_OFF3 - RES_STR_SYSTEMTIME_DATA + 1)
 
 static int on_1 = 0;
 static int off_1 = 0;
@@ -40,7 +39,6 @@ static int on_2 = 0;
 static int off_2 = 0;
 static int on_3 = 0;
 static int off_3 = 0;
-
 
 static touch_pos touch_pos_down,touch_pos_up,touch_pos_old;
 
@@ -54,7 +52,6 @@ static int check_button(int x,int y)
     if(y > SETTING_LIST_STR_PINT_Y)
         return (((y - SETTING_LIST_STR_PINT_Y) / SETTING_LIST_STR_PINT_SPAC)+1);
     return -1;
-
 }
 
 static int loadres(void)
@@ -85,6 +82,136 @@ static void unloadres(void)
     }
 }
 
+static void write_to_file(void)
+{
+    FILE *fp;
+    fp = fopen(TIME_SETTING_FILE,"w");
+    if (fp == NULL) {
+        printf("open file %s failed: %s\n", TIME_SETTING_FILE, strerror(errno));
+        return -1;
+    }
+    char buf[2];
+    sprintf(buf,"%01d%01d",use_24_hour_format,sync_net_time);
+    fwrite(buf,sizeof(buf),1,fp);
+    fclose(fp);
+}
+
+static void systemtime_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
+{
+    struct tm tar_time;
+    tar_time.tm_year = 0;
+    tar_time.tm_mon = 0;
+    tar_time.tm_mday = 0;
+    tar_time.tm_hour = 0;
+    tar_time.tm_min = 0;
+    FILE *fp;
+    char time_fm_buf[100];
+    switch (lParam) {
+        case 0:
+            sync_net_time = !sync_net_time;
+            write_to_file();
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            break;
+        case 1:
+            if (sync_net_time) break;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            creat_time_input_dialog(hWnd,INPUT_DATE,now_time);
+            break;
+        case 2:
+            if (sync_net_time) break;
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            if (use_24_hour_format)
+                creat_time_input_dialog(hWnd,INPUT_TIME_24,now_time);
+            else
+                creat_time_input_dialog(hWnd,INPUT_TIME_12,now_time);
+            break;
+        case 3:
+            use_24_hour_format = !use_24_hour_format;
+            status_bar_offset = use_24_hour_format ? 0 : STATUS_BAR_ICO_OFFSET;
+            write_to_file();
+            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            break;
+        case 4:
+            if (touch_pos_up.x < (LCD_W*3 /4))
+            {
+                on_1 = !on_1;
+                timing_power_on[0].status = on_1;
+                timing_power_on_set();
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            }
+            else
+            {
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                tar_time.tm_hour = (int)timing_power_on[0].timing / 100;
+                tar_time.tm_min = (int)timing_power_on[0].timing % 100;
+                if (use_24_hour_format)
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24,&tar_time);
+                else
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12,&tar_time);
+            }
+            break;
+        case 5:
+            if (touch_pos_up.x < (LCD_W*3 /4))
+            {
+                off_1 = !off_1;
+                timing_power_off[0].status = off_1;
+                timing_power_off_set();
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            }
+            else
+            {
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                tar_time.tm_hour = (int)timing_power_off[0].timing / 100;
+                tar_time.tm_min = (int)timing_power_off[0].timing % 100;
+                if (use_24_hour_format)
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24 + 3,&tar_time);
+                else
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12 + 3,&tar_time);
+            }
+            break;
+        case 6:
+            if (touch_pos_up.x < (LCD_W*3 /4))
+            {
+                on_2 = !on_2;
+                timing_power_on[1].status = on_2;
+                timing_power_on_set();
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            }
+            else
+            {
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                tar_time.tm_hour = (int)timing_power_on[1].timing / 100;
+                tar_time.tm_min = (int)timing_power_on[1].timing % 100;
+                if (use_24_hour_format)
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24 + 1,&tar_time);
+                else
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12 + 1,&tar_time);
+            }
+            break;
+        case 7:
+            if (touch_pos_up.x < (LCD_W*3 /4))
+            {
+                off_2 = !off_2;
+                timing_power_off[1].status = off_2;
+                timing_power_off_set();
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            }
+            else
+            {
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
+                tar_time.tm_hour = (int)timing_power_off[1].timing / 100;
+                tar_time.tm_min = (int)timing_power_off[1].timing % 100;
+                if (use_24_hour_format)
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24 + 4,&tar_time);
+                else
+                    creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12 + 4,&tar_time);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
 static void menu_back(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
     EndDialog(hWnd, wParam);
@@ -97,7 +224,7 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
     //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
     switch (message) {
     case MSG_INITDIALOG: {
-    	  DWORD bkcolor;
+        DWORD bkcolor;
         HWND hFocus = GetDlgDefPushButton(hWnd);
         loadres();
         bkcolor = GetWindowElementPixel(hWnd, WE_BGC_WINDOW);
@@ -106,10 +233,21 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
             SetFocus(hFocus);
         batt = battery;
         list_sel = 0;
+        on_1 = timing_power_on[0].status;
+        on_2 = timing_power_on[1].status;
+        on_3 = timing_power_on[2].status;
+        off_1 = timing_power_off[0].status;
+        off_2 = timing_power_off[1].status;
+        off_3 = timing_power_off[2].status;
         SetTimer(hWnd, _ID_TIMER_SETTING_SYSTEMTIME, TIMER_SETTING_SYSTEMTIME);
         return 0;
     }
     case MSG_TIMER: {
+        static int dialog_last_time = 60;
+        if (now_time->tm_min != dialog_last_time){
+            dialog_last_time = now_time->tm_min;
+            InvalidateRect(hWnd, &msg_rcBg, FALSE);
+        }
         if (wParam == TIMER_SETTING_SYSTEMTIME) {
 #ifdef ENABLE_BATT
             if (batt != battery) {
@@ -117,10 +255,6 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                 InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
-#ifdef ENABLE_WIFI
-				InvalidateRect(hWnd, &msg_rcWifi, TRUE);
-#endif
-
         }
         break;
     }
@@ -142,58 +276,56 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                                BACK_PINT_W, BACK_PINT_H,
                                &back_bmap);
 #ifdef ENABLE_BATT
-        FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,
+        FillBoxWithBitmap(hdc, BATT_PINT_X - status_bar_offset, BATT_PINT_Y,
                                BATT_PINT_W, BATT_PINT_H,
                                &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-		if(get_wifi()==RK_WIFI_State_IDLE) 
-		{
-        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                              	 WIFI_PINT_W, WIFI_PINT_H,
-                               	&wifi_disabled_bmap);
-			}
-		else if(get_wifi()==RK_WIFI_State_CONNECTED){
-			        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-                              	 WIFI_PINT_W, WIFI_PINT_H,
-                               	&wifi_connected_bmap);
-		}
-		else{
-			FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
-									 WIFI_PINT_W, WIFI_PINT_H,
-									&wifi_disconnected_bmap);
-		}
-		
+        if(get_wifi()==RK_WIFI_State_IDLE)
+        {
+            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                WIFI_PINT_W, WIFI_PINT_H,
+                                &wifi_disabled_bmap);
+        }
+        else if(get_wifi()==RK_WIFI_State_CONNECTED)
+        {
+            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                WIFI_PINT_W, WIFI_PINT_H,
+                                &wifi_connected_bmap);
+        }
+        else{
+            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                WIFI_PINT_W, WIFI_PINT_H,
+                                &wifi_disconnected_bmap);
+        }
 #endif
 
-		RECT msg_rcTime;
-		char *sys_time_str[6];
-		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-		msg_rcTime.left = REALTIME_PINT_X;
-		msg_rcTime.top = REALTIME_PINT_Y;
-		msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
-		msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
-		SetBkColor(hdc, COLOR_transparent);
-		SetBkMode(hdc,BM_TRANSPARENT);
-		SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-		SelectFont(hdc, logfont_title);
-		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
+        RECT msg_rcTime;
+        time_flush();
+        msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
+        msg_rcTime.top = REALTIME_PINT_Y;
+        msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+        msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+        SetBkColor(hdc, COLOR_transparent);
+        SetBkMode(hdc,BM_TRANSPARENT);
+        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+        SelectFont(hdc, logfont_title);
+        DrawText(hdc, status_bar_time_str, -1, &msg_rcTime, DT_TOP);
+        msg_rcTime.left = REALDATE_PINT_X - status_bar_offset;
+        DrawText(hdc, status_bar_date_str, -1, &msg_rcTime, DT_TOP);
 
 //==================display volume icon============================
 
-		BITMAP *volume_display;
+        BITMAP *volume_display;
 
-		
-		if(get_volume()==0) volume_display=&volume_0;
-		else if ( get_volume()>0  && get_volume()<=32)	volume_display=&volume_1;
-		else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
-		else volume_display=&volume_3;
+        if(get_volume()==0) volume_display=&volume_0;
+        else if ( get_volume()>0  && get_volume()<=32)    volume_display=&volume_1;
+        else if ( get_volume()>32  && get_volume()<=66)  volume_display=&volume_2;
+        else volume_display=&volume_3;
 
-		FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
-							   VOLUME_PINT_W, VOLUME_PINT_H,
-							   volume_display);
-
-
+        FillBoxWithBitmap(hdc, VOLUME_PINT_X - status_bar_offset, VOLUME_PINT_Y,
+                                VOLUME_PINT_W, VOLUME_PINT_H,
+                                volume_display);
 
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);
@@ -205,130 +337,124 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
         page = (SYSTEMTIME_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
         cur_page = list_sel / SETTING_NUM_PERPAGE;
 
-		RECT msg_temp;
-		char *sys_data_str[11];
-			
-        for (i = 0; i < SETTING_NUM_PERPAGE; i++) {
-            RECT msg_rcFilename;
+        char time_temp[6];
+
+        for (i = 0; i < SYSTEMTIME_NUM; i++) {
+            RECT msg_rcText;
+            RECT msg_rcTimeformat;
 
             if ((cur_page * SETTING_NUM_PERPAGE + i) >= SYSTEMTIME_NUM)
                 break;
 
-            msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
-            msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * i;
-            msg_rcFilename.right = LCD_W - msg_rcFilename.left;
-            msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
+            msg_rcText.left = SETTING_LIST_STR_PINT_X;
+            msg_rcText.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * i;
+            msg_rcText.right = LCD_W - msg_rcText.left;
+            msg_rcText.bottom = msg_rcText.top + SETTING_LIST_STR_PINT_H;
 
             if (i == list_sel % SETTING_NUM_PERPAGE)
-               FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+                FillBoxWithBitmap(hdc, 0, msg_rcText.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
 
-  //         if ((cur_page * SETTING_NUM_PERPAGE + i) == get_themestyle())
-  //             FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
-   //        else
-   //           FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
-            SelectFont(hdc, logfont);
-            DrawText(hdc, res_str[RES_STR_SYSTEMTIME_DATA + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+            switch (RES_STR_SYNC_NET_TIME + cur_page * SETTING_NUM_PERPAGE + i)
+                {
+                    case RES_STR_SYNC_NET_TIME:
+                        DrawText(hdc, res_str[RES_STR_SYNC_NET_TIME], -1, &msg_rcText, DT_TOP);
+                        if (sync_net_time) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_RIGHT);
+                        else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_RIGHT);
+                        break;
+                    case RES_STR_SYSTEMTIME_DATA:
+                        if (sync_net_time) SetTextColor(hdc, RGB2Pixel(hdc, 0x5e, 0x5e, 0x5e));
+                        DrawText(hdc, res_str[RES_STR_SYSTEMTIME_DATA], -1, &msg_rcText, DT_TOP);
+                        DrawText(hdc, status_bar_date_str, -1, &msg_rcText, DT_RIGHT);
+                        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+                        break;
+                    case RES_STR_SYSTEMTIME_TIME:
+                        if (sync_net_time) SetTextColor(hdc, RGB2Pixel(hdc, 0x5e, 0x5e, 0x5e));
+                        DrawText(hdc, res_str[RES_STR_SYSTEMTIME_TIME], -1, &msg_rcText, DT_TOP);
+                        DrawText(hdc, status_bar_time_str, -1, &msg_rcText, DT_RIGHT);
+                        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+                        break;
+                    case RES_STR_SYSTEMTIME_FORMAT:
+                        DrawText(hdc, res_str[RES_STR_SYSTEMTIME_FORMAT], -1, &msg_rcText, DT_TOP);
+                        msg_rcTimeformat = msg_rcText;
+                        msg_rcTimeformat.left = msg_rcTimeformat.right - 2 * REALTIME_PINT_W;
+                        if (use_24_hour_format)
+                        {
+                            DrawText(hdc, "<", -1, &msg_rcTimeformat, DT_LEFT);
+                            DrawText(hdc, res_str[RES_STR_SYSTEMTIME_FORMAT_24], -1, &msg_rcTimeformat, DT_CENTER);
+                            DrawText(hdc, ">", -1, &msg_rcTimeformat, DT_RIGHT);
+                        }
+                        else
+                        {
+                            DrawText(hdc, "<", -1, &msg_rcTimeformat, DT_LEFT);
+                            DrawText(hdc, res_str[RES_STR_SYSTEMTIME_FORMAT_12], -1, &msg_rcTimeformat, DT_CENTER);
+                            DrawText(hdc, ">", -1, &msg_rcTimeformat, DT_RIGHT);
+                        }
+                        break;
+                    case RES_STR_SYSTEMTIME_ON1:
+                        DrawText(hdc, res_str[RES_STR_SYSTEMTIME_ON1], -1, &msg_rcText, DT_TOP);
+                        if(on_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
+                        else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
+                        if (use_24_hour_format)
+                            sprintf(time_temp,"%02d:%02d", (int)(timing_power_on[0].timing / 100), timing_power_on[0].timing % 100);
+                        else
+                        {
+                            if (timing_power_on[0].timing > 1200)
+                                sprintf(time_temp,"%02d:%02d PM", (int)(timing_power_on[0].timing / 100) % 12, timing_power_on[0].timing % 100);
+                            else
+                                sprintf(time_temp,"%02d:%02d AM", (int)(timing_power_on[0].timing / 100), timing_power_on[0].timing % 100);
+                        }
+                        DrawText(hdc, time_temp, -1, &msg_rcText, DT_RIGHT);
+                        break;
+                    case RES_STR_SYSTEMTIME_ON2:
+                        break;
+                        DrawText(hdc, res_str[RES_STR_SYSTEMTIME_ON2], -1, &msg_rcText, DT_TOP);
+                        if(on_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
+                        else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
+                        if (use_24_hour_format)
+                            sprintf(time_temp,"%02d:%02d", (int)(timing_power_on[1].timing / 100), timing_power_on[1].timing % 100);
+                        else
+                        {
+                            if (timing_power_on[1].timing > 1200)
+                                sprintf(time_temp,"%02d:%02d PM", (int)(timing_power_on[1].timing / 100) % 12, timing_power_on[1].timing % 100);
+                            else
+                                sprintf(time_temp,"%02d:%02d AM", (int)(timing_power_on[1].timing / 100), timing_power_on[1].timing % 100);
+                        }
+                        DrawText(hdc, time_temp, -1, &msg_rcText, DT_RIGHT);
+                        break;
 
-		//==========================================//
-		
-		    snprintf(sys_data_str, sizeof(sys_data_str), "%04d-%02d-%02d", systemtime_year, systemtime_month,systemtime_day);
-			msg_temp = msg_rcFilename;
-			
-			switch (RES_STR_SYSTEMTIME_DATA + cur_page * SETTING_NUM_PERPAGE + i)
-				{
-					case RES_STR_SYSTEMTIME_DATA:
-						msg_temp.left = msg_rcFilename.left+825;
-						DrawText(hdc, sys_data_str, -1, &msg_temp, DT_TOP);
-					break;
+                    case RES_STR_SYSTEMTIME_OFF1:
+                        DrawText(hdc, res_str[RES_STR_SYSTEMTIME_OFF1], -1, &msg_rcText, DT_TOP);
+                        if(off_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
+                        else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
+                        if (use_24_hour_format)
+                            sprintf(time_temp,"%02d:%02d", (int)(timing_power_off[0].timing / 100), timing_power_off[0].timing % 100);
+                        else
+                        {
+                            if (timing_power_off[0].timing > 1200)
+                                sprintf(time_temp,"%02d:%02d PM", (int)(timing_power_off[0].timing / 100) % 12, timing_power_off[0].timing % 100);
+                            else
+                                sprintf(time_temp,"%02d:%02d AM", (int)(timing_power_off[0].timing / 100), timing_power_off[0].timing % 100);
+                        }
+                        DrawText(hdc, time_temp, -1, &msg_rcText, DT_RIGHT);
+                        break;
 
-
-					case RES_STR_SYSTEMTIME_TIME:
-						msg_temp.left = msg_rcFilename.left+900;
-						DrawText(hdc, sys_time_str, -1, &msg_temp, DT_TOP);						
-					break;
-
-					
-					case RES_STR_SYSTEMTIME_FORMAT:
-						msg_temp.left = msg_rcFilename.left+900;
-						SelectFont(hdc, logfont);
-						DrawText(hdc, "24", -1, &msg_temp, DT_TOP);	
-					break;
-
-					
-					case RES_STR_SYSTEMTIME_ON1:
-						msg_temp.left = msg_rcFilename.left+500;
-						SelectFont(hdc, logfont);
-						if(on_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
-						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
-						
-						msg_temp.left = msg_rcFilename.left+900;
-						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);	
-					break;
-
-
-					case RES_STR_SYSTEMTIME_ON2:
-						SelectFont(hdc, logfont);
-						msg_temp.left = msg_rcFilename.left+500;
-						
-						if(on_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
-						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
-						
-						msg_temp.left = msg_rcFilename.left+900;
-						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);							
-					break;
-
-
-					case RES_STR_SYSTEMTIME_ON3:
-						SelectFont(hdc, logfont);
-						msg_temp.left = msg_rcFilename.left+500;
-						
-						if(on_3) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
-						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
-					
-						msg_temp.left = msg_rcFilename.left+900;
-						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);								
-					break;
-
-					
-					case RES_STR_SYSTEMTIME_OFF1:
-						SelectFont(hdc, logfont);
-						msg_temp.left = msg_rcFilename.left+500;
-						
-						if(off_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
-						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
-					
-						msg_temp.left = msg_rcFilename.left+900;
-						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);						
-					break;
-
-					
-					case RES_STR_SYSTEMTIME_OFF2:
-						SelectFont(hdc, logfont);
-						msg_temp.left = msg_rcFilename.left+500;
-						
-						if(off_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
-						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
-					
-
-						msg_temp.left = msg_rcFilename.left+900;
-						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);						
-					break;
-
-					
-					case RES_STR_SYSTEMTIME_OFF3:
-						SelectFont(hdc, logfont);
-						msg_temp.left = msg_rcFilename.left+500;
-						
-						if(off_3) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_temp, DT_TOP);
-						else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_temp, DT_TOP);
-					
-						msg_temp.left = msg_rcFilename.left+900;
-						DrawText(hdc, "12:00", -1, &msg_temp, DT_TOP);						
-					break;
-					
-						
-				}
-			
+                    case RES_STR_SYSTEMTIME_OFF2:
+                        break;
+                        DrawText(hdc, res_str[RES_STR_SYSTEMTIME_OFF2], -1, &msg_rcText, DT_TOP);
+                        if(off_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
+                        else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
+                        if (use_24_hour_format)
+                            sprintf(time_temp,"%02d:%02d", (int)(timing_power_off[1].timing / 100), timing_power_off[1].timing % 100);
+                        else
+                        {
+                            if (timing_power_off[1].timing > 1200)
+                                sprintf(time_temp,"%02d:%02d PM", (int)(timing_power_off[1].timing / 100) % 12, timing_power_off[1].timing % 100);
+                            else
+                                sprintf(time_temp,"%02d:%02d AM", (int)(timing_power_off[1].timing / 100), timing_power_off[1].timing % 100);
+                        }
+                        DrawText(hdc, time_temp, -1, &msg_rcText, DT_RIGHT);
+                        break;
+                }
         }
 
         if (page > 1) {
@@ -337,14 +463,14 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                 if (page == 1)
                     x =  SETTING_PAGE_DOT_X;
                 else if (page % 2)
-           	        x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC;
+                       x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC;
                 else
                     x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC + SETTING_PAGE_DOT_SPAC / 2;
 
                 if (i == cur_page)
                     FillCircle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);
                 else
-                    Circle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);    
+                    Circle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);
             }
         }
         SetBrushColor(hdc, old_brush);
@@ -365,15 +491,13 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case KEY_UP_FUNC:
-                 if (list_sel > 0)
+                if (list_sel > 0)
                     list_sel--;
                 else
                     list_sel = SYSTEMTIME_NUM - 1;
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 break;
             case KEY_ENTER_FUNC:
-				
-
                 break;
         }
         break;
@@ -404,53 +528,9 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
         if(witch_button > 0 && witch_button < SYSTEMTIME_WHOLE_BUTTON_NUM)
         {
             list_sel = witch_button - 1;
-            switch (list_sel) {
-					case 0:
-						break;
-					
-					
-					case 1:
-						break;
-						
-						
-					case 2:
-						break;
-						
-
-					case 3:
-						on_1 = !on_1;
-						printf("on_1 = %d",on_1);
-						printf("on_1 = %d",on_1);
-						printf("on_1 = %d",on_1);
-						break;
-
-					
-					case 4:
-						off_1 = !off_1;
-						break;
-
-					
-					case 5:
-						on_2 = !on_2;
-						break;
-
-					
-					case 6:
-						off_2 = !off_2;
-						break;
-
-					
-					case 7:						
-						on_3 = !on_3;
-						break;
-
-					case 8:						
-						off_3 = !off_3;
-						break;
-				}
-			
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            systemtime_enter(hWnd,wParam,list_sel);
         }
+
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
         EnableScreenAutoOff();
@@ -463,8 +543,8 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
 void creat_setting_systemtime_dialog(HWND hWnd)
 {
     DLGTEMPLATE DesktopDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
-    	                        0, 0,
-    	                        LCD_W, LCD_H,
+                                0, 0,
+                                LCD_W, LCD_H,
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0};
     //DesktopDlg.controls = DesktopCtrl;
 

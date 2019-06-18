@@ -88,6 +88,11 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         return 0;
     }
     case MSG_TIMER: {
+        static int dialog_last_time = 60;
+        if (now_time->tm_min != dialog_last_time){
+            dialog_last_time = now_time->tm_min;
+            InvalidateRect(hWnd, &msg_rcBg, FALSE);
+        }
         if (wParam == _ID_TIMER_LOWPOWER) {
 #ifdef ENABLE_BATT
             if (batt != battery) {
@@ -119,14 +124,14 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
                                BG_PINT_Y, BG_PINT_W,
                                BG_PINT_H, &background_bmap);
 #ifdef ENABLE_BATT
-        FillBoxWithBitmap(hdc, BATT_PINT_X, BATT_PINT_Y,
+        FillBoxWithBitmap(hdc, BATT_PINT_X - status_bar_offset, BATT_PINT_Y,
                                BATT_PINT_W, BATT_PINT_H,
                                &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-		if(get_wifi()==RK_WIFI_State_IDLE) 
+		if(get_wifi()==RK_WIFI_State_IDLE)
 		{
-        	FillBoxWithBitmap(hdc, WIFI_PINT_X, WIFI_PINT_Y,
+        	FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
                               	 WIFI_PINT_W, WIFI_PINT_H,
                                	&wifi_disabled_bmap);
 			}
@@ -160,19 +165,19 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 
 											   
 
-		RECT msg_rcTime;
-		char *sys_time_str[6];
-		snprintf(sys_time_str, sizeof(sys_time_str), "%02d:%02d", time_hour / 60, time_hour % 60, time_min / 60, time_min % 60);
-		msg_rcTime.left = REALTIME_PINT_X;
-		msg_rcTime.top = REALTIME_PINT_Y;
-		msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
-		msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
-		SetBkColor(hdc, COLOR_transparent);
-		SetBkMode(hdc,BM_TRANSPARENT);
-		SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-		SelectFont(hdc, logfont_title);
-		DrawText(hdc, sys_time_str, -1, &msg_rcTime, DT_TOP);
-
+        RECT msg_rcTime;
+        time_flush();
+        msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
+        msg_rcTime.top = REALTIME_PINT_Y;
+        msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+        msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+        SetBkColor(hdc, COLOR_transparent);
+        SetBkMode(hdc,BM_TRANSPARENT);
+        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+        SelectFont(hdc, logfont_title);
+        DrawText(hdc, status_bar_time_str, -1, &msg_rcTime, DT_TOP);
+        msg_rcTime.left = REALDATE_PINT_X - status_bar_offset;
+        DrawText(hdc, status_bar_date_str, -1, &msg_rcTime, DT_TOP);
 
         SetBkColor(hdc, COLOR_transparent);
         SetBkMode(hdc,BM_TRANSPARENT);

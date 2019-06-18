@@ -26,19 +26,16 @@ extern MG_EXPORT PLOGFONT g_SysLogFont [];
 
 #include <DeviceIo/Rk_wifi.h>
 
-
-
 char timebuff[100];
 static RECT msg_rcTime = {TIME_PINT_X, TIME_PINT_Y, TIME_PINT_X + TIME_PINT_W, TIME_PINT_Y + TIME_PINT_H};
 #ifdef ENABLE_BATT
 RECT msg_rcBatt = {BATT_PINT_X, BATT_PINT_Y, BATT_PINT_X + BATT_PINT_W, BATT_PINT_Y + BATT_PINT_H};
 #endif
+RECT msg_rcStatusBar = {STATUS_BAR_X, STATUS_BAR_Y, STATUS_BAR_X + STATUS_BAR_W, STATUS_BAR_Y + STATUS_BAR_H};
 
 #ifdef ENABLE_WIFI
 RECT msg_rcWifi = {WIFI_PINT_X, WIFI_PINT_Y, WIFI_PINT_X + WIFI_PINT_W, WIFI_PINT_Y + WIFI_PINT_H};
 #endif
-
-
 
 RECT msg_rcBg = {BG_PINT_X, BG_PINT_Y, BG_PINT_X + BG_PINT_W, BG_PINT_Y + BG_PINT_H};
 RECT msg_rcTitle = {TITLE_PINT_X, TITLE_PINT_Y, TITLE_PINT_X + TITLE_PINT_W, TITLE_PINT_Y + TITLE_PINT_H};
@@ -68,18 +65,23 @@ BITMAP wifi_signal_2;
 BITMAP wifi_signal_1;
 BITMAP input_box;
 
-
-
-
+struct tm *now_time = 0;
+struct tm *last_time = 0;
+rtc_timing timing_power_on[TIMING_NUM+1] = {0};
+rtc_timing timing_power_off[TIMING_NUM+1] = {0};
+char *timing_buf;
+int power_off_time;
+int power_on_time;
+int systemtime_year = 2019;
+int systemtime_month = 5;
+int systemtime_day = 30;
 int time_hour = 0;
 int time_min = 0;
 int time_sec = 0;
 int battery = 0;
-int systemtime_year = 2019;
-int systemtime_month = 5;
-int systemtime_day = 30;
-
-
+int status_bar_offset;
+int status_bar_time_str[10] = {0};
+int status_bar_date_str[20] = {0};
 
 char *res_str[RES_STR_MAX] = {0};
 LOGFONT  *logfont_cej;
@@ -163,6 +165,58 @@ int loadversion(char **model, char **version)
     fclose(fp);
 
     return 0;	
+}
+
+int loadtimefile(void)
+{
+    FILE *fp;
+    ssize_t len = 0;
+    int pos = 0;
+    use_24_hour_format = 1;
+    status_bar_offset = 0;
+    sync_net_time = 0;
+    fp = fopen(TIMING_FILE, "r");
+    if (fp == NULL) {
+        printf("open file %s failed: %s\n", TIMING_FILE, strerror(errno));
+        return -1;
+    }
+    while ((__getline(&timing_buf, &len, fp)) != -1) {
+        timing_power_on[pos].timing = ((*timing_buf - 48) * 1000) + ((*(timing_buf+1) - 48) * 100)
+                                    + ((*(timing_buf+2) - 48) * 10) + (*(timing_buf+3) - 48);
+        timing_power_on[pos].status = (*(timing_buf+4) - 48);
+        pos++;
+        if (pos >= TIMING_NUM)
+            break;
+    }
+    pos = 0;
+    while ((__getline(&timing_buf, &len, fp)) != -1) {
+        timing_power_off[pos].timing = ((*timing_buf - 48) * 1000) + ((*(timing_buf+1) - 48) * 100)
+                                    + ((*(timing_buf+2) - 48) * 10) + (*(timing_buf+3) - 48);
+        timing_power_off[pos].status = (*(timing_buf+4) - 48);
+        pos++;
+        if (pos >= TIMING_NUM)
+            break;
+    }
+
+    fclose(fp);
+
+    fp = fopen(TIME_SETTING_FILE, "r");
+    if (fp == NULL) {
+        printf("open file %s failed: %s\n", TIME_SETTING_FILE, strerror(errno));
+        free(timing_buf);
+        timing_buf = 0;
+        return -1;
+    }
+    if ((__getline(&timing_buf, &len, fp)) != -1) {
+        use_24_hour_format = *timing_buf - 48;
+        if (!use_24_hour_format)
+            status_bar_offset = STATUS_BAR_ICO_OFFSET;
+        sync_net_time = *(timing_buf+1) - 48;
+    }
+    free(timing_buf);
+    timing_buf = 0;
+    fclose(fp);
+
 }
 
 int loadstringres(void)
@@ -441,6 +495,7 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 			logfont_k_title = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_TITLE_FONT_SIZE, 0);
 		
             loadstringres();
+            loadtimefile();
             SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
 
 

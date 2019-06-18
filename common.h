@@ -58,7 +58,7 @@
 #define _ID_TIMER_SETTING_GENERAL       120
 #define _ID_TIMER_INPUT       121
 
-
+#define TIMING_NUM  3
 
 #define MSG_VIDEOPLAY_END         (MSG_USER + 1)
 #define MSG_MEDIA_UPDATE          (MSG_USER + 2)
@@ -146,6 +146,7 @@ enum RES_STR_ID {
     RES_STR_NO_CONTENT,
     RES_STR_THEMESTYLE_THEME1,
     RES_STR_THEMESTYLE_THEME2,
+    RES_STR_SYNC_NET_TIME,
     RES_STR_SYSTEMTIME_DATA,
     RES_STR_SYSTEMTIME_TIME,
     RES_STR_SYSTEMTIME_FORMAT,
@@ -155,6 +156,8 @@ enum RES_STR_ID {
     RES_STR_SYSTEMTIME_OFF2,
     RES_STR_SYSTEMTIME_ON3,
     RES_STR_SYSTEMTIME_OFF3,
+    RES_STR_SYSTEMTIME_FORMAT_24,
+    RES_STR_SYSTEMTIME_FORMAT_12,
     RES_STR_LOWPOWER,
     RES_STR_CONNECTED,
     RES_STR_CONNECTING,
@@ -228,6 +231,12 @@ typedef struct
     int y;
 }touch_pos;
 
+typedef struct
+{
+    int status;
+    int timing;
+}rtc_timing;
+
 #if 1
 #define BROWSER_PATH_ROOT     "/oem/file"
 #define BROWSER_PATH_PIC      "/oem/file/pic"
@@ -257,10 +266,13 @@ typedef struct
 #define REC_FILE_JA    "/usr/local/share/minigui/res/string/JP-UTF8.bin"
 #define REC_FILE_KO    "/usr/local/share/minigui/res/string/KO-UTF8.bin"
 
+#define TIMING_FILE    "/usr/local/share/minigui/res/string/timing"
+#define TIME_SETTING_FILE    "/usr/local/share/minigui/res/string/time_setting"
+
 #define VERSION_FILE   "/etc/version"
 #define DEFRETROARCH   "/data/retroarch/retroarch.cfg"
 #define DEFRETROARCHNAME   ".cfg"
-        
+
 #include "ui_1024x600.h"
 //#include "ui_480x320.h"
 //#include "ui_480x272.h"
@@ -294,12 +306,16 @@ typedef struct
 #include "ffplay_ipc.h"
 #include "lowpower_dialog.h"
 #include "input_dialog.h"
+#include "time_input_dialog.h"
+#include "systime.h"
+#include "rtc_demo.h"
 
 #include <DeviceIo/Rk_wifi.h>
-#include <pthread.h> 
+#include <pthread.h>
 
 
 extern int loadstringres(void);
+extern int loadtimefile(void);
 extern int loadversion(char **model, char **version);
 extern int main_loadres(void);
 extern void main_unloadres(void);
@@ -343,7 +359,10 @@ extern struct wifi_info wifi_date;  // user`s wifi ssid and pwd
 extern struct wifi_avaiable wifiavaiable_list[100];  // result of scan
 extern int wifiavaiable_size;  // size of wifiavaiable_list
 
-
+extern struct tm *now_time;
+extern struct tm *last_time;
+extern int use_24_hour_format;
+extern int sync_net_time;
 extern int time_hour;
 extern int time_min;
 extern int time_sec;
@@ -356,11 +375,17 @@ extern RECT msg_rcBg;
 extern RECT msg_rcBatt;
 extern RECT msg_rcTitle;
 extern RECT msg_rcDialog;
+extern RECT msg_rcStatusBar;
+extern int status_bar_offset;
+extern int status_bar_time_str[10];
+extern int status_bar_date_str[20];
 
 extern RECT msg_rcWifi;
 
 
 extern char *res_str[RES_STR_MAX];
+extern rtc_timing timing_power_on[TIMING_NUM+1];
+extern rtc_timing timing_power_off[TIMING_NUM+1];
 
 extern LOGFONT  *logfont_cej;
 extern LOGFONT  *logfont_k;
