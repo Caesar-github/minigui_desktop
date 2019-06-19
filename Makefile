@@ -1,8 +1,8 @@
 PROJECT_DIR := $(shell pwd)
-CC ?= ../../buildroot/output/rockchip_rk3126c/host/bin/arm-buildroot-linux-gnueabihf-gcc
-BIN = game
+CC ?= $(TARGET_OUTPUT_DIR)/host/bin/arm-buildroot-linux-gnueabihf-gcc
+BIN = minigui_desktop
 
-STAGING_DIR ?= ../../buildroot/output/rockchip_rk3126c/staging/
+STAGING_DIR ?= $(TARGET_OUTPUT_DIR)/staging/
 
 OBJ = audioplay_dialog.o \
       browser_dialog.o \
@@ -54,7 +54,7 @@ CFLAGS += -DENABLE_BATT
 endif
 
 ifeq ($(ENABLE_WIFI),1)
-OBJ += setting_wifi_dialog.o 
+OBJ += setting_wifi_dialog.o
 CFLAGS += -DENABLE_WIFI
 endif
 
