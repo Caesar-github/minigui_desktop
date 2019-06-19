@@ -113,7 +113,7 @@ int parameter_recovery(void)
 
 	set_volume(VOLUME_DEF);
 	set_wifi(0);
-	set_wifi_date(" ", " ");
+	set_wifi_date("  ", "  ");
 
     fpFile = fopen(PARAMETER_FILE, "wb+");
     if (fpFile <= 0) {
@@ -250,7 +250,7 @@ char* get_wifi_psk(void)
 int test_wifi_pwd(void) // exist retuen 1 ,esle 0 
 {
 
-	if(strcmp(para_data.wifi_psk, " ") == 0) 
+	if (strcmp(para_data.wifi_psk, "  ") == 0)
 		return 0;
 	return 1;
 
@@ -266,3 +266,4 @@ char *get_ui_image_path(void)
     else
         return UI_IMAGE_PATH_0;
 }
+

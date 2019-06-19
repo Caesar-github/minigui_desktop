@@ -372,7 +372,7 @@ int main_loadres(void)
    if (LoadBitmap(HDC_SCREEN, &wifi_disabled_bmap, img)) 
    	    return -1;  
 
-	
+    RK_wifi_register_callback(_RK_wifi_state_callback);
 #endif
 
     snprintf(img, sizeof(img), "%sback.png", respath);

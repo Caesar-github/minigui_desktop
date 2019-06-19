@@ -250,7 +250,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
 				RK_wifi_enable(1);
 				set_wifi(RK_WIFI_State_DISCONNECTED);
 	
-				if (wifi_connect_flag=2)
+				if (wifi_connect_flag==2)
 				{
 					RK_wifi_connect(get_wifi_ssid(),get_wifi_psk());
 				}
@@ -421,7 +421,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
 						int state;
 						state = get_wifi();
 
-						if(test_wifi_pwd() && state == RK_WIFI_State_DISCONNECTED)
+						if(test_wifi_pwd() && (state == RK_WIFI_State_DISCONNECTED))
 						{
 							if (strcmp(get_wifi_ssid(), wifiavaiable_list[j+((cur_page-1)*WIFI_NUM_PERPAGE)].ssid) == 0) 
 							{
@@ -585,11 +585,6 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
 			//		if(pthread_kill(thread1,0) != ESRCH && pthread_kill(thread1,0) !=  EINVAL)
 					{
 						int iret1;
-						printf("0.0\n");
-						printf("0.0\n");
-						printf("0.0\n");
-						printf("0.0\n");
-						printf("0.0\n");
 											
 						iret1 = pthread_create( &thread1, NULL, get_available_wifi, (void*) message1);
 	//					pthread_detach(&thread1);
