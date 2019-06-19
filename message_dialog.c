@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h> 
+#include <sys/time.h>
 #include <math.h>
 #include <sys/ioctl.h>
 #include <sys/prctl.h>
@@ -24,7 +24,7 @@
 
 #include "common.h"
 
-LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message, 
+LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
                 WPARAM wParam, LPARAM lParam)
 {
     HWND hCurFocus;
@@ -36,10 +36,10 @@ LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
         int i;
         PCTRLDATA pCtrlData;
         HWND hCtrl;
-            
-        PDLGTEMPLATE pDlgTmpl 
+
+        PDLGTEMPLATE pDlgTmpl
                     = (PDLGTEMPLATE)(((PMAINWINCREATE)lParam)->dwReserved);
-            
+
         for (i = 0; i < pDlgTmpl->controlnr; i++) {
             pCtrlData = pDlgTmpl->controls + i;
             if (pCtrlData->class_name) {
@@ -59,7 +59,7 @@ LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
             }
             else
                 break;
-                              
+
             if (hCtrl == HWND_INVALID) {
                 dlgDestroyAllControls (hWnd);
                 return -1;
@@ -78,7 +78,7 @@ LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
             return GetDlgCtrlID (hDef);
         return 0;
     }
-    
+
     case MSG_DLG_SETDEFID:
     {
         HWND hOldDef;
@@ -98,13 +98,12 @@ LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
         }
         break;
     }
-        
     case MSG_COMMAND:
         if (wParam == IDCANCEL) {
             HWND hCancel;
-            
+
             hCancel = GetDlgItem (hWnd, IDCANCEL);
-            if (hCancel && IsWindowEnabled (hCancel) 
+            if (hCancel && IsWindowEnabled (hCancel)
                     && IsWindowVisible (hCancel))
                 EndDialog (hWnd, IDCANCEL);
         }
@@ -115,7 +114,7 @@ LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
         HWND hCancel;
 
         hCancel = GetDlgItem (hWnd, IDCANCEL);
-        if (hCancel && IsWindowEnabled (hCancel) 
+        if (hCancel && IsWindowEnabled (hCancel)
                     && IsWindowVisible (hCancel))
             EndDialog (hWnd, IDCANCEL);
 
@@ -125,185 +124,189 @@ LRESULT PreDefDialogProc_ex(HWND hWnd, UINT message,
     case MSG_ISDIALOG:
         return 1;
     case MSG_KEYLONGPRESS:
-		break;
+        break;
     case MSG_KEYDOWN:
-        if ((hCurFocus = GetFocusChild (hWnd)) 
-                && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
+        if ((hCurFocus = GetFocusChild (hWnd))
+                && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) &
                 DLGC_WANTALLKEYS)
             break;
 
-        switch (wParam) {
-        case KEY_EXIT_FUNC:
-            SendMessage (hWnd, MSG_COMMAND, IDCANCEL, 0L);
-            return 0;
-        case KEY_DOWN_FUNC:
-        {
-            HWND hNewFocus;
-                
-            if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
-                            DLGC_WANTTAB)
-                break;
+            switch (wParam) {
+            case KEY_EXIT_FUNC:
+                SendMessage (hWnd, MSG_COMMAND, IDCANCEL, 0L);
+                return 0;
+            case KEY_DOWN_FUNC:
+            {
+                HWND hNewFocus;
 
-            if (lParam & KS_SHIFT)
-                hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, TRUE);
-            else
-                hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, FALSE);
+                if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) &
+                                DLGC_WANTTAB)
+                    break;
 
-            if (hNewFocus != hCurFocus) {
-                SetNullFocus (hCurFocus);
-                SetFocus (hNewFocus);
+                if (lParam & KS_SHIFT)
+                    hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, TRUE);
+                else
+                    hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, FALSE);
+
+                if (hNewFocus != hCurFocus) {
+                    SetNullFocus (hCurFocus);
+                    SetFocus (hNewFocus);
 #if 0
-                SendMessage (hWnd, MSG_DLG_SETDEFID, 
-                                GetDlgCtrlID (hNewFocus), 0L);
+                    SendMessage (hWnd, MSG_DLG_SETDEFID,
+                                    GetDlgCtrlID (hNewFocus), 0L);
 #endif
-            }
+                }
 
-            return 0;
-        }
-		case KEY_UP_FUNC:
-		{
-			HWND hNewFocus;
-						
-			if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
-							DLGC_WANTTAB)
-				break;
-		
-			if (lParam & KS_SHIFT)
-				hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, FALSE);
-			else
-				hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, TRUE);
-		
-			if (hNewFocus != hCurFocus) {
-				SetNullFocus (hCurFocus);
-				SetFocus (hNewFocus);
-#if 0
-				SendMessage (hWnd, MSG_DLG_SETDEFID, 
-										GetDlgCtrlID (hNewFocus), 0L);
-#endif
-			}
-		
-			return 0;
-		}
-        case KEY_ENTER_FUNC:
-        {
-            HWND hDef;
-
-            if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
-                            DLGC_WANTENTER)
-                break;
-
-            if (SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) & 
-                            DLGC_PUSHBUTTON)
-                break;
-
-            hDef = GetDlgDefPushButton (hWnd);
-            /* DK[07/05/10]Fix Bug4798, Check the control if has WS_DISABLED property. */
-            if (hDef && IsWindowEnabled(hDef)) {
-                SendMessage (hWnd, MSG_COMMAND, GetDlgCtrlID (hDef), 0L);
                 return 0;
             }
-        }
+            case KEY_UP_FUNC:
+            {
+                HWND hNewFocus;
+
+                if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) &
+                                DLGC_WANTTAB)
+                    break;
+
+                if (lParam & KS_SHIFT)
+                    hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, FALSE);
+                else
+                    hNewFocus = GetNextDlgTabItem (hWnd, hCurFocus, TRUE);
+
+                if (hNewFocus != hCurFocus) {
+                    SetNullFocus (hCurFocus);
+                    SetFocus (hNewFocus);
+#if 0
+                    SendMessage (hWnd, MSG_DLG_SETDEFID,
+                                            GetDlgCtrlID (hNewFocus), 0L);
+#endif
+                }
+                return 0;
+            }
+            case KEY_ENTER_FUNC:
+            {
+                HWND hDef;
+
+                if (hCurFocus && SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) &
+                                DLGC_WANTENTER)
+                    break;
+
+                if (SendMessage (hCurFocus, MSG_GETDLGCODE, 0, 0L) &
+                                DLGC_PUSHBUTTON)
+                    break;
+
+                hDef = GetDlgDefPushButton (hWnd);
+                /* DK[07/05/10]Fix Bug4798, Check the control if has WS_DISABLED property. */
+                if (hDef && IsWindowEnabled(hDef)) {
+                    SendMessage (hWnd, MSG_COMMAND, GetDlgCtrlID (hDef), 0L);
+                    return 0;
+                }
+            }
         }
         break;
 
     default:
         break;
     }
-    
+
     return DefaultMainWinProc (hWnd, message, wParam, lParam);
 }
 
 static LRESULT MsgBoxProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message) {
-    case MSG_INITDIALOG:
+    switch (message)
     {
-        HWND hFocus = GetDlgDefPushButton (hWnd);
-        if (hFocus)
-             SetFocus (hFocus);
+        case MSG_INITDIALOG:
+        {
+            HWND hFocus = GetDlgDefPushButton (hWnd);
+            if (hFocus)
+                 SetFocus (hFocus);
 
-        SetWindowAdditionalData (hWnd, (DWORD)lParam);
-        SetWindowFont (hWnd, logfont);
+            SetWindowAdditionalData (hWnd, (DWORD)lParam);
+            SetWindowFont (hWnd, logfont);
 
-        /* set the messagebox's body text font and color.*/
-        hFocus = GetDlgItem(hWnd, IDC_STATIC+100);
-        SetWindowFont (hFocus, logfont);
+            /* set the messagebox's body text font and color.*/
+            hFocus = GetDlgItem(hWnd, IDC_STATIC+100);
+            SetWindowFont (hFocus, logfont);
 
-        SetWindowElementAttr (hFocus,WE_FGC_WINDOW, 
-            GetWindowElementAttr (hFocus, WE_FGC_MESSAGEBOX));
-        return 0;
+            SetWindowElementAttr (hFocus,WE_FGC_WINDOW,
+                GetWindowElementAttr (hFocus, WE_FGC_MESSAGEBOX));
+            return 0;
+        }
+
+        case MSG_COMMAND:
+        {
+            switch (wParam)
+            {
+                case IDOK:
+                case IDCANCEL:
+                case IDABORT:
+                case IDRETRY:
+                case IDIGNORE:
+                case IDYES:
+                case IDNO:
+                    if (GetDlgItem (hWnd, wParam))
+                        EndDialog (hWnd, wParam);
+                    break;
+            }
+            break;
+        }
+
+        case MSG_CHAR:
+        {
+            int id = 0;
+
+            if (HIBYTE (wParam))
+                break;
+            switch (LOBYTE (wParam))
+            {
+                case 'Y':
+                case 'y':
+                    id = IDYES;
+                    break;
+                case 'N':
+                case 'n':
+                    id = IDNO;
+                    break;
+                case 'A':
+                case 'a':
+                    id = IDABORT;
+                    break;
+                case 'R':
+                case 'r':
+                    id = IDRETRY;
+                    break;
+                case 'I':
+                case 'i':
+                    id = IDIGNORE;
+                    break;
+            }
+
+            if (id != 0 && GetDlgItem (hWnd, id))
+                EndDialog (hWnd, id);
+            break;
+        }
+
+        case MSG_DESTROY:
+            if (GetDlgItem (hWnd, IDCANCEL))
+            {
+                EndDialog (hWnd, IDCANCEL);
+            }
+            else if (GetDlgItem (hWnd, IDIGNORE))
+            {
+                EndDialog (hWnd, IDIGNORE);
+            }
+            else if (GetDlgItem (hWnd, IDNO))
+            {
+                EndDialog (hWnd, IDNO);
+            }
+            else if (GetDlgItem (hWnd, IDOK))
+            {
+                EndDialog (hWnd, IDOK);
+            }
+            break;
+        default:
+            break;
     }
-
-    case MSG_COMMAND:
-    {
-        switch (wParam) {
-        case IDOK:
-        case IDCANCEL:
-        case IDABORT:
-        case IDRETRY:
-        case IDIGNORE:
-        case IDYES:
-        case IDNO:
-            if (GetDlgItem (hWnd, wParam))
-                EndDialog (hWnd, wParam);
-            break;
-        }
-        break;
-    }
-
-    case MSG_CHAR:
-    {
-        int id = 0;
-        
-        if (HIBYTE (wParam))
-            break;
-        switch (LOBYTE (wParam)) {
-        case 'Y':
-        case 'y':
-            id = IDYES;
-            break;
-        case 'N':
-        case 'n':
-            id = IDNO;
-            break;
-        case 'A':
-        case 'a':
-            id = IDABORT;
-            break;
-        case 'R':
-        case 'r':
-            id = IDRETRY;
-            break;
-        case 'I':
-        case 'i':
-            id = IDIGNORE;
-            break;
-        }
-        
-        if (id != 0 && GetDlgItem (hWnd, id))
-            EndDialog (hWnd, id);
-        break;
-    }
-
-    case MSG_DESTROY:
-        if (GetDlgItem (hWnd, IDCANCEL)) {
-            EndDialog (hWnd, IDCANCEL);
-        }
-        else if (GetDlgItem (hWnd, IDIGNORE)) {
-            EndDialog (hWnd, IDIGNORE);
-        }
-        else if (GetDlgItem (hWnd, IDNO)) {
-            EndDialog (hWnd, IDNO);
-        }
-        else if (GetDlgItem (hWnd, IDOK)) {
-            EndDialog (hWnd, IDOK);
-        }
-        break;
-
-    default:
-        break;
-    }
-
     return DefaultDialogProc (hWnd, message, wParam, lParam);
 }
 
@@ -311,14 +314,17 @@ static void get_box_xy (HWND hParentWnd, DWORD dwStyle, DLGTEMPLATE* MsgBoxData)
 {
     RECT rcTemp;
 
-    if (dwStyle & MB_BASEDONPARENT) {
+    if (dwStyle & MB_BASEDONPARENT)
+    {
         GetWindowRect (hParentWnd, &rcTemp);
     }
-    else {
+    else
+    {
         rcTemp = g_rcDesktop;
     }
 
-    switch (dwStyle & MB_ALIGNMASK) {
+    switch (dwStyle & MB_ALIGNMASK)
+    {
         case MB_ALIGNCENTER:
             MsgBoxData->x = rcTemp.left + (RECTW(rcTemp) - MsgBoxData->w)/2;
             MsgBoxData->y = rcTemp.top + (RECTH(rcTemp) - MsgBoxData->h)/2;
@@ -345,34 +351,36 @@ static void get_box_xy (HWND hParentWnd, DWORD dwStyle, DLGTEMPLATE* MsgBoxData)
             break;
     }
 
-    if ((MsgBoxData->x + MsgBoxData->w) > g_rcDesktop.right) {
+    if ((MsgBoxData->x + MsgBoxData->w) > g_rcDesktop.right)
+    {
         MsgBoxData->x = g_rcDesktop.right - MsgBoxData->w;
     }
 
-    if ((MsgBoxData->y + MsgBoxData->h) > g_rcDesktop.bottom) {
+    if ((MsgBoxData->y + MsgBoxData->h) > g_rcDesktop.bottom)
+    {
         MsgBoxData->y = g_rcDesktop.bottom - MsgBoxData->h;
     }
 }
 
-int MessageBox_ex(HWND hParentWnd, const char* pszText, 
+int MessageBox_ex(HWND hParentWnd, const char* pszText,
                       const char* pszCaption, DWORD dwStyle)
 {
     BOOL IsTiny;
-    DLGTEMPLATE MsgBoxData = 
+    DLGTEMPLATE MsgBoxData =
     {
-        WS_CAPTION | WS_BORDER, 
+        WS_CAPTION | WS_BORDER,
         WS_EX_NONE, 0, 0, 0, 0, NULL, 0, 0, 0, NULL, 0L
     };
-    CTRLDATA     CtrlData [5] = 
+    CTRLDATA     CtrlData [5] =
     {
-        {"button", 
-            BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE | WS_GROUP, 
-            0, 0, 0, 0, 0, NULL, 0L},
-        {"button", 
-            BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 
+        {"button",
+            BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE | WS_GROUP,
             0, 0, 0, 0, 0, NULL, 0L},
         {"button",
-            BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 
+            BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE,
+            0, 0, 0, 0, 0, NULL, 0L},
+        {"button",
+            BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE,
             0, 0, 0, 0, 0, NULL, 0L}
     };
 
@@ -470,7 +478,7 @@ int MessageBox_ex(HWND hParentWnd, const char* pszText,
     rcButtons.left   = 0;
     rcButtons.top    = 0;
     rcButtons.bottom = mb_buttonh;
-    rcButtons.right  = MsgBoxData.controlnr * mb_buttonw + 
+    rcButtons.right  = MsgBoxData.controlnr * mb_buttonw +
         (MsgBoxData.controlnr - 1) * (mb_margin << 1);
 
     rcIcon.left   = 0;
@@ -540,7 +548,7 @@ int MessageBox_ex(HWND hParentWnd, const char* pszText,
 
     SelectFont(HDC_SCREEN, logfont);
 
-    //DrawText (HDC_SCREEN, pszText, -1, &rcText, 
+    //DrawText (HDC_SCREEN, pszText, -1, &rcText,
     //        DT_LEFT | DT_TOP | DT_CHARBREAK | DT_EXPANDTABS | DT_CALCRECT);
 
     if (IsTiny)
@@ -566,8 +574,8 @@ int MessageBox_ex(HWND hParentWnd, const char* pszText,
         + (mb_margin << 2)
         + (iBorder << 1);
     height = MAX (RECTH (rcText), RECTH (rcIcon)) + RECTH (rcButtons)
-        + mb_margin + (mb_margin << 1) 
-        + (iBorder << 1) 
+        + mb_margin + (mb_margin << 1)
+        + (iBorder << 1)
         + GetWindowElementAttr (hParentWnd, WE_METRICS_CAPTION);
 
     buttonx = (width - RECTW (rcButtons)) >> 1;
@@ -584,13 +592,10 @@ int MessageBox_ex(HWND hParentWnd, const char* pszText,
 
     MsgBoxData.controls = CtrlData;
 
-	printf("0.0\n");
-	printf("0.0\n");
-	printf("0.0\n");
+    printf("0.0\n");
+    printf("0.0\n");
+    printf("0.0\n");
 
-   return DialogBoxIndirectParam (&MsgBoxData, hParentWnd, MsgBoxProc, 
+   return DialogBoxIndirectParam (&MsgBoxData, hParentWnd, MsgBoxProc,
            (LPARAM)dwStyle);
-
-
-
 }

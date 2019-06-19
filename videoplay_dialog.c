@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h> 
+#include <sys/time.h>
 #include <math.h>
 
 //编码
@@ -91,9 +91,8 @@ static void decodeYUV420SP(int* rgba, unsigned char* yuv420sp, int width, int he
 
                 rgba[yp] = 0xff000000 | ((b << 6) & 0xff0000)
                         | ((g >> 2) & 0xff00) | ((r >> 10) & 0xff);
-//              下面为百度到的方法，其实就是r和b变量调换下位置  
-//              rgba[yp] = 0xff000000 | ((r << 6) & 0xff0000)  
-//                      | ((g >> 2) & 0xff00) | ((b >> 10) & 0xff);  
+//              rgba[yp] = 0xff000000 | ((r << 6) & 0xff0000)
+//                      | ((g >> 2) & 0xff00) | ((b >> 10) & 0xff);
             }
         }
 }
@@ -135,9 +134,8 @@ static void decodeYUV420P(unsigned char* yuv420_y, unsigned char* yuv420_u, unsi
 
                 rgba[yp] = 0xff000000 | ((b << 6) & 0xff0000)
                         | ((g >> 2) & 0xff00) | ((r >> 10) & 0xff);
-//              下面为百度到的方法，其实就是r和b变量调换下位置  
-//              rgba[yp] = 0xff000000 | ((r << 6) & 0xff0000)  
-//                      | ((g >> 2) & 0xff00) | ((b >> 10) & 0xff);  
+//              rgba[yp] = 0xff000000 | ((r << 6) & 0xff0000)
+//                      | ((g >> 2) & 0xff00) | ((b >> 10) & 0xff);
             }
         }
 }
@@ -164,12 +162,12 @@ int YV12ToBGR24_Table(unsigned char* pY,unsigned char* pU,unsigned char* pV,unsi
             yIdx = i * width + j;
             vIdx = (i/2) * (width/2) + (j/2);
             uIdx = vIdx;
-            
+
             rdif = Table_fv1[vData[vIdx]];
             invgdif = Table_fu1[uData[uIdx]] + Table_fv2[vData[vIdx]];
             bdif = Table_fu2[uData[uIdx]];
 
-            bgr[0] = yData[yIdx] + bdif;    
+            bgr[0] = yData[yIdx] + bdif;
             bgr[1] = yData[yIdx] - invgdif;
             bgr[2] = yData[yIdx] + rdif;
             bgr[3] = 255;
@@ -190,14 +188,13 @@ void print_time(void)
 {
     struct timeval tv;
     gettimeofday(&tv,NULL);
-    //printf("second:%ld\n",tv.tv_sec);  //秒
-    //printf("millisecond:%ld\n",tv.tv_sec*1000 + tv.tv_usec/1000);  //毫秒
-    printf("microsecond:%ld\n",tv.tv_sec*1000000 + tv.tv_usec);  //微秒	
+    //printf("second:%ld\n",tv.tv_sec);
+    //printf("millisecond:%ld\n",tv.tv_sec*1000 + tv.tv_usec/1000);
+    printf("microsecond:%ld\n",tv.tv_sec*1000000 + tv.tv_usec);
 }
 
 void* videoplay(void *arg)
 {
-    //获取输入输出文件名
     //const char *input = "/usr/local/share/3.mp4";
     char input[256];
     struct file_node *file_node;
@@ -212,32 +209,25 @@ void* videoplay(void *arg)
     }
     snprintf(input, sizeof(input), "%s/%s", dir_node->patch, file_node->name);
     printf("%s video file = %s\n", __func__, input);
-    //1.注册所有组件
     av_register_all();
-    //封装格式上下文，统领全局的结构体，保存了视频文件封装格式的相关信息
     AVFormatContext *pFormatCtx = avformat_alloc_context();
-    //2.打开输入视频文件
     if (avformat_open_input(&pFormatCtx, input, NULL, NULL) != 0)
     {
         printf("%s","无法打开输入视频文件");
         return;
     }
 
-    //3.获取视频文件信息
     if (avformat_find_stream_info(pFormatCtx,NULL) < 0)
     {
         printf("%s","无法获取视频文件信息");
         return;
     }
 
-    //获取视频流的索引位置
-    //遍历所有类型的流（音频流、视频流、字幕流），找到视频流
     int v_stream_idx = -1;
     i = 0;
     //number of streams
     for (; i < pFormatCtx->nb_streams; i++)
     {
-        //流的类型
         if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
         {
             v_stream_idx = i;
@@ -251,10 +241,7 @@ void* videoplay(void *arg)
         return;
     }
 
-    //只有知道视频的编码方式，才能够根据编码方式去找到解码器
-    //获取视频流中的编解码上下文
     AVCodecContext *pCodecCtx = pFormatCtx->streams[v_stream_idx]->codec;
-    //4.根据编解码上下文中的编码id查找对应的解码
     AVCodec *pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
     if (pCodec == NULL)
     {
@@ -262,36 +249,24 @@ void* videoplay(void *arg)
         return;
     }
 
-    //5.打开解码器
     if (avcodec_open2(pCodecCtx,pCodec,NULL)<0)
     {
         printf("%s","解码器无法打开\n");
         return;
     }
 
-    //输出视频信息
     printf("视频的文件格式：%s\n",pFormatCtx->iformat->name);
     printf("视频时长：%d\n", (pFormatCtx->duration)/1000000);
     printf("视频的宽高：%d,%d\n",pCodecCtx->width,pCodecCtx->height);
     printf("解码器的名称：%s\n",pCodec->name);
 
-    //准备读取
-    //AVPacket用于存储一帧一帧的压缩数据（H264）
-    //缓冲区，开辟空间
     AVPacket *packet = (AVPacket*)av_malloc(sizeof(AVPacket));
 
-    //AVFrame用于存储解码后的像素数据(YUV)
-    //内存分配
     AVFrame *pFrame = av_frame_alloc();
-    //YUV420
     AVFrame *pFrameYUV = av_frame_alloc();
-    //只有指定了AVFrame的像素格式、画面大小才能真正分配内存
-    //缓冲区分配内存
     uint8_t *out_buffer = (uint8_t *)av_malloc(avpicture_get_size(AV_PIX_FMT_YUV420P, LCD_W, LCD_H));
-    //初始化缓冲区
     avpicture_fill((AVPicture *)pFrameYUV, out_buffer, AV_PIX_FMT_YUV420P, LCD_W, LCD_H);
 
-    //用于转码（缩放）的参数，转之前的宽高，转之后的宽高，格式等
     struct SwsContext *sws_ctx = sws_getContext(pCodecCtx->width,pCodecCtx->height,pCodecCtx->pix_fmt,
                                                 LCD_W, LCD_H, AV_PIX_FMT_YUV420P,
                                                 SWS_BICUBIC, NULL, NULL, NULL);
@@ -301,15 +276,12 @@ void* videoplay(void *arg)
 
     int frame_count = 0;
 
-    //6.一帧一帧的读取压缩数据
     while ((av_read_frame(pFormatCtx, packet) >= 0) && (videoplay_exit == 0))
     {
-        //只要视频压缩数据（根据流的索引位置判断）
         if (packet->stream_index == v_stream_idx)
         {
-        	  //printf("1\n");
-        	  //print_time();
-            //7.解码一帧视频压缩数据，得到视频像素数据
+            //printf("1\n");
+            //print_time();
             ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
             if (ret < 0)
             {
@@ -317,22 +289,16 @@ void* videoplay(void *arg)
                 return;
             }
             //printf("2\n");
-        	  //print_time();
-            //为0说明解码完成，非0正在解码
+            //print_time();
             if (got_picture)
             {
-                //AVFrame转为像素格式YUV420，宽高
-                //2 6输入、输出数据
-                //3 7输入、输出画面一行的数据的大小 AVFrame 转换是一行一行转换的
-                //4 输入数据第一列要转码的位置 从0开始
-                //5 输入画面的高度
                 //printf("3\n");
-        	      //print_time();
+                //print_time();
 #if 0
                 sws_scale(sws_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height,
                           pFrameYUV->data, pFrameYUV->linesize);
                 //printf("4\n");
-        	      //print_time();
+                  //print_time();
                 decodeYUV420P(pFrameYUV->data[0], pFrameYUV->data[1], pFrameYUV->data[2], rgb_buff, LCD_W, LCD_H);
 #else
                 pthread_mutex_lock(&mutex);
@@ -340,13 +306,8 @@ void* videoplay(void *arg)
                 pthread_mutex_unlock(&mutex);
 #endif
                 //printf("5\n");
-        	      //print_time();
+                  //print_time();
                 InvalidateRect(hMainWnd, &msg_rcDialog, TRUE);
-                //输出到YUV文件
-                //AVFrame像素帧写入文件
-                //data解码后的图像像素数据（音频采样数据）
-                //Y 亮度 UV 色度（压缩了） 人对亮度更加敏感
-                //U V 个数是Y的1/4
                 int y_size = pCodecCtx->width * pCodecCtx->height;
                 //fwrite(pFrameYUV->data[0], 1, y_size, fp_yuv);
                 //fwrite(pFrameYUV->data[1], 1, y_size / 4, fp_yuv);
@@ -357,7 +318,6 @@ void* videoplay(void *arg)
             }
         }
 
-        //释放资源
         av_free_packet(packet);
     }
 
@@ -405,110 +365,116 @@ static LRESULT videoplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     HDC hdc;
 
     //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
-    switch (message) {
-    case MSG_INITDIALOG: {
-    	  DWORD bkcolor;
-        HWND hFocus = GetDlgDefPushButton(hWnd);
-        bkcolor = GetWindowElementPixel(hWnd, WE_BGC_WINDOW);
-        SetWindowBkColor(hWnd, bkcolor);
-        if (hFocus)
-            SetFocus(hFocus);
-        loadres();
-        memset(rgb_buff, 0xff, LCD_W * LCD_H*4);
-        //SetTimer(hWnd, _ID_TIMER_VIDEOPLAY, TIMER_VIDEOPLAY);
-        //InvalidateRect(hWnd, &msg_rcDialog, TRUE);
-        hMainWnd = hWnd;
-        pthread_mutex_init(&mutex, NULL);
-        if (videoplay_t == NULL) {
-            videoplay_exit = 0;
-            pthread_create(&videoplay_t, NULL, videoplay, (void *)"videoplay");
-        }
-        return 0;
-    }
-    case MSG_TIMER:
-        if (wParam == _ID_TIMER_VIDEOPLAY) {
-            //InvalidateRect(hWnd, &msg_rcDialog, TRUE);
-        }
-        break;
-    case MSG_KEYDOWN:
-        switch (wParam) {
-            case KEY_ENTER_FUNC:
-                //videoplay();
-                if (videoplay_t == NULL) {
-                    videoplay_exit = 0;
-                    pthread_create(&videoplay_t, NULL, videoplay, (void *)"videoplay");
-                }
-                break;
-            case KEY_DOWN_FUNC:
-                break;
-            case KEY_UP_FUNC:
-                break;
-            case KEY_EXIT_FUNC:
-                videoplay_exit = 1;
-                //if (videoplay_t != NULL)
-                //    pthread_join(videoplay_t, NULL);
-                break;
-        }
-        break;
-    case MSG_COMMAND: {
-        break;
-    }
-    case MSG_PAINT: {
-        int i;
-        pthread_mutex_lock(&mutex);
-        FillBoxWithBitmap(hdc, BACK_PINT_X, BACK_PINT_Y,
-                               BACK_PINT_W, BACK_PINT_H,
-                               &back_bmap);
-        hdc = BeginPaint(hWnd);
-        SelectFont(hdc, logfont);
-        InitBitmap(HDC_SCREEN, LCD_W, LCD_H, LCD_W*4, rgb_buff, &mBitMap);
-        FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, &mBitMap);
-        EndPaint(hWnd, hdc);
-        pthread_mutex_unlock(&mutex);
-        break;
-    }
-    case MSG_VIDEOPLAY_END:
-        EndDialog(hWnd, wParam);
-        break;
-    case MSG_DESTROY:
-        unloadres();
-        pthread_mutex_destroy(&mutex);
-        return 0;
-    case MSG_LBUTTONDOWN:
-        touch_pos_down.x = LOSWORD(lParam);
-        touch_pos_down.y = HISWORD(lParam);
-        printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
-        break;
-    case MSG_LBUTTONUP:
-        if (get_bl_brightness() == 0)
+    switch (message)
+    {
+        case MSG_INITDIALOG:
         {
-            screenon();
+              DWORD bkcolor;
+            HWND hFocus = GetDlgDefPushButton(hWnd);
+            bkcolor = GetWindowElementPixel(hWnd, WE_BGC_WINDOW);
+            SetWindowBkColor(hWnd, bkcolor);
+            if (hFocus)
+                SetFocus(hFocus);
+            loadres();
+            memset(rgb_buff, 0xff, LCD_W * LCD_H*4);
+            //SetTimer(hWnd, _ID_TIMER_VIDEOPLAY, TIMER_VIDEOPLAY);
+            //InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+            hMainWnd = hWnd;
+            pthread_mutex_init(&mutex, NULL);
+            if (videoplay_t == NULL)
+            {
+                videoplay_exit = 0;
+                pthread_create(&videoplay_t, NULL, videoplay, (void *)"videoplay");
+            }
+            return 0;
+        }
+        case MSG_TIMER:
+            if (wParam == _ID_TIMER_VIDEOPLAY)
+            {
+                //InvalidateRect(hWnd, &msg_rcDialog, TRUE);
+            }
+            break;
+        case MSG_KEYDOWN:
+            switch (wParam)
+            {
+                case KEY_ENTER_FUNC:
+                    //videoplay();
+                    if (videoplay_t == NULL)
+                    {
+                        videoplay_exit = 0;
+                        pthread_create(&videoplay_t, NULL, videoplay, (void *)"videoplay");
+                    }
+                    break;
+                case KEY_DOWN_FUNC:
+                    break;
+                case KEY_UP_FUNC:
+                    break;
+                case KEY_EXIT_FUNC:
+                    videoplay_exit = 1;
+                    //if (videoplay_t != NULL)
+                    //    pthread_join(videoplay_t, NULL);
+                    break;
+            }
+            break;
+        case MSG_COMMAND:
+            break;
+        case MSG_PAINT:
+        {
+            int i;
+            pthread_mutex_lock(&mutex);
+            FillBoxWithBitmap(hdc, BACK_PINT_X, BACK_PINT_Y,
+                                   BACK_PINT_W, BACK_PINT_H,
+                                   &back_bmap);
+            hdc = BeginPaint(hWnd);
+            SelectFont(hdc, logfont);
+            InitBitmap(HDC_SCREEN, LCD_W, LCD_H, LCD_W*4, rgb_buff, &mBitMap);
+            FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, &mBitMap);
+            EndPaint(hWnd, hdc);
+            pthread_mutex_unlock(&mutex);
             break;
         }
-        DisableScreenAutoOff();
-        touch_pos_up.x = LOSWORD(lParam);
-        touch_pos_up.y = HISWORD(lParam);
-        printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
-        int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
-        if(witch_button == 0) menu_back(hWnd,wParam,lParam);
-        if(witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
-        {
-            videoplay_enter(hWnd,wParam,lParam);
-        }
-        touch_pos_old.x = touch_pos_up.x;
-        touch_pos_old.y = touch_pos_up.y;
-        EnableScreenAutoOff();
-        break;
+        case MSG_VIDEOPLAY_END:
+            EndDialog(hWnd, wParam);
+            break;
+        case MSG_DESTROY:
+            unloadres();
+            pthread_mutex_destroy(&mutex);
+            return 0;
+        case MSG_LBUTTONDOWN:
+            touch_pos_down.x = LOSWORD(lParam);
+            touch_pos_down.y = HISWORD(lParam);
+            printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__,touch_pos_down.x,touch_pos_down.y);
+            break;
+        case MSG_LBUTTONUP:
+            if (get_bl_brightness() == 0)
+            {
+                screenon();
+                break;
+            }
+            DisableScreenAutoOff();
+            touch_pos_up.x = LOSWORD(lParam);
+            touch_pos_up.y = HISWORD(lParam);
+            printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
+            int witch_button = check_button(touch_pos_up.x,touch_pos_up.y);
+            if(witch_button == 0)
+                menu_back(hWnd,wParam,lParam);
+            if(witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
+            {
+                videoplay_enter(hWnd,wParam,lParam);
+            }
+            touch_pos_old.x = touch_pos_up.x;
+            touch_pos_old.y = touch_pos_up.y;
+            EnableScreenAutoOff();
+            break;
     }
-
     return DefaultDialogProc(hWnd, message, wParam, lParam);
 }
 
 void creat_videoplay_dialog(HWND hWnd, struct directory_node *node)
 {
     DLGTEMPLATE PicPreViewDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
-    	                        0, 0,
-    	                        LCD_W, LCD_H,
+                                0, 0,
+                                LCD_W, LCD_H,
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0};
     list_select = node->file_sel;
     file_total = node->total;
