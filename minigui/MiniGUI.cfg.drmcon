@@ -21,7 +21,7 @@
 gal_engine=shadow
 
 # IAL engine
-ial_engine=RKKeybroad
+ial_engine=RKKeyboard
 mdev=/dev/input/event0
 mtype=IMPS2
 
