@@ -384,6 +384,10 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
             if (cur_file_node)
                 DrawText(hdc, cur_file_node->name, -1, &msg_rcFilename, DT_TOP | DT_CENTER);
             snprintf(time_str, sizeof(time_str), "%02d:%02d/%02d:%02d", cur_time / 60, cur_time % 60, total_time / 60, total_time % 60);
+            msg_rcTime.left = TIME_PINT_X;
+            msg_rcTime.top = TIME_PINT_Y;
+            msg_rcTime.right = TIME_PINT_X + TIME_PINT_W;
+            msg_rcTime.bottom = TIME_PINT_Y + TIME_PINT_H;
             DrawText(hdc, time_str, -1, &msg_rcTime, DT_TOP | DT_RIGHT);
             FillBoxWithBitmap(hdc, PLAYSTATUS_PINT_X, PLAYSTATUS_PINT_Y, PLAYSTATUS_PINT_W, PLAYSTATUS_PINT_H, &playstatus_bmap[play_status]);
             FillBoxWithBitmap(hdc, PLAYPREV_PINT_X, PLAYPREV_PINT_Y, PLAYPREV_PINT_W, PLAYPREV_PINT_H, &playprev_bmap);
