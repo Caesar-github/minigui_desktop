@@ -4,6 +4,8 @@ BIN = minigui_desktop
 
 STAGING_DIR ?= $(TARGET_OUTPUT_DIR)/staging/
 
+include config.mk
+
 OBJ = audioplay_dialog.o \
       browser_dialog.o \
       desktop_dialog.o \
