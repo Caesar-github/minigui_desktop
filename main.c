@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h> 
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <math.h>
@@ -17,7 +17,7 @@
 #include <minigui/gdi.h>
 #include <minigui/window.h>
 #include <minigui/control.h>
-extern WINDOW_ELEMENT_RENDERER * __mg_def_renderer;
+extern WINDOW_ELEMENT_RENDERER *__mg_def_renderer;
 extern MG_EXPORT PLOGFONT g_SysLogFont [];
 
 #include "common.h"
@@ -67,8 +67,8 @@ BITMAP input_box;
 
 struct tm *now_time = 0;
 struct tm *last_time = 0;
-rtc_timing timing_power_on[TIMING_NUM+1] = {0};
-rtc_timing timing_power_off[TIMING_NUM+1] = {0};
+rtc_timing timing_power_on[TIMING_NUM + 1] = {0};
+rtc_timing timing_power_off[TIMING_NUM + 1] = {0};
 char *timing_buf;
 int battery = 0;
 int status_bar_offset;
@@ -90,33 +90,38 @@ HWND mhWnd;
 #define maxlabelsize 35
 static int  __getline(char **lineptr, ssize_t *n, FILE *stream)
 {
-    int count=0;
+    int count = 0;
     int buf;
 
-    if(*lineptr == NULL) {
-        *n=maxlabelsize;
-        *lineptr = (char*)malloc(*n);
+    if (*lineptr == NULL)
+    {
+        *n = maxlabelsize;
+        *lineptr = (char *)malloc(*n);
     }
 
-    if(( buf = fgetc(stream) ) == EOF ) {
+    if ((buf = fgetc(stream)) == EOF)
+    {
         return -1;
     }
 
-    do {
-        if(buf=='\n') {
+    do
+    {
+        if (buf == '\n')
+        {
             count += 1;
             break;
         }
 
         count++;
 
-        *(*lineptr+count-1) = buf;
-        *(*lineptr+count) = '\0';
+        *(*lineptr + count - 1) = buf;
+        *(*lineptr + count) = '\0';
 
-        if(*n <= count)
-            *lineptr = (char*)realloc(*lineptr,count*2);
+        if (*n <= count)
+            *lineptr = (char *)realloc(*lineptr, count * 2);
         buf = fgetc(stream);
-    } while( buf != EOF);
+    }
+    while (buf != EOF);
 
     return count;
 }
@@ -125,10 +130,12 @@ void updatesysfont(LOGFONT  *font)
 {
     int i;
 
-    for (i = 0; i <= WE_DESKTOP; i++) {
+    for (i = 0; i <= WE_DESKTOP; i++)
+    {
         __mg_def_renderer->we_fonts[i] = font;
     }
-    for (i = 0; i < NR_SYSLOGFONTS; i++) {
+    for (i = 0; i < NR_SYSLOGFONTS; i++)
+    {
         g_SysLogFont[i] = font;
     }
 }
@@ -138,12 +145,13 @@ int loadversion(char **model, char **version)
     FILE *fp;
     ssize_t len = 0;
     int pos = 0;
-    const char* versionFile;
+    const char *versionFile;
 
     versionFile = VERSION_FILE;
 
     fp = fopen(versionFile, "r");
-    if (fp == NULL) {
+    if (fp == NULL)
+    {
         printf("open file %s failed: %s\n", versionFile, strerror(errno));
         return -1;
     }
@@ -156,7 +164,7 @@ int loadversion(char **model, char **version)
 
     fclose(fp);
 
-    return 0;	
+    return 0;
 }
 
 int loadtimefile(void)
@@ -165,23 +173,26 @@ int loadtimefile(void)
     ssize_t len = 0;
     int pos = 0;
     fp = fopen(TIMING_FILE, "r");
-    if (fp == NULL) {
+    if (fp == NULL)
+    {
         printf("open file %s failed: %s\n", TIMING_FILE, strerror(errno));
         return -1;
     }
-    while ((__getline(&timing_buf, &len, fp)) != -1) {
-        timing_power_on[pos].timing = ((*timing_buf - 48) * 1000) + ((*(timing_buf+1) - 48) * 100)
-                                    + ((*(timing_buf+2) - 48) * 10) + (*(timing_buf+3) - 48);
-        timing_power_on[pos].status = (*(timing_buf+4) - 48);
+    while ((__getline(&timing_buf, &len, fp)) != -1)
+    {
+        timing_power_on[pos].timing = ((*timing_buf - 48) * 1000) + ((*(timing_buf + 1) - 48) * 100)
+                                      + ((*(timing_buf + 2) - 48) * 10) + (*(timing_buf + 3) - 48);
+        timing_power_on[pos].status = (*(timing_buf + 4) - 48);
         pos++;
         if (pos >= TIMING_NUM)
             break;
     }
     pos = 0;
-    while ((__getline(&timing_buf, &len, fp)) != -1) {
-        timing_power_off[pos].timing = ((*timing_buf - 48) * 1000) + ((*(timing_buf+1) - 48) * 100)
-                                    + ((*(timing_buf+2) - 48) * 10) + (*(timing_buf+3) - 48);
-        timing_power_off[pos].status = (*(timing_buf+4) - 48);
+    while ((__getline(&timing_buf, &len, fp)) != -1)
+    {
+        timing_power_off[pos].timing = ((*timing_buf - 48) * 1000) + ((*(timing_buf + 1) - 48) * 100)
+                                       + ((*(timing_buf + 2) - 48) * 10) + (*(timing_buf + 3) - 48);
+        timing_power_off[pos].status = (*(timing_buf + 4) - 48);
         pos++;
         if (pos >= TIMING_NUM)
             break;
@@ -197,32 +208,34 @@ int loadstringres(void)
     FILE *fp;
     ssize_t len = 0;
     int pos = 0;
-    const char* langFile;
+    const char *langFile;
 
-    switch (get_language()) {
-        case LANGUAGE_CH:
-            langFile = REC_FILE_CN;
-            logfont = logfont_cej;
-		    logfont_title = logfont_cej_title;
-            break;
-        case LANGUAGE_EN:
-            langFile = REC_FILE_EN;
-            logfont = logfont_cej;
-			logfont_title = logfont_cej_title;
-            break;
-        case LANGUAGE_JA:
-            langFile = REC_FILE_JA;
-            logfont = logfont_cej;
-			logfont_title = logfont_cej_title;
-            break;
-        case LANGUAGE_KO:
-            langFile = REC_FILE_KO;
-            logfont = logfont_k;
-			logfont_title = logfont_k_title;
-            break;
+    switch (get_language())
+    {
+    case LANGUAGE_CH:
+        langFile = REC_FILE_CN;
+        logfont = logfont_cej;
+        logfont_title = logfont_cej_title;
+        break;
+    case LANGUAGE_EN:
+        langFile = REC_FILE_EN;
+        logfont = logfont_cej;
+        logfont_title = logfont_cej_title;
+        break;
+    case LANGUAGE_JA:
+        langFile = REC_FILE_JA;
+        logfont = logfont_cej;
+        logfont_title = logfont_cej_title;
+        break;
+    case LANGUAGE_KO:
+        langFile = REC_FILE_KO;
+        logfont = logfont_k;
+        logfont_title = logfont_k_title;
+        break;
     }
     fp = fopen(langFile, "r");
-    if (fp == NULL) {
+    if (fp == NULL)
+    {
         printf("open file %s failed: %s\n", langFile, strerror(errno));
         return -1;
     }
@@ -231,7 +244,8 @@ int loadstringres(void)
     fgetc(fp);
     fgetc(fp);
 
-    while ((__getline(&res_str[pos], &len, fp)) != -1) {
+    while ((__getline(&res_str[pos], &len, fp)) != -1)
+    {
         //printf("load line Label %d------%s\n", pos, res_str[pos]);
         pos++;
         if (pos >= RES_STR_MAX)
@@ -246,27 +260,29 @@ void unloadstringres(void)
 {
     int i;
 
-    for (i = 0; i < RES_STR_MAX; i++) {
-        if (res_str[i]) {
+    for (i = 0; i < RES_STR_MAX; i++)
+    {
+        if (res_str[i])
+        {
             free(res_str[i]);
             res_str[i] = 0;
         }
     }
 }
 
-static char* mk_time(char* buff)
+static char *mk_time(char *buff)
 {
-     time_t t;
-     struct tm * tm;
+    time_t t;
+    struct tm *tm;
 
-     time (&t);
-     tm = localtime (&t);
-     sprintf (buff, "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
+    time(&t);
+    tm = localtime(&t);
+    sprintf(buff, "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
 
-     return buff;
+    return buff;
 }
 
-void sysUsecTime(char* buff)
+void sysUsecTime(char *buff)
 {
     struct timeval    tv;
     struct timezone tz;
@@ -276,7 +292,7 @@ void sysUsecTime(char* buff)
     gettimeofday(&tv, &tz);
 
     p = localtime(&tv.tv_sec);
-    sprintf(buff, "%04d-%02d-%02d %02d:%02d:%02d %03d", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000);
+    sprintf(buff, "%04d-%02d-%02d %02d:%02d:%02d %03d", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec / 1000);
 }
 
 
@@ -284,29 +300,36 @@ void sysUsecTime(char* buff)
 
 int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 {
-	printf("%s state: %d\n", __func__, state);
+    printf("%s state: %d\n", __func__, state);
 
-	set_wifi(state);
- //   if (get_bl_brightness() == 0)
- //   {
- //       screenon();
- //   }
-//	DesktopUpdateAllWindow();
+    set_wifi_state(state);
 
-	if (state == RK_WIFI_State_CONNECTED) {
-		printf("RK_WIFI_State_CONNECTED\n");
-	
-	} else if (state == RK_WIFI_State_CONNECTFAILED) {
-		printf("RK_WIFI_State_CONNECTFAILED\n");
-	} else if (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY) {
-		printf("RK_WIFI_State_CONNECTFAILED_WRONG_KEY\n");
-	}
-	 else if (state == RK_WIFI_State_CONNECTING) {
-		printf("RK_WIFI_State_CONNECTING\n");
-		set_wifi_date(wifi_date.ssid,wifi_date.psk);
-	}
 
-	return 0;
+    if (state == RK_WIFI_State_CONNECTED)
+    {
+        printf("RK_WIFI_State_CONNECTED\n");
+
+    }
+    else if (state == RK_WIFI_State_CONNECTFAILED)
+    {
+        printf("RK_WIFI_State_CONNECTFAILED\n");
+    }
+    else if (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY)
+    {
+        printf("RK_WIFI_State_CONNECTFAILED_WRONG_KEY\n");
+    }
+    else if (state == RK_WIFI_State_CONNECTING)
+    {
+        printf("RK_WIFI_State_CONNECTING\n");
+        set_wifi_date(wifi_date.ssid, wifi_date.psk);
+    }
+    else
+    {
+        printf("state:%d", state);
+        printf("RK_WIFI_State_DISCONNECT\n");
+    }
+
+    return 0;
 
 }
 
@@ -321,7 +344,8 @@ int main_loadres(void)
     char *respath = get_ui_image_path();
 
 #ifdef ENABLE_BATT
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < 6; i++)
+    {
         snprintf(img, sizeof(img), "%sbattery%d.png", respath, i);
         if (LoadBitmap(HDC_SCREEN, &batt_bmap[i], img))
             return -1;
@@ -329,23 +353,23 @@ int main_loadres(void)
 #endif
 
 #ifdef ENABLE_WIFI
-   snprintf(img, sizeof(img), "%swifi.png", respath);
-   if (LoadBitmap(HDC_SCREEN, &wifi_bmap, img)) 
-		return -1;
+    snprintf(img, sizeof(img), "%swifi.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_bmap, img))
+        return -1;
 
-   snprintf(img, sizeof(img), "%swifi_connected.png", respath);
-   if (LoadBitmap(HDC_SCREEN, &wifi_connected_bmap, img)) 
-   	    return -1;
-   
-   snprintf(img, sizeof(img), "%swifi_disconnected.png", respath);
-   if (LoadBitmap(HDC_SCREEN, &wifi_disconnected_bmap, img)) 
-   	    return -1;   
-   
-   snprintf(img, sizeof(img), "%swifi_disabled.png", respath);
-   if (LoadBitmap(HDC_SCREEN, &wifi_disabled_bmap, img)) 
-   	    return -1;  
+    snprintf(img, sizeof(img), "%swifi_connected.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_connected_bmap, img))
+        return -1;
 
-    RK_wifi_register_callback(_RK_wifi_state_callback);
+    snprintf(img, sizeof(img), "%swifi_disconnected.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_disconnected_bmap, img))
+        return -1;
+
+    snprintf(img, sizeof(img), "%swifi_disabled.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_disabled_bmap, img))
+        return -1;
+
+
 #endif
 
     snprintf(img, sizeof(img), "%sback.png", respath);
@@ -357,49 +381,49 @@ int main_loadres(void)
         return -1;
 
 //=================add vulume icon=======================
-	
+
     snprintf(img, sizeof(img), "%svolume_0.png", respath);
     if (LoadBitmap(HDC_SCREEN, &volume_0, img))
         return -1;
-	
-	snprintf(img, sizeof(img), "%svolume_1.png", respath);
+
+    snprintf(img, sizeof(img), "%svolume_1.png", respath);
     if (LoadBitmap(HDC_SCREEN, &volume_1, img))
         return -1;
-	
-	snprintf(img, sizeof(img), "%svolume_2.png", respath);
+
+    snprintf(img, sizeof(img), "%svolume_2.png", respath);
     if (LoadBitmap(HDC_SCREEN, &volume_2, img))
         return -1;
-	
-	snprintf(img, sizeof(img), "%svolume_3.png", respath);
+
+    snprintf(img, sizeof(img), "%svolume_3.png", respath);
     if (LoadBitmap(HDC_SCREEN, &volume_3, img))
         return -1;
 
 
-	snprintf(img, sizeof(img), "%sairkiss.jpg", respath);
+    snprintf(img, sizeof(img), "%sairkiss.jpg", respath);
     if (LoadBitmap(HDC_SCREEN, &airkiss_bmap, img))
         return -1;
 
 
-	snprintf(img, sizeof(img), "%swifi_signal_3.png", respath);
-	if (LoadBitmap(HDC_SCREEN, &wifi_signal_3, img))
-		return -1;
+    snprintf(img, sizeof(img), "%swifi_signal_3.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_signal_3, img))
+        return -1;
 
-	snprintf(img, sizeof(img), "%swifi_signal_2.png", respath);
-	if (LoadBitmap(HDC_SCREEN, &wifi_signal_2, img))
-		return -1;
+    snprintf(img, sizeof(img), "%swifi_signal_2.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_signal_2, img))
+        return -1;
 
-	snprintf(img, sizeof(img), "%swifi_signal_1.png", respath);
-	if (LoadBitmap(HDC_SCREEN, &wifi_signal_1, img))
-		return -1;
+    snprintf(img, sizeof(img), "%swifi_signal_1.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_signal_1, img))
+        return -1;
 
-	snprintf(img, sizeof(img), "%sinput_box.png", respath);
-	if (LoadBitmap(HDC_SCREEN, &input_box, img))
-		return -1;
+    snprintf(img, sizeof(img), "%sinput_box.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &input_box, img))
+        return -1;
 
-	snprintf(img, sizeof(img), "%slist_sel1.png", respath);
-	if (LoadBitmap(HDC_SCREEN, &list_sel1_bmap, img))
-		return -1;
-	
+    snprintf(img, sizeof(img), "%slist_sel1.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &list_sel1_bmap, img))
+        return -1;
+
     return 0;
 }
 
@@ -409,7 +433,7 @@ void main_unloadres(void)
 
 #ifdef ENABLE_BATT
     for (i = 0; i < 6; i++)
-      UnloadBitmap(&batt_bmap[i]);
+        UnloadBitmap(&batt_bmap[i]);
 #endif
 
     UnloadBitmap(&background_bmap);
@@ -418,15 +442,19 @@ void main_unloadres(void)
 #ifdef ENABLE_BATT
 static void batt_update(void)
 {
-    if (ac_is_online()) {
+    if (ac_is_online())
+    {
         battery = 5;
-    } else {
+    }
+    else
+    {
         int bat = get_battery_capacity();
         //printf("battery:%d\n",bat);
         if (bat < 5) {
             battery = 0;
             creat_lowpower_dialog(mhWnd);
-        } else if (bat < 10)
+        }
+        else if (bat < 10)
             battery = 0;
         else if (bat < 30)
             battery = 1;
@@ -458,54 +486,51 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 {
     HDC hdc;
 
-    switch (message) {
-        case MSG_CREATE:
-            EnableScreenAutoOff();
-            main_loadres();
-            logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
-            logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
-			
-			logfont_cej_title = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_TITLE_FONT_SIZE, 0);
-			logfont_k_title = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_TITLE_FONT_SIZE, 0);
-		
-            loadstringres();
-            loadtimefile();
-            SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
+    switch (message)
+    {
+    case MSG_CREATE:
+        EnableScreenAutoOff();
+        main_loadres();
+        logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
+        logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
+
+        logfont_cej_title = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_TITLE_FONT_SIZE, 0);
+        logfont_k_title = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_TITLE_FONT_SIZE, 0);
+
+        loadstringres();
+        loadtimefile();
+        SetTimer(hWnd, _ID_TIMER_MAIN, TIMER_MAIN);
 
 
 #ifdef ENABLE_BATT
-            batt_update();
+        batt_update();
 #endif
 
 #ifdef ENABLE_WIFI
-			
-				if(get_wifi())
-				{
-					RK_wifi_enable(1);
-					set_wifi(RK_WIFI_State_DISCONNECTED);
-					int iret1;
-					iret1 = pthread_create( &thread1, NULL, get_available_wifi, (void*) message1);
-				//	pthread_detach(&thread1);
-					printf("Thread 1 returns: %d\n",iret1);  // return 0 if seccuess
-			
-				}
-				else
-				{
-					RK_wifi_enable(0);
-					set_wifi(RK_WIFI_State_IDLE);
-			
-				}
-			
-				
+
+        RK_wifi_register_callback(_RK_wifi_state_callback);
+
+        RK_wifi_enable(1);
+        set_wifi_state(RK_WIFI_State_DISCONNECTED);
+        int iret1;
+        iret1 = pthread_create(&thread1, NULL, get_available_wifi, (void *) message1);
+        pthread_detach(&thread1);
+        printf("Thread 1 returns: %d\n", iret1); // return 0 if seccuess
+
+        RK_wifi_enable(0);
+        set_wifi_state(RK_WIFI_State_OFF);
+
+
 #endif
 
 
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            RegisterMainWindow(hWnd);
-            mhWnd = hWnd;
-            creat_desktop_dialog(hWnd);
+        InvalidateRect(hWnd, &msg_rcBg, TRUE);
+        RegisterMainWindow(hWnd);
+        mhWnd = hWnd;
+        creat_desktop_dialog(hWnd);
         break;
         case MSG_TIMER:
+		{
             if (wParam == _ID_TIMER_MAIN) {
 #ifdef ENABLE_BATT
                 batt_update();
@@ -517,45 +542,47 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
                         screenoff();
                     }
                 }
-		/* for lowpower test
-		int test_cnt=0
-		test_cnt ++;
-		if (test_cnt == 5) {
-			battery = 0;
-			creat_lowpower_dialog(mhWnd);
-		}
-		*/
             }
+            /* for lowpower test
+            int test_cnt=0
+            test_cnt ++;
+            if (test_cnt == 5) {
+                battery = 0;
+                creat_lowpower_dialog(mhWnd);
+            }
+            */
+        }
         break;
-        case MSG_PAINT:
-            hdc = BeginPaint(hWnd);
+    case MSG_PAINT:
+        hdc = BeginPaint(hWnd);
 
-            FillBoxWithBitmap(hdc, BG_PINT_X,
-                              BG_PINT_Y, BG_PINT_W,
-                              BG_PINT_H, &background_bmap);
-            EndPaint(hWnd, hdc);
-            break;
-        case MSG_KEYDOWN:
-            printf("%s MSG_KEYDOWN message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
-            break;
-        case MSG_MAINWIN_KEYDOWN:
-            break;
-        case MSG_MAINWIN_KEYUP:
-            if (screenoff_cnt == get_screenoff_val()) {
-                EnableKeyMessage();
-                screenon();
-            }
-            screenoff_cnt = 0;
-            break;
-        case MSG_CLOSE:
-            KillTimer(hWnd, _ID_TIMER_MAIN);
-            UnregisterMainWindow(hWnd);
-            DestroyMainWindow(hWnd);
-            PostQuitMessage(hWnd);
-            main_unloadres();
-            unloadstringres();
-            DestroyLogFont(logfont_cej);
-            DestroyLogFont(logfont_k);
+        FillBoxWithBitmap(hdc, BG_PINT_X,
+                          BG_PINT_Y, BG_PINT_W,
+                          BG_PINT_H, &background_bmap);
+        EndPaint(hWnd, hdc);
+        break;
+    case MSG_KEYDOWN:
+        printf("%s MSG_KEYDOWN message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
+        break;
+    case MSG_MAINWIN_KEYDOWN:
+        break;
+    case MSG_MAINWIN_KEYUP:
+        if (screenoff_cnt == get_screenoff_val())
+        {
+            EnableKeyMessage();
+            screenon();
+        }
+        screenoff_cnt = 0;
+        break;
+    case MSG_CLOSE:
+        KillTimer(hWnd, _ID_TIMER_MAIN);
+        UnregisterMainWindow(hWnd);
+        DestroyMainWindow(hWnd);
+        PostQuitMessage(hWnd);
+        main_unloadres();
+        unloadstringres();
+        DestroyLogFont(logfont_cej);
+        DestroyLogFont(logfont_k);
         return 0;
     }
 
@@ -582,18 +609,19 @@ static void InitCreateInfo(PMAINWINCREATE pCreateInfo)
 
 void signal_func(int signal)
 {
-    switch (signal){
-        case SIGUSR1:
+    switch (signal)
+    {
+    case SIGUSR1:
 #ifdef ENABLE_BATT
-            batt_update();
+        batt_update();
 #endif
-            break;
-        default:
-            break;
+        break;
+    default:
+        break;
     }
 }
 
-int MiniGUIMain(int args, const char* arg[])
+int MiniGUIMain(int args, const char *arg[])
 {
     MSG Msg;
     MAINWINCREATE CreateInfo;
@@ -602,7 +630,7 @@ int MiniGUIMain(int args, const char* arg[])
     HWND hMainWnd;
 
 #ifdef _MGRM_PROCESSES
-    JoinLayer (NAME_DEF_LAYER, arg[0], 0, 0);
+    JoinLayer(NAME_DEF_LAYER, arg[0], 0, 0);
 #endif
 
 
@@ -610,10 +638,11 @@ int MiniGUIMain(int args, const char* arg[])
     status_bar_offset = get_time_format() ? 0 : STATUS_BAR_ICO_OFFSET;
 	keyboard_init();
     screenon();
-    InitCreateInfo (&CreateInfo);
+    InitCreateInfo(&CreateInfo);
 
     pid_file = fopen("/tmp/pid", "w");
-    if (!pid_file) {
+    if (!pid_file)
+    {
         printf("open /tmp/pid fail...\n");
         return -1;
     }
@@ -627,14 +656,15 @@ int MiniGUIMain(int args, const char* arg[])
     sigemptyset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
 
-    hMainWnd = CreateMainWindow (&CreateInfo);
+    hMainWnd = CreateMainWindow(&CreateInfo);
     if (hMainWnd == HWND_INVALID)
         return -1;
 
-    while (GetMessage (&Msg, hMainWnd)) {
-        DispatchMessage (&Msg);
+    while (GetMessage(&Msg, hMainWnd))
+    {
+        DispatchMessage(&Msg);
     }
-    MainWindowThreadCleanup (hMainWnd);
+    MainWindowThreadCleanup(hMainWnd);
     parameter_deinit();
     return 0;
 }

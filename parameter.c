@@ -31,7 +31,6 @@ struct parameter_data
     int gamedisp_val;
     int themestyle_val;
 	int volume_val;
-	RK_WIFI_RUNNING_State_e wifi_state;
 	char wifi_ssid[128];
 	char wifi_psk[128];
     int time_format;
@@ -50,10 +49,11 @@ static void set_version(int val)
 
 static int parameter_save(void)
 {
-    FILE * fpFile = 0;
+    FILE *fpFile = 0;
 
     fpFile = fopen(PARAMETER_FILE, "wb+");
-    if (fpFile <= 0) {
+    if (fpFile <= 0)
+    {
         printf("create parameter file fail\n");
         return -1;
     }
@@ -68,11 +68,12 @@ static int parameter_save(void)
 
 int parameter_init(void)
 {
-    FILE * fpFile = 0;
+    FILE *fpFile = 0;
 
     memset(&para_data, 0, sizeof(struct parameter_data));
     fpFile = fopen(PARAMETER_FILE, "r");
-    if (fpFile <= 0) {
+    if (fpFile <= 0)
+    {
         parameter_recovery();
         return 0;
     }
@@ -80,17 +81,23 @@ int parameter_init(void)
         fclose(fpFile);
 
     fpFile = fopen(PARAMETER_FILE, "rb+");
-    if (fpFile <= 0) {
+    if (fpFile <= 0)
+    {
         printf("open parameter file fail\n");
         return -1;
     }
     fread(&para_data, 1, sizeof(struct parameter_data), fpFile);
     fclose(fpFile);
 
-    if (para_data.version != VERSION) {
+#ifdef ENABLE_WIFI
+    set_wifi_date(" ", " ");
+#endif
+
+    if (para_data.version != VERSION)
+    {
         parameter_recovery();
     }
-	
+
     return 0;
 }
 
@@ -102,7 +109,7 @@ void parameter_deinit(void)
 
 int parameter_recovery(void)
 {
-    FILE * fpFile = 0;
+    FILE *fpFile = 0;
 
     set_version(VERSION);
     set_language(LANGUAGE_DEF);
@@ -113,15 +120,18 @@ int parameter_recovery(void)
     set_gamedisp(GAMEDISP_DEF);
     set_themestyle(THEMESTYLE_DEF);
 
-	set_volume(VOLUME_DEF);
-	set_wifi(0);
-	set_wifi_date("  ", "  ");
+    set_volume(VOLUME_DEF);
+
+#ifdef ENABLE_WIFI
+    set_wifi_date(" ", " ");
+#endif
 
 	set_if_sync_net_time(1);
 	set_time_format(USE_24_HOUR_FORMAT);
 
     fpFile = fopen(PARAMETER_FILE, "wb+");
-    if (fpFile <= 0) {
+    if (fpFile <= 0)
+    {
         printf("create parameter file fail\n");
         return -1;
     }
@@ -223,47 +233,54 @@ void set_volume(int val)
     parameter_save();
 }
 
-int get_wifi(void)
+//**************************************************************************
+// wifi
+
+#ifdef ENABLE_WIFI
+
+RK_WIFI_RUNNING_State_e wifi_state;
+
+int get_wifi_state(void)
 {
-    return para_data.wifi_state;
+    return wifi_state;
 }
 
-void set_wifi(RK_WIFI_RUNNING_State_e val)
+void set_wifi_state(RK_WIFI_RUNNING_State_e val)
 {
 
-	para_data.wifi_state = val;
-    parameter_save();
+    wifi_state = val;
 }
 
 
 void set_wifi_date(char *ssid, char *psk)
 {
 
-	snprintf(para_data.wifi_ssid, 128, "%s", ssid);
-	snprintf(para_data.wifi_psk, 128, "%s", psk);
+    snprintf(para_data.wifi_ssid, 128, "%s", ssid);
+    snprintf(para_data.wifi_psk, 128, "%s", psk);
     parameter_save();
 }
 
 
-char* get_wifi_ssid(void)
+char *get_wifi_ssid(void)
 {
     return para_data.wifi_ssid;
 }
 
-char* get_wifi_psk(void)
+char *get_wifi_psk(void)
 {
     return para_data.wifi_psk;
 }
 
 
-int test_wifi_pwd(void) // exist retuen 1 ,esle 0 
+int test_wifi_pwd(void) // exist retuen 1 ,esle 0
 {
 
-	if (strcmp(para_data.wifi_psk, "  ") == 0)
-		return 0;
-	return 1;
+    if (strcmp(para_data.wifi_psk, " ") == 0)
+        return 0;
+    return 1;
 
 }
+#endif
 
 void set_time_format(int format)
 {
