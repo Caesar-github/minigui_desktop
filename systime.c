@@ -17,11 +17,8 @@
 #include <minigui/gdi.h>
 #include <minigui/window.h>
 #include <minigui/control.h>
-
+#include "parameter.h"
 #include "common.h"
-
-int use_24_hour_format;
-int sync_net_time;
 
 void time_flush(void)
 {
@@ -37,7 +34,7 @@ void time_flush(void)
     time(&t);
     now_time = localtime(&t);
     strftime(status_bar_date_str,sizeof(status_bar_date_str),"%Y-%m-%d",now_time);
-    if (!use_24_hour_format)
+    if (!get_time_format())
     {
         if (now_time->tm_hour > 12)
         {

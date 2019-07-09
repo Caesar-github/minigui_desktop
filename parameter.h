@@ -7,6 +7,8 @@
 
 #include <DeviceIo/Rk_wifi.h>
 
+#define USE_12_HOUR_FORMAT 0
+#define USE_24_HOUR_FORMAT 1
 
 int parameter_recovery(void);
 int get_language(void);
@@ -34,5 +36,9 @@ void set_wifi_date(char *ssid, char*psk);
 char* get_wifi_ssid(void);
 char* get_wifi_psk(void);
 int test_wifi_pwd(void);
+void set_time_format(int format);
+int get_time_format(void);
+void set_if_sync_net_time(int status);
+int get_if_sync_net_time(void);
 
 #endif

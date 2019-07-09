@@ -82,21 +82,6 @@ static void unloadres(void)
     }
 }
 
-static void write_to_file(void)
-{
-    FILE *fp;
-    fp = fopen(TIME_SETTING_FILE,"w");
-    if (fp == NULL)
-    {
-        printf("open file %s failed: %s\n", TIME_SETTING_FILE, strerror(errno));
-        return;
-    }
-    char buf[2];
-    sprintf(buf,"%01d%01d",use_24_hour_format,sync_net_time);
-    fwrite(buf,sizeof(buf),1,fp);
-    fclose(fp);
-}
-
 static void systemtime_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
 {
     struct tm tar_time;
@@ -110,27 +95,25 @@ static void systemtime_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
     switch (lParam)
     {
         case 0:
-            sync_net_time = !sync_net_time;
-            write_to_file();
+            set_if_sync_net_time(!get_if_sync_net_time());
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             break;
         case 1:
-            if (sync_net_time) break;
+            if (get_if_sync_net_time()) break;
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             creat_time_input_dialog(hWnd,INPUT_DATE,now_time);
             break;
         case 2:
-            if (sync_net_time) break;
+            if (get_if_sync_net_time()) break;
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            if (use_24_hour_format)
+            if (get_time_format())
                 creat_time_input_dialog(hWnd,INPUT_TIME_24,now_time);
             else
                 creat_time_input_dialog(hWnd,INPUT_TIME_12,now_time);
             break;
         case 3:
-            use_24_hour_format = !use_24_hour_format;
-            status_bar_offset = use_24_hour_format ? 0 : STATUS_BAR_ICO_OFFSET;
-            write_to_file();
+            set_time_format(!get_time_format());
+            status_bar_offset = get_time_format() ? 0 : STATUS_BAR_ICO_OFFSET;
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             break;
         case 4:
@@ -146,7 +129,7 @@ static void systemtime_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 tar_time.tm_hour = (int)timing_power_on[0].timing / 100;
                 tar_time.tm_min = (int)timing_power_on[0].timing % 100;
-                if (use_24_hour_format)
+                if (get_time_format())
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24,&tar_time);
                 else
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12,&tar_time);
@@ -165,7 +148,7 @@ static void systemtime_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 tar_time.tm_hour = (int)timing_power_off[0].timing / 100;
                 tar_time.tm_min = (int)timing_power_off[0].timing % 100;
-                if (use_24_hour_format)
+                if (get_time_format())
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24 + 3,&tar_time);
                 else
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12 + 3,&tar_time);
@@ -184,7 +167,7 @@ static void systemtime_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 tar_time.tm_hour = (int)timing_power_on[1].timing / 100;
                 tar_time.tm_min = (int)timing_power_on[1].timing % 100;
-                if (use_24_hour_format)
+                if (get_time_format())
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24 + 1,&tar_time);
                 else
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12 + 1,&tar_time);
@@ -203,7 +186,7 @@ static void systemtime_enter(HWND hWnd,WPARAM wParam,LPARAM lParam)
                 InvalidateRect(hWnd, &msg_rcBg, TRUE);
                 tar_time.tm_hour = (int)timing_power_off[1].timing / 100;
                 tar_time.tm_min = (int)timing_power_off[1].timing % 100;
-                if (use_24_hour_format)
+                if (get_time_format())
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_24 + 4,&tar_time);
                 else
                     creat_time_input_dialog(hWnd,INPUT_TIME_TIMING_12 + 4,&tar_time);
@@ -367,17 +350,17 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                 {
                     case RES_STR_SYNC_NET_TIME:
                         DrawText(hdc, res_str[RES_STR_SYNC_NET_TIME], -1, &msg_rcText, DT_TOP);
-                        if (sync_net_time) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_RIGHT);
+                        if (get_if_sync_net_time()) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_RIGHT);
                         else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_RIGHT);
                         break;
                     case RES_STR_SYSTEMTIME_DATA:
-                        if (sync_net_time) SetTextColor(hdc, RGB2Pixel(hdc, 0x5e, 0x5e, 0x5e));
+                        if (get_if_sync_net_time()) SetTextColor(hdc, RGB2Pixel(hdc, 0x5e, 0x5e, 0x5e));
                         DrawText(hdc, res_str[RES_STR_SYSTEMTIME_DATA], -1, &msg_rcText, DT_TOP);
                         DrawText(hdc, status_bar_date_str, -1, &msg_rcText, DT_RIGHT);
                         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
                         break;
                     case RES_STR_SYSTEMTIME_TIME:
-                        if (sync_net_time) SetTextColor(hdc, RGB2Pixel(hdc, 0x5e, 0x5e, 0x5e));
+                        if (get_if_sync_net_time()) SetTextColor(hdc, RGB2Pixel(hdc, 0x5e, 0x5e, 0x5e));
                         DrawText(hdc, res_str[RES_STR_SYSTEMTIME_TIME], -1, &msg_rcText, DT_TOP);
                         DrawText(hdc, status_bar_time_str, -1, &msg_rcText, DT_RIGHT);
                         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
@@ -386,7 +369,7 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                         DrawText(hdc, res_str[RES_STR_SYSTEMTIME_FORMAT], -1, &msg_rcText, DT_TOP);
                         msg_rcTimeformat = msg_rcText;
                         msg_rcTimeformat.left = msg_rcTimeformat.right - 2 * REALTIME_PINT_W;
-                        if (use_24_hour_format)
+                        if (get_time_format())
                         {
                             DrawText(hdc, "<", -1, &msg_rcTimeformat, DT_LEFT);
                             DrawText(hdc, res_str[RES_STR_SYSTEMTIME_FORMAT_24], -1, &msg_rcTimeformat, DT_CENTER);
@@ -403,7 +386,7 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                         DrawText(hdc, res_str[RES_STR_SYSTEMTIME_ON1], -1, &msg_rcText, DT_TOP);
                         if(on_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
                         else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
-                        if (use_24_hour_format)
+                        if (get_time_format())
                             sprintf(time_temp,"%02d:%02d", (int)(timing_power_on[0].timing / 100), timing_power_on[0].timing % 100);
                         else
                         {
@@ -419,7 +402,7 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                         DrawText(hdc, res_str[RES_STR_SYSTEMTIME_ON2], -1, &msg_rcText, DT_TOP);
                         if(on_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
                         else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
-                        if (use_24_hour_format)
+                        if (get_time_format())
                             sprintf(time_temp,"%02d:%02d", (int)(timing_power_on[1].timing / 100), timing_power_on[1].timing % 100);
                         else
                         {
@@ -435,7 +418,7 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                         DrawText(hdc, res_str[RES_STR_SYSTEMTIME_OFF1], -1, &msg_rcText, DT_TOP);
                         if(off_1) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
                         else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
-                        if (use_24_hour_format)
+                        if (get_time_format())
                             sprintf(time_temp,"%02d:%02d", (int)(timing_power_off[0].timing / 100), timing_power_off[0].timing % 100);
                         else
                         {
@@ -452,7 +435,7 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
                         DrawText(hdc, res_str[RES_STR_SYSTEMTIME_OFF2], -1, &msg_rcText, DT_TOP);
                         if(off_2) DrawText(hdc, res_str[RES_STR_ENABLE], -1, &msg_rcText, DT_CENTER);
                         else DrawText(hdc, res_str[RES_STR_DISABLE], -1, &msg_rcText, DT_CENTER);
-                        if (use_24_hour_format)
+                        if (get_time_format())
                             sprintf(time_temp,"%02d:%02d", (int)(timing_power_off[1].timing / 100), timing_power_off[1].timing % 100);
                         else
                         {

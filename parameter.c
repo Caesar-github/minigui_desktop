@@ -34,6 +34,8 @@ struct parameter_data
 	RK_WIFI_RUNNING_State_e wifi_state;
 	char wifi_ssid[128];
 	char wifi_psk[128];
+    int time_format;
+    int sync_net_time;
 };
 
 static struct parameter_data para_data;
@@ -114,6 +116,9 @@ int parameter_recovery(void)
 	set_volume(VOLUME_DEF);
 	set_wifi(0);
 	set_wifi_date("  ", "  ");
+
+	set_if_sync_net_time(1);
+	set_time_format(USE_24_HOUR_FORMAT);
 
     fpFile = fopen(PARAMETER_FILE, "wb+");
     if (fpFile <= 0) {
@@ -256,6 +261,27 @@ int test_wifi_pwd(void) // exist retuen 1 ,esle 0
 
 }
 
+void set_time_format(int format)
+{
+    para_data.time_format = format;
+    parameter_save();
+}
+
+int get_time_format(void)
+{
+    return para_data.time_format;
+}
+
+void set_if_sync_net_time(int status)
+{
+    para_data.sync_net_time = status;
+    parameter_save();
+}
+
+int get_if_sync_net_time(void)
+{
+    return para_data.sync_net_time;
+}
 
 char *get_ui_image_path(void)
 {

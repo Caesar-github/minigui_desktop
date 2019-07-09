@@ -70,14 +70,6 @@ struct tm *last_time = 0;
 rtc_timing timing_power_on[TIMING_NUM+1] = {0};
 rtc_timing timing_power_off[TIMING_NUM+1] = {0};
 char *timing_buf;
-int power_off_time;
-int power_on_time;
-int systemtime_year = 2019;
-int systemtime_month = 5;
-int systemtime_day = 30;
-int time_hour = 0;
-int time_min = 0;
-int time_sec = 0;
 int battery = 0;
 int status_bar_offset;
 int status_bar_time_str[10] = {0};
@@ -172,9 +164,6 @@ int loadtimefile(void)
     FILE *fp;
     ssize_t len = 0;
     int pos = 0;
-    use_24_hour_format = 1;
-    status_bar_offset = 0;
-    sync_net_time = 0;
     fp = fopen(TIMING_FILE, "r");
     if (fp == NULL) {
         printf("open file %s failed: %s\n", TIMING_FILE, strerror(errno));
@@ -197,26 +186,10 @@ int loadtimefile(void)
         if (pos >= TIMING_NUM)
             break;
     }
-
-    fclose(fp);
-
-    fp = fopen(TIME_SETTING_FILE, "r");
-    if (fp == NULL) {
-        printf("open file %s failed: %s\n", TIME_SETTING_FILE, strerror(errno));
-        free(timing_buf);
-        timing_buf = 0;
-        return -1;
-    }
-    if ((__getline(&timing_buf, &len, fp)) != -1) {
-        use_24_hour_format = *timing_buf - 48;
-        if (!use_24_hour_format)
-            status_bar_offset = STATUS_BAR_ICO_OFFSET;
-        sync_net_time = *(timing_buf+1) - 48;
-    }
     free(timing_buf);
     timing_buf = 0;
-    fclose(fp);
 
+    fclose(fp);
 }
 
 int loadstringres(void)
@@ -634,6 +607,7 @@ int MiniGUIMain(int args, const char* arg[])
 
 
     parameter_init();
+    status_bar_offset = get_time_format() ? 0 : STATUS_BAR_ICO_OFFSET;
 	keyboard_init();
     screenon();
     InitCreateInfo (&CreateInfo);

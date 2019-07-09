@@ -266,8 +266,7 @@ typedef struct
 #define REC_FILE_JA    "/usr/local/share/minigui/res/string/JP-UTF8.bin"
 #define REC_FILE_KO    "/usr/local/share/minigui/res/string/KO-UTF8.bin"
 
-#define TIMING_FILE    "/usr/local/share/minigui/res/string/timing"
-#define TIME_SETTING_FILE    "/usr/local/share/minigui/res/string/time_setting"
+#define TIMING_FILE    "/data/timing"
 
 #define VERSION_FILE   "/etc/version"
 #define DEFRETROARCH   "/data/retroarch/retroarch.cfg"
@@ -361,15 +360,7 @@ extern int wifiavaiable_size;  // size of wifiavaiable_list
 
 extern struct tm *now_time;
 extern struct tm *last_time;
-extern int use_24_hour_format;
-extern int sync_net_time;
-extern int time_hour;
-extern int time_min;
-extern int time_sec;
 extern int battery;
-extern int systemtime_year;
-extern int systemtime_month;
-extern int systemtime_day;
 extern BITMAP background_bmap;
 extern RECT msg_rcBg;
 extern RECT msg_rcBatt;
