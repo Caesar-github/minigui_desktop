@@ -60,6 +60,10 @@ OBJ += setting_wifi_dialog.o
 CFLAGS += -DENABLE_WIFI
 endif
 
+ifeq ($(ENABLE_RK816),1)
+CFLAGS += -DENABLE_RK816
+endif
+
 $(BIN): $(OBJ)
 	$(CC) -o $(BIN) $(OBJ) $(CFLAGS)
 

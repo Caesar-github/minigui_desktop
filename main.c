@@ -449,6 +449,7 @@ static void batt_update(void)
         battery = 5;
     } else {
         int bat = get_battery_capacity();
+        //printf("battery:%d\n",bat);
         if (bat < 5) {
             battery = 0;
             creat_lowpower_dialog(mhWnd);
@@ -533,6 +534,9 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         break;
         case MSG_TIMER:
             if (wParam == _ID_TIMER_MAIN) {
+#ifdef ENABLE_BATT
+                batt_update();
+#endif
                 if (screenautooff && (screenoff_cnt < get_screenoff_val())) {
                     screenoff_cnt ++;
                     if (screenoff_cnt == get_screenoff_val()) {
