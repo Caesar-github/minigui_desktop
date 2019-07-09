@@ -356,7 +356,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         else if (get_volume() > 32  && get_volume() <= 66)  volume_display = &volume_2;
         else volume_display = &volume_3;
 
-        FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
+        FillBoxWithBitmap(hdc, VOLUME_PINT_X - status_bar_offset, VOLUME_PINT_Y,
                           VOLUME_PINT_W, VOLUME_PINT_H,
                           volume_display);
 
