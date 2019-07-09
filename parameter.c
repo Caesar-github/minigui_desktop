@@ -215,6 +215,10 @@ int get_volume(void)
 
 void set_volume(int val)
 {
+    char cmd_buf[50];
+    sprintf(cmd_buf,"amixer cset name='Master Playback Volume' %d",val);
+    printf("%s\n",cmd_buf);
+    system(cmd_buf);
     para_data.volume_val = val;
     parameter_save();
 }
