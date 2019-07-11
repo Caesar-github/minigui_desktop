@@ -122,7 +122,7 @@ static LRESULT setting_eq_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                InvalidateRect(hWnd, &msg_rcStatusBar, TRUE);
             }
 #endif
         }

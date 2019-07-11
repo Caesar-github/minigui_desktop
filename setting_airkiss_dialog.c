@@ -135,7 +135,7 @@ static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                InvalidateRect(hWnd, &msg_rcStatusBar, TRUE);
             }
 #endif
         }

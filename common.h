@@ -326,6 +326,7 @@ extern BITMAP wifi_bmap;
 extern BITMAP wifi_connected_bmap;
 extern BITMAP wifi_disconnected_bmap;
 extern BITMAP wifi_disabled_bmap;
+extern BITMAP wifi_key_bmap;
 extern BITMAP back_bmap;
 extern BITMAP volume_0;
 extern BITMAP volume_1;
@@ -338,13 +339,13 @@ extern BITMAP wifi_signal_2;
 extern BITMAP wifi_signal_1;
 extern BITMAP input_box;
 
+extern HWND setting_wiif_dialog_hWnd;
 
 
 
 struct wifi_info {
 	char ssid[128];
 	char psk[128];
-	int modify_flag;
 };
 
 struct wifi_avaiable {
@@ -354,7 +355,8 @@ struct wifi_avaiable {
 
 extern HWND mhWnd;
 
-extern struct wifi_info wifi_date;  // user`s wifi ssid and pwd
+extern struct wifi_info input_wifi_date;
+extern struct wifi_info connect_wifi_date;
 extern struct wifi_avaiable wifiavaiable_list[100];  // result of scan
 extern int wifiavaiable_size;  // size of wifiavaiable_list
 
@@ -394,6 +396,9 @@ enum INPUT_TYPE {
 extern int input_dialog_type;
 extern int pwd_short_flag;
 extern int wifi_connect_flag;
+extern int cur_page;
+extern int avaiable_wifi_display_mode;
+
 
 
 

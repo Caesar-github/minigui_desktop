@@ -124,7 +124,7 @@ static LRESULT setting_language_dialog_proc(HWND hWnd, UINT message, WPARAM wPar
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                InvalidateRect(hWnd, &msg_rcStatusBar, TRUE);
             }
 #endif
 #ifdef ENABLE_WIFI

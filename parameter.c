@@ -31,8 +31,12 @@ struct parameter_data
     int gamedisp_val;
     int themestyle_val;
 	int volume_val;
-	char wifi_ssid[128];
-	char wifi_psk[128];
+//	char wifi_ssid[128];
+//	char wifi_psk[128];
+//	wifi_info wifi_val[10];
+	char wifi_ssid[10][128];
+	char wifi_psk[10][128];
+	int wifi_head;
     int time_format;
     int sync_net_time;
 };
@@ -89,9 +93,6 @@ int parameter_init(void)
     fread(&para_data, 1, sizeof(struct parameter_data), fpFile);
     fclose(fpFile);
 
-#ifdef ENABLE_WIFI
-    set_wifi_date(" ", " ");
-#endif
 
     if (para_data.version != VERSION)
     {
@@ -123,7 +124,7 @@ int parameter_recovery(void)
     set_volume(VOLUME_DEF);
 
 #ifdef ENABLE_WIFI
-    set_wifi_date(" ", " ");
+  reset_wifi_val();
 #endif
 
 	set_if_sync_net_time(1);
@@ -252,34 +253,100 @@ void set_wifi_state(RK_WIFI_RUNNING_State_e val)
 }
 
 
-void set_wifi_date(char *ssid, char *psk)
+int  add_wifi_date(char *ssid, char *psk)
 {
+	int i; 
+	if(para_data.wifi_head == 10)  // array is full
+	{
+		return 0;
+	}
+	for(i=0;i<=para_data.wifi_head;i++)
+	{
+		if (strcmp(para_data.wifi_ssid[i], ssid) == 0)
+		{
+			snprintf(para_data.wifi_psk[i], 128, "%s", psk);
+			parameter_save();
+			return 1;
+		}
 
-    snprintf(para_data.wifi_ssid, 128, "%s", ssid);
-    snprintf(para_data.wifi_psk, 128, "%s", psk);
+	}
+	
+    snprintf(para_data.wifi_ssid[para_data.wifi_head], 128, "%s", ssid);
+    snprintf(para_data.wifi_psk[para_data.wifi_head], 128, "%s", psk);
+	para_data.wifi_head++;
     parameter_save();
+	return 1;
 }
 
 
-char *get_wifi_ssid(void)
+int del_wifi_date(char *ssid)
 {
-    return para_data.wifi_ssid;
+	int i,j; 
+	if(para_data.wifi_head == 0)  // array is empty
+	{
+		return 0;
+	}
+	for(i=0;i<=para_data.wifi_head;i++)
+	{
+		if (strcmp(para_data.wifi_ssid[i], ssid) == 0)
+		{
+			for(j=i;j<para_data.wifi_head;j++)
+			{
+				snprintf(para_data.wifi_psk[j], 128, "%s", para_data.wifi_psk[j+1]);
+				snprintf(para_data.wifi_ssid[j], 128, "%s", para_data.wifi_ssid[j+1]);
+			}
+			para_data.wifi_head--;
+			parameter_save();
+			return 1;
+		}
+
+	}
+	return 1;
+
 }
 
-char *get_wifi_psk(void)
+
+
+char *get_wifi_psk(char *ssid)
 {
-    return para_data.wifi_psk;
+	int i;
+	for(i=0;i<=para_data.wifi_head;i++)
+	{
+		if (strcmp(para_data.wifi_ssid[i], ssid) == 0)
+		{
+			return para_data.wifi_psk[i];
+		}
+
+	}
+    return NULL;
 }
 
 
-int test_wifi_pwd(void) // exist retuen 1 ,esle 0
+void _print_wifi(void)
 {
+	int i;
+	for(i=0;i<10;i++)
+	{
+		printf("ssid: %s\n\n",para_data.wifi_ssid[i]);
+		printf("psk: %s\n\n",para_data.wifi_psk[i]);
 
-    if (strcmp(para_data.wifi_psk, " ") == 0)
-        return 0;
-    return 1;
+	}
+
+	printf("\n\n head: %d\n\n",para_data.wifi_head);
 
 }
+
+void reset_wifi_val(void)
+{
+	for(para_data.wifi_head=0;para_data.wifi_head<10;para_data.wifi_head++)
+	{
+		snprintf(para_data.wifi_ssid[para_data.wifi_head], 128, "%s", " ");
+		snprintf(para_data.wifi_psk[para_data.wifi_head], 128, "%s", " ");
+	}
+		para_data.wifi_head = 0;
+	
+}
+
 #endif
 
 void set_time_format(int format)

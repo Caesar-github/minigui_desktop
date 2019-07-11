@@ -80,6 +80,9 @@
 #define WIFI_SIGNAL_PINT_W  24
 #define WIFI_SIGNAL_PINT_H  24
 
+#define WIFI_KEY_PINT_W  30
+#define WIFI_KEY_PINT_H  25
+
 #define VOLUME_PINT_X    (WIFI_PINT_X - STATUS_BAR_ICO_SPAC+3)
 #define VOLUME_PINT_Y    20
 #define VOLUME_PINT_W    28

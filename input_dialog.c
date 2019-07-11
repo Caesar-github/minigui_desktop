@@ -170,8 +170,12 @@ static void input_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
             }
             else
             {
-                snprintf(wifi_date.psk, 128, "%s", input_content);
+                snprintf(input_wifi_date.psk, 128, "%s", input_content);
+				set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
+				snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
+				snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
                 wifi_connect_flag = 1;
+				cur_page=1;
                 menu_back(hWnd, wParam, lParam);
             }
             break;
@@ -218,7 +222,7 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, FALSE);
+                InvalidateRect(hWnd, &msg_rcStatusBar, FALSE);
             }
 #endif
 #ifdef ENABLE_WIFI
@@ -299,8 +303,12 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             }
             else
             {
-                snprintf(wifi_date.psk, 128, "%s", input_content);
+                snprintf(input_wifi_date.psk, 128, "%s", input_content);
+				set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
+				snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
+				snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
                 wifi_connect_flag = 1;
+				cur_page=1;
                 menu_back(hWnd, wParam, lParam);
             }
         }
@@ -415,7 +423,7 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             SelectFont(hdc, logfont);
             DrawText(hdc, res_str[RES_STR_WIFI_SSID], -1, &msg_rcFilename, DT_TOP);
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X + 150;
-            DrawText(hdc, wifi_date.ssid, -1, &msg_rcFilename, DT_TOP);
+            DrawText(hdc, input_wifi_date.ssid, -1, &msg_rcFilename, DT_TOP);
 
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
             msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC;
@@ -527,7 +535,7 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         int witch_button = check_button(touch_pos_down.x, touch_pos_down.y);
         if (witch_button == 0)
         {
-            menu_back(hWnd, wParam, lParam);
+			menu_back(hWnd, wParam, lParam);
         }
         else if (witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
         {

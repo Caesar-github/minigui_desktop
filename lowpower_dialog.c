@@ -103,7 +103,7 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                InvalidateRect(hWnd, &msg_rcStatusBar, TRUE);
             }
 #endif
             if (autopoweroff_cnt < 4)

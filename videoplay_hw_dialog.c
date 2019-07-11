@@ -280,7 +280,7 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                InvalidateRect(hWnd, &msg_rcStatusBar, TRUE);
             }
 #endif
 #ifdef ENABLE_WIFI

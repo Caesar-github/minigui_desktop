@@ -143,7 +143,7 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                InvalidateRect(hWnd, &msg_rcStatusBar, TRUE);
             }
 #endif
 #ifdef ENABLE_WIFI
@@ -250,6 +250,16 @@ static LRESULT setting_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
             SelectFont(hdc, logfont);
             DrawText(hdc, res_str[RES_STR_TITLE_GENERAL + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+
+			int wifi_state;
+			wifi_state=get_wifi_state();
+			if(i==1 && wifi_state == RK_WIFI_State_CONNECTED)
+			{
+				msg_rcFilename.left = LCD_W-250;
+				DrawText(hdc, connect_wifi_date.ssid, -1, &msg_rcFilename, DT_TOP);
+				msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
+			}
+				
         }
 #else
         RECT msg_rcFilename;
