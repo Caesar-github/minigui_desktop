@@ -462,16 +462,9 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 int witch_button = check_button(touch_pos_up.x, touch_pos_up.y);
                 if (witch_button >= 0 && witch_button < 5)
                 {
-                    if (menu_sel == witch_button && line_sel == 1)
-                    {
-                        desktop_enter(hWnd, wParam, witch_button);
-                    }
-                    else
-                    {
-                        menu_sel = witch_button;
-                        line_sel = 1;
-                        InvalidateRect(hWnd, &msg_rcBg, TRUE);
-                    }
+                    line_sel = 1;
+                    menu_sel = witch_button;
+                    desktop_enter(hWnd, wParam, witch_button);
                 }
                 else if (witch_button >= 5 && witch_button < WHOLE_BUTTON_NUM)
                 {
