@@ -275,6 +275,7 @@ static LRESULT time_input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                 SetFocus(hFocus);
             button_sel = 0;
             //SetTimer(hWnd, _ID_TIMER_SETTING_SYSTEMTIME, TIMER_SETTING_SYSTEMTIME);
+            nhWnd = hWnd;
             return 0;
         }
         case MSG_TIMER:

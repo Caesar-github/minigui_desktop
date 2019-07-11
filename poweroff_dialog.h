@@ -35,6 +35,10 @@
 #ifndef __LOWPOWER_DIALOG_H__
 #define __LOWPOWER_DIALOG_H__
 
-void creat_lowpower_dialog(HWND hWnd);
+#define TYPE_LOWPOWER   0
+#define TYPE_TIMING     1
+#define TYPE_POWEROFF   2
+
+void creat_poweroff_dialog(HWND hWnd,int type);
 
 #endif

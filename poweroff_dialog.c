@@ -25,21 +25,31 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 1
+#define WHOLE_BUTTON_NUM 2
 
 static int batt = 0;
-static int autopoweroff_cnt = 0;
-static int runlowpower = 0;
+static int autopoweroff_cnt = 50;
+static int run_lowpower = 0,run_poweroff = 0;
+static int create_type = 0;
 
 static touch_pos touch_pos_down, touch_pos_up, touch_pos_old;
 
+static const GAL_Rect msg_rcArrow[] = {
+    {TIME_INPUT_OK_X, TIME_INPUT_OK_Y, TIME_INPUT_OK_W, TIME_INPUT_OK_H},
+    {TIME_INPUT_CANCEL_X, TIME_INPUT_CANCEL_Y, TIME_INPUT_CANCEL_W, TIME_INPUT_CANCEL_H}
+};
+
+static int is_button(int x,int y,GAL_Rect rect)
+{
+    return ((x <= rect.x + rect.w ) && (x >= rect.x) && (y <= rect.y + rect.h ) && (y >= rect.y));
+}
+
 static int check_button(int x, int y)
 {
-    if ((x <= BACK_PINT_X + BACK_PINT_W) &&
-            (x >= BACK_PINT_X) &&
-            (y <= BACK_PINT_Y + BACK_PINT_H) &&
-            (y >= BACK_PINT_Y))
+    if (is_button(x, y, msg_rcArrow[0]))
         return 0;
+    if (is_button(x, y, msg_rcArrow[1]))
+        return 1;
     return -1;
 }
 
@@ -55,12 +65,10 @@ static void unloadres(void)
 static void poweroff(void)
 {
     printf("%s\n", __func__);
-    system("halt");
-}
-
-static void lowpower_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-    //todo
+    if (create_type == TYPE_LOWPOWER)
+        system("halt");
+    else
+        system("poweroff");
 }
 
 static void menu_back(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -85,7 +93,6 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         if (hFocus)
             SetFocus(hFocus);
         batt = battery;
-        autopoweroff_cnt = 0;
         SetTimer(hWnd, _ID_TIMER_LOWPOWER, TIMER_LOWPOWER);
         return 0;
     }
@@ -103,15 +110,20 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             if (batt != battery)
             {
                 batt = battery;
-                InvalidateRect(hWnd, &msg_rcStatusBar, TRUE);
+                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
             }
 #endif
-            if (autopoweroff_cnt < 4)
+            if (create_type != TYPE_POWEROFF)
             {
-                autopoweroff_cnt ++;
-                printf("autopoweroff_cnt = %d\n", autopoweroff_cnt);
-                if (autopoweroff_cnt >= 4)
+                if (autopoweroff_cnt > 0)
+                {
+                    autopoweroff_cnt --;
+                    InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+                }
+                else
+                {
                     poweroff();
+                }
             }
         }
         break;
@@ -120,76 +132,64 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     {
         int i;
         int page;
+        int cur_page;
         struct file_node *file_node_temp;
         gal_pixel old_brush;
-        RECT msg_rcInfo;
         gal_pixel pixle = 0xffffffff;
+        gal_pixel pixle2 = 0xff5e5e5e;
 
         hdc = BeginPaint(hWnd);
+        old_brush = SetBrushColor(hdc, pixle2);
+        FillBox(hdc, 0, 0, TIME_INPUT_W, TIME_INPUT_H);
         old_brush = SetBrushColor(hdc, pixle);
-        FillBoxWithBitmap(hdc, BG_PINT_X,
-                          BG_PINT_Y, BG_PINT_W,
-                          BG_PINT_H, &background_bmap);
-#ifdef ENABLE_BATT
-        FillBoxWithBitmap(hdc, BATT_PINT_X - status_bar_offset, BATT_PINT_Y,
-                          BATT_PINT_W, BATT_PINT_H,
-                          &batt_bmap[batt]);
-#endif
-#ifdef ENABLE_WIFI
-        if (get_wifi_state() == RK_WIFI_State_OFF)
+        SetBkColor(hdc, COLOR_lightwhite);
+        SetBkMode(hdc,BM_TRANSPARENT);
+        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+        SelectFont(hdc, logfont);
+
+        int arrow_i;
+        char text_buf[10];
+        RECT msg_rcButton;
+
+        MoveTo(hdc, 0, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+        LineTo(hdc, TIME_INPUT_W, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+        MoveTo(hdc, TIME_INPUT_W / 2, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+        LineTo(hdc, TIME_INPUT_W / 2, TIME_INPUT_H);
+
+        SetBkColor(hdc, COLOR_transparent);
+
+        msg_rcButton.left = 0;
+        msg_rcButton.right = POWER_OFF_W;
+        msg_rcButton.top = POWER_OFF_H / 3;
+        msg_rcButton.bottom = POWER_OFF_H;
+
+        if (create_type == TYPE_LOWPOWER)
         {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_disabled_bmap);
-        }
-        else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
-        {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_connected_bmap);
+            DrawText(hdc, res_str[RES_STR_LOWPOWER], -1, &msg_rcButton, DT_CENTER);
         }
         else
         {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_disconnected_bmap);
+            DrawText(hdc, res_str[RES_STR_POWEROFF], -1, &msg_rcButton, DT_CENTER);
         }
-#endif
 
+        char cnt_buf[5];
+        sprintf(cnt_buf,"%d\0",autopoweroff_cnt / 5);
+        msg_rcButton.top = POWER_OFF_H / 2;
+        if (create_type != TYPE_POWEROFF)
+        {
+            DrawText(hdc, cnt_buf, -1, &msg_rcButton, DT_CENTER);
+        }
 
-        //==================display volume icon============================
-        BITMAP *volume_display;
-        if (get_volume() == 0) volume_display = &volume_0;
-        else if (get_volume() > 0  && get_volume() <= 32)    volume_display = &volume_1;
-        else if (get_volume() > 32  && get_volume() <= 66)  volume_display = &volume_2;
-        else volume_display = &volume_3;
-        FillBoxWithBitmap(hdc, VOLUME_PINT_X, VOLUME_PINT_Y,
-                          VOLUME_PINT_W, VOLUME_PINT_H,
-                          volume_display);
+        msg_rcButton.left = TIME_INPUT_OK_X;
+        msg_rcButton.right = msg_rcButton.left + TIME_INPUT_OK_W;
+        msg_rcButton.top = TIME_INPUT_OK_Y;
+        msg_rcButton.bottom = msg_rcButton.top + TIME_INPUT_OK_H;
+        DrawText(hdc, res_str[RES_STR_OK], -1, &msg_rcButton, DT_CENTER);
 
-        RECT msg_rcTime;
-        time_flush();
-        msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
-        msg_rcTime.top = REALTIME_PINT_Y;
-        msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
-        msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+        msg_rcButton.left = TIME_INPUT_CANCEL_X;
+        msg_rcButton.right = msg_rcButton.left + TIME_INPUT_CANCEL_W;
+        DrawText(hdc, res_str[RES_STR_CANCEL], -1, &msg_rcButton, DT_CENTER);
         SetBkColor(hdc, COLOR_transparent);
-        SetBkMode(hdc, BM_TRANSPARENT);
-        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-        SelectFont(hdc, logfont_title);
-        DrawText(hdc, status_bar_time_str, -1, &msg_rcTime, DT_TOP);
-        msg_rcTime.left = REALDATE_PINT_X - status_bar_offset;
-        DrawText(hdc, status_bar_date_str, -1, &msg_rcTime, DT_TOP);
-
-        SetBkColor(hdc, COLOR_transparent);
-        SetBkMode(hdc, BM_TRANSPARENT);
-        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0, 0));
-        SelectFont(hdc, logfont);
-        msg_rcInfo.left = 0;
-        msg_rcInfo.top = LCD_H / 2;
-        msg_rcInfo.right = LCD_W;
-        msg_rcInfo.bottom = msg_rcInfo.top + 24;
-        DrawText(hdc, res_str[RES_STR_LOWPOWER], -1, &msg_rcInfo, DT_TOP | DT_CENTER);
 
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
@@ -235,13 +235,8 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         touch_pos_up.y = HISWORD(lParam);
         printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
         int witch_button = check_button(touch_pos_up.x, touch_pos_up.y);
-        if (witch_button == 0) menu_back(hWnd, wParam, lParam);
-        if (witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
-        {
-            lowpower_enter(hWnd, wParam, witch_button);
-        }
-        touch_pos_old.x = touch_pos_up.x;
-        touch_pos_old.y = touch_pos_up.y;
+        if (witch_button == 0) poweroff();
+        if (witch_button == 1) menu_back(hWnd, wParam, lParam);
         EnableScreenAutoOff();
         break;
     }
@@ -250,16 +245,30 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     return DefaultDialogProc(hWnd, message, wParam, lParam);
 }
 
-void creat_lowpower_dialog(HWND hWnd)
+void creat_poweroff_dialog(HWND hWnd,int type)
 {
     DLGTEMPLATE DesktopDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
-                              0, 0,
-                              LCD_W, LCD_H,
+                              POWER_OFF_X, POWER_OFF_Y,
+                              POWER_OFF_W, POWER_OFF_H,
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0
                              };
-    //DesktopDlg.controls = DesktopCtrl;
-    if (runlowpower)
-        return;
-    runlowpower = 1;
+    create_type = type;
+    switch(create_type)
+    {
+        case TYPE_LOWPOWER:
+            if (run_lowpower)
+                return;
+            run_lowpower = 1;
+            break;
+        case TYPE_TIMING:
+            if (run_poweroff)
+                return;
+            run_poweroff = 1;
+            break;
+        case TYPE_POWEROFF:
+            break;
+        default:return;
+    }
+
     DialogBoxIndirectParam(&DesktopDlg, hWnd, dialog_proc, 0L);
 }

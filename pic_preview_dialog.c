@@ -190,6 +190,7 @@ static LRESULT picpreview_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                 SetFocus(hFocus);
             loadpicinit(dir_node);
             SetTimer(hWnd, _ID_TIMER_PICPREVIEW, TIMER_PICPREVIEW);
+            nhWnd = hWnd;
             return 0;
         }
         case MSG_TIMER:

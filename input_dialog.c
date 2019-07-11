@@ -375,7 +375,6 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
 
         RECT msg_rcTime, msg_rcFilename;
-        time_flush();
         msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
         msg_rcTime.top = REALTIME_PINT_Y;
         msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

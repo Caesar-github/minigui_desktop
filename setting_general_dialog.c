@@ -25,13 +25,13 @@
 #include "common.h"
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 6
+#define WHOLE_BUTTON_NUM 7
 
 static BITMAP list_sel_bmap;
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
-#define GENERAL_NUM    5
+#define GENERAL_NUM    6
 
 static touch_pos touch_pos_down, touch_pos_up, touch_pos_old;
 
@@ -113,6 +113,9 @@ static void general_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
     case 4:
         creat_setting_backlight_dialog(hWnd);
         break;
+    case 5:
+        creat_poweroff_dialog(hWnd,TYPE_POWEROFF);
+        break;
     }
     InvalidateRect(hWnd, &msg_rcBg, TRUE);
 }
@@ -138,6 +141,7 @@ static LRESULT setting_general_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         batt = battery;
         list_sel = 0;
         SetTimer(hWnd, _ID_TIMER_SETTING_GENERAL, TIMER_SETTING_GENERAL);
+        nhWnd = hWnd;
         return 0;
     }
     case MSG_TIMER:
@@ -209,7 +213,6 @@ static LRESULT setting_general_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
 
 
         RECT msg_rcTime;
-        time_flush();
         msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
         msg_rcTime.top = REALTIME_PINT_Y;
         msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

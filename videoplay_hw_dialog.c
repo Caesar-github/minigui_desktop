@@ -384,7 +384,6 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
         }
 #endif
             RECT msg_rcTime;
-            time_flush();
             msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
             msg_rcTime.top = REALTIME_PINT_Y;
             msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

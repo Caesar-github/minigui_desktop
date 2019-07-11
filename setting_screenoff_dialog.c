@@ -109,6 +109,7 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
         batt = battery;
         list_sel = 0;
         SetTimer(hWnd, _ID_TIMER_SETTING_SCREENOFF, TIMER_SETTING_SCREENOFF);
+        nhWnd = hWnd;
         return 0;
     }
     case MSG_TIMER:
@@ -180,7 +181,6 @@ static LRESULT setting_screenoff_dialog_proc(HWND hWnd, UINT message, WPARAM wPa
 
 
         RECT msg_rcTime;
-        time_flush();
         msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
         msg_rcTime.top = REALTIME_PINT_Y;
         msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

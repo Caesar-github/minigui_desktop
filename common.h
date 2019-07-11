@@ -107,6 +107,7 @@ enum RES_STR_ID {
     RES_STR_TITLE_THEMESTYLE,
     RES_STR_TITLE_SCREENOFF,
     RES_STR_TITLE_BACKLIGHT,
+    RES_STR_SHUTDOWN,
     RES_STR_LANGUAGE_CN,
     RES_STR_LANGUAGE_EN,
     RES_STR_LANGUAGE_JP,
@@ -159,6 +160,7 @@ enum RES_STR_ID {
     RES_STR_SYSTEMTIME_FORMAT_24,
     RES_STR_SYSTEMTIME_FORMAT_12,
     RES_STR_LOWPOWER,
+    RES_STR_POWEROFF,
     RES_STR_CONNECTED,
     RES_STR_CONNECTING,
     RES_STR_WRONG_PWD,
@@ -303,7 +305,7 @@ typedef struct
 #include "videoplay_hw_dialog.h"
 #include "system.h"
 #include "ffplay_ipc.h"
-#include "lowpower_dialog.h"
+#include "poweroff_dialog.h"
 #include "input_dialog.h"
 #include "time_input_dialog.h"
 #include "systime.h"
@@ -353,7 +355,7 @@ struct wifi_avaiable {
 	int rssi;
 };
 
-extern HWND mhWnd;
+extern HWND mhWnd,nhWnd;
 
 extern struct wifi_info input_wifi_date;
 extern struct wifi_info connect_wifi_date;

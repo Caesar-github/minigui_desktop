@@ -227,6 +227,7 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
             off_2 = timing_power_off[1].status;
             off_3 = timing_power_off[2].status;
             SetTimer(hWnd, _ID_TIMER_SETTING_SYSTEMTIME, TIMER_SETTING_SYSTEMTIME);
+            nhWnd = hWnd;
             return 0;
         }
         case MSG_TIMER:
@@ -295,7 +296,6 @@ static LRESULT setting_systemtime_dialog_proc(HWND hWnd, UINT message, WPARAM wP
 
 
             RECT msg_rcTime;
-            time_flush();
             msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
             msg_rcTime.top = REALTIME_PINT_Y;
             msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

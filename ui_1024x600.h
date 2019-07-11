@@ -363,4 +363,9 @@
 #define TIME_INPUT_CANCEL_W   TIME_INPUT_OK_W
 #define TIME_INPUT_CANCEL_X   (TIME_INPUT_W / 2)
 
+#define POWER_OFF_X    (LCD_W / 4)
+#define POWER_OFF_Y    (LCD_H / 4)
+#define POWER_OFF_W    (LCD_W / 2)
+#define POWER_OFF_H    (LCD_H / 2)
+
 #endif

@@ -200,16 +200,20 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         SetTimer(hWnd, _ID_TIMER_DESKTOP, TIMER_DESKTOP);
         if (hFocus)
             SetFocus(hFocus);
+        nhWnd = hWnd;
         return 0;
     }
     case MSG_TIMER:
     {
         time_flush();
-        if (now_time->tm_min != last_time->tm_min) InvalidateRect(hWnd, &msg_rcBg, FALSE);
-        if (timing_power_off[TIMING_NUM].status == 1 && (timing_power_off[TIMING_NUM].timing == (now_time->tm_hour * 100 + now_time->tm_min)))
+        if (now_time->tm_min != last_time->tm_min || now_time->tm_hour != last_time->tm_hour)
         {
-            printf("%s:timing for power off\n", __func__);
-            system("poweroff");
+            if (timing_power_off[TIMING_NUM].status == 1 && (timing_power_off[TIMING_NUM].timing == (now_time->tm_hour * 100 + now_time->tm_min)))
+            {
+                printf("%s:timing for power off\n", __func__);
+                creat_poweroff_dialog(hWnd,TYPE_TIMING);
+            }
+            InvalidateRect(hWnd, &msg_rcBg, FALSE);
         }
         if (double_click_timer > 0) double_click_timer = 0;
         if (wParam == _ID_TIMER_DESKTOP)
@@ -274,7 +278,6 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 
             RECT msg_rcTime;
-            time_flush();
             msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
             msg_rcTime.top = REALTIME_PINT_Y;
             msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

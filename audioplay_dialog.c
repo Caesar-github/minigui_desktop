@@ -233,6 +233,7 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
         batt = battery;
         SetTimer(hWnd, _ID_TIMER_AUDIOPLAY, TIMER_AUDIOPLAY);
         audio_play(hWnd, 0);
+        nhWnd = hWnd;
         return 0;
     }
     case MSG_TIMER:
@@ -361,7 +362,6 @@ static LRESULT audioplay_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
                           volume_display);
 
         RECT msg_rcTime;
-        time_flush();
         msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
         msg_rcTime.top = REALTIME_PINT_Y;
         msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

@@ -36,7 +36,7 @@ void time_flush(void)
     strftime(status_bar_date_str,sizeof(status_bar_date_str),"%Y-%m-%d",now_time);
     if (!get_time_format())
     {
-        if (now_time->tm_hour > 12)
+        if (now_time->tm_hour >= 12)
         {
             sprintf(status_bar_time_str,"%02d:%02d PM",now_time->tm_hour % 12,now_time->tm_min);
         }

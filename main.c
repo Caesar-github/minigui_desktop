@@ -86,7 +86,7 @@ LOGFONT  *logfont_title;
 
 static int screenoff_cnt = 0;
 static int screenautooff = 1;
-HWND mhWnd;
+HWND mhWnd,nhWnd;
 
 #define maxlabelsize 35
 static int  __getline(char **lineptr, ssize_t *n, FILE *stream)
@@ -509,7 +509,7 @@ static void batt_update(void)
         //printf("battery:%d\n",bat);
         if (bat < 5) {
             battery = 0;
-            creat_lowpower_dialog(mhWnd);
+            creat_poweroff_dialog(mhWnd,TYPE_LOWPOWER);
         }
         else if (bat < 10)
             battery = 0;

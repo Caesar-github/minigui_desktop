@@ -593,6 +593,7 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         file_list_init();
         batt = battery;
         SetTimer(hWnd, _ID_TIMER_BROWSER, TIMER_BROWSER);
+        nhWnd = hWnd;
         return 0;
     }
     case MSG_TIMER:
@@ -663,7 +664,6 @@ static LRESULT browser_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 
         RECT msg_rcTime;
-        time_flush();
         msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
         msg_rcTime.top = REALTIME_PINT_Y;
         msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;

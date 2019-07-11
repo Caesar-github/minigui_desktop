@@ -29,6 +29,7 @@ OBJ = audioplay_dialog.o \
       setting_general_dialog.o \
       input_dialog.o \
       time_input_dialog.o \
+      poweroff_dialog.o \
       systime.o \
       cJSON.o \
       sysfs.o \
@@ -51,7 +52,6 @@ CFLAGS += -lavformat -lavcodec -lswscale -lavutil -DENABLE_VIDEO
 endif
 
 ifeq ($(ENABLE_BATT),1)
-OBJ += lowpower_dialog.o
 CFLAGS += -DENABLE_BATT
 endif
 
