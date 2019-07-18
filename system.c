@@ -48,7 +48,7 @@
        while (__result == -1L && errno == EINTR);              \
        __result; }))
 
-int system_fd_closexec(const char* command)
+int system_fd_closexec(const char *command)
 {
     int status = 0;
     pid_t pid;
@@ -59,29 +59,32 @@ int system_fd_closexec(const char* command)
     if ((pid = vfork()) < 0)
         return -1;
 
-    if (pid == 0) {
+    if (pid == 0)
+    {
         int i = 0;
         int stdin_fd = fileno(stdin);
         int stdout_fd = fileno(stdout);
         int stderr_fd = fileno(stderr);
         long sc_open_max = sysconf(_SC_OPEN_MAX);
-        if (sc_open_max < 0) {
+        if (sc_open_max < 0)
+        {
             fprintf(stderr, "Warning, sc_open_max is unlimited!\n");
             sc_open_max = 20000; /* enough? */
         }
         /* close all descriptors in child sysconf(_SC_OPEN_MAX) */
-        for (; i < sc_open_max; i++) {
+        for (; i < sc_open_max; i++)
+        {
             if (i == stdin_fd || i == stdout_fd || i == stderr_fd)
                 continue;
             close(i);
         }
 
-        execl(_PATH_BSHELL, "sh", "-c", command, (char*)0);
+        execl(_PATH_BSHELL, "sh", "-c", command, (char *)0);
         _exit(127);
     }
 
-	 if (TEMP_FAILURE_RETRY (waitpid (pid, &status, 0)) != pid)
-		 status = -1;
+    if (TEMP_FAILURE_RETRY(waitpid(pid, &status, 0)) != pid)
+        status = -1;
 
     return status;
 }
@@ -94,14 +97,17 @@ int runapp_result(char *cmd)
     int ret;
 
     read_fp = popen(cmd, "r");
-    if (read_fp != NULL) {
+    if (read_fp != NULL)
+    {
         chars_read = fread(buffer, sizeof(char), BUFSIZ - 1, read_fp);
         if (chars_read > 0)
             ret = 1;
         else
             ret = -1;
         pclose(read_fp);
-    } else {
+    }
+    else
+    {
         ret = -1;
     }
 

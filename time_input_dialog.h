@@ -8,7 +8,7 @@
 #define INPUT_TIME_TIMING_24     0x50
 
 extern HWND last_hWnd;
-extern void creat_time_input_dialog(HWND hWnd,int type,struct tm *tar_time);
+extern void creat_time_input_dialog(HWND hWnd, int type, struct tm *tar_time);
 
 #endif
 

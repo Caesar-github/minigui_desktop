@@ -88,7 +88,8 @@
 #define TIMER_INPUT                 50
 
 
-enum RES_STR_ID {
+enum RES_STR_ID
+{
     RES_STR_RES = 0,
     RES_STR_TITLE_GAME,
     RES_STR_TITLE_MUSIC,
@@ -173,7 +174,8 @@ enum RES_STR_ID {
     RES_STR_MAX
 };
 
-enum filter_filetype {
+enum filter_filetype
+{
     FILTER_FILE_NO = 0,
     FILTER_FILE_MUSIC = 1,
     FILTER_FILE_GAME = 2,
@@ -182,7 +184,8 @@ enum filter_filetype {
     FILTER_FILE_VIDEO = 5
 };
 
-enum filetype {
+enum filetype
+{
     FILE_FOLDER = 0,
     FILE_MUSIC = 1,
     FILE_GAME = 2,
@@ -193,7 +196,8 @@ enum filetype {
     FILE_TYPE_MAX
 };
 
-enum languagetype {
+enum languagetype
+{
     LANGUAGE_CH = 0,
     LANGUAGE_EN,
     LANGUAGE_JA,
@@ -219,7 +223,8 @@ struct directory_node
     int file_sel;
 };
 
-enum MEDIA_CMD {
+enum MEDIA_CMD
+{
     MEDIA_CMD_CUR_TIME = 0,
     MEDIA_CMD_TOTAL_TIME,
     MEDIA_CMD_END,
@@ -231,13 +236,13 @@ typedef struct
 {
     int x;
     int y;
-}touch_pos;
+} touch_pos;
 
 typedef struct
 {
     int status;
     int timing;
-}rtc_timing;
+} rtc_timing;
 
 #if 1
 #define BROWSER_PATH_ROOT     "/oem/file"
@@ -345,17 +350,19 @@ extern HWND setting_wiif_dialog_hWnd;
 
 
 
-struct wifi_info {
-	char ssid[128];
-	char psk[128];
+struct wifi_info
+{
+    char ssid[128];
+    char psk[128];
 };
 
-struct wifi_avaiable {
-	char ssid[128];
-	int rssi;
+struct wifi_avaiable
+{
+    char ssid[128];
+    int rssi;
 };
 
-extern HWND mhWnd,nhWnd;
+extern HWND mhWnd, nhWnd;
 
 extern struct wifi_info input_wifi_date;
 extern struct wifi_info connect_wifi_date;
@@ -379,8 +386,8 @@ extern RECT msg_rcWifi;
 
 
 extern char *res_str[RES_STR_MAX];
-extern rtc_timing timing_power_on[TIMING_NUM+1];
-extern rtc_timing timing_power_off[TIMING_NUM+1];
+extern rtc_timing timing_power_on[TIMING_NUM + 1];
+extern rtc_timing timing_power_off[TIMING_NUM + 1];
 
 extern LOGFONT  *logfont_cej;
 extern LOGFONT  *logfont_k;
@@ -390,7 +397,8 @@ extern LOGFONT  *logfont;
 extern LOGFONT  *logfont_title;
 
 
-enum INPUT_TYPE {
+enum INPUT_TYPE
+{
     WIFI_PWD = 1,
     SYSTEMTIME_DATE,
 };

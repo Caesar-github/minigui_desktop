@@ -211,7 +211,7 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             if (timing_power_off[TIMING_NUM].status == 1 && (timing_power_off[TIMING_NUM].timing == (now_time->tm_hour * 100 + now_time->tm_min)))
             {
                 printf("%s:timing for power off\n", __func__);
-                creat_poweroff_dialog(hWnd,TYPE_TIMING);
+                creat_poweroff_dialog(hWnd, TYPE_TIMING);
             }
             InvalidateRect(hWnd, &msg_rcBg, FALSE);
         }
@@ -255,24 +255,24 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                               &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-        if (get_wifi_state() == RK_WIFI_State_OFF)
-        {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_disabled_bmap);
-        }
-        else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
-        {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_connected_bmap);
-        }
-        else
-        {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_disconnected_bmap);
-        }
+            if (get_wifi_state() == RK_WIFI_State_OFF)
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_disabled_bmap);
+            }
+            else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_connected_bmap);
+            }
+            else
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_disconnected_bmap);
+            }
 #endif
 
 

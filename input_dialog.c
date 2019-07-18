@@ -171,11 +171,11 @@ static void input_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
             else
             {
                 snprintf(input_wifi_date.psk, 128, "%s", input_content);
-				set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
-				snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
-				snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
+                set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
+                snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
+                snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
                 wifi_connect_flag = 1;
-				cur_page=1;
+                cur_page = 1;
                 menu_back(hWnd, wParam, lParam);
             }
             break;
@@ -304,11 +304,11 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             else
             {
                 snprintf(input_wifi_date.psk, 128, "%s", input_content);
-				set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
-				snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
-				snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
+                set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
+                snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
+                snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
                 wifi_connect_flag = 1;
-				cur_page=1;
+                cur_page = 1;
                 menu_back(hWnd, wParam, lParam);
             }
         }
@@ -534,7 +534,7 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         int witch_button = check_button(touch_pos_down.x, touch_pos_down.y);
         if (witch_button == 0)
         {
-			menu_back(hWnd, wParam, lParam);
+            menu_back(hWnd, wParam, lParam);
         }
         else if (witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
         {

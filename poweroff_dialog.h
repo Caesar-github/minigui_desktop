@@ -39,6 +39,6 @@
 #define TYPE_TIMING     1
 #define TYPE_POWEROFF   2
 
-void creat_poweroff_dialog(HWND hWnd,int type);
+void creat_poweroff_dialog(HWND hWnd, int type);
 
 #endif

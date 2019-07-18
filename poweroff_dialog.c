@@ -29,19 +29,20 @@
 
 static int batt = 0;
 static int autopoweroff_cnt = 50;
-static int run_lowpower = 0,run_poweroff = 0;
+static int run_lowpower = 0, run_poweroff = 0;
 static int create_type = 0;
 
 static touch_pos touch_pos_down, touch_pos_up, touch_pos_old;
 
-static const GAL_Rect msg_rcArrow[] = {
+static const GAL_Rect msg_rcArrow[] =
+{
     {TIME_INPUT_OK_X, TIME_INPUT_OK_Y, TIME_INPUT_OK_W, TIME_INPUT_OK_H},
     {TIME_INPUT_CANCEL_X, TIME_INPUT_CANCEL_Y, TIME_INPUT_CANCEL_W, TIME_INPUT_CANCEL_H}
 };
 
-static int is_button(int x,int y,GAL_Rect rect)
+static int is_button(int x, int y, GAL_Rect rect)
 {
-    return ((x <= rect.x + rect.w ) && (x >= rect.x) && (y <= rect.y + rect.h ) && (y >= rect.y));
+    return ((x <= rect.x + rect.w) && (x >= rect.x) && (y <= rect.y + rect.h) && (y >= rect.y));
 }
 
 static int check_button(int x, int y)
@@ -143,7 +144,7 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         FillBox(hdc, 0, 0, TIME_INPUT_W, TIME_INPUT_H);
         old_brush = SetBrushColor(hdc, pixle);
         SetBkColor(hdc, COLOR_lightwhite);
-        SetBkMode(hdc,BM_TRANSPARENT);
+        SetBkMode(hdc, BM_TRANSPARENT);
         SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
         SelectFont(hdc, logfont);
 
@@ -173,7 +174,7 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         }
 
         char cnt_buf[5];
-        sprintf(cnt_buf,"%d\0",autopoweroff_cnt / 5);
+        sprintf(cnt_buf, "%d\0", autopoweroff_cnt / 5);
         msg_rcButton.top = POWER_OFF_H / 2;
         if (create_type != TYPE_POWEROFF)
         {
@@ -245,7 +246,7 @@ static LRESULT dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     return DefaultDialogProc(hWnd, message, wParam, lParam);
 }
 
-void creat_poweroff_dialog(HWND hWnd,int type)
+void creat_poweroff_dialog(HWND hWnd, int type)
 {
     DLGTEMPLATE DesktopDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
                               POWER_OFF_X, POWER_OFF_Y,
@@ -253,21 +254,22 @@ void creat_poweroff_dialog(HWND hWnd,int type)
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0
                              };
     create_type = type;
-    switch(create_type)
+    switch (create_type)
     {
-        case TYPE_LOWPOWER:
-            if (run_lowpower)
-                return;
-            run_lowpower = 1;
-            break;
-        case TYPE_TIMING:
-            if (run_poweroff)
-                return;
-            run_poweroff = 1;
-            break;
-        case TYPE_POWEROFF:
-            break;
-        default:return;
+    case TYPE_LOWPOWER:
+        if (run_lowpower)
+            return;
+        run_lowpower = 1;
+        break;
+    case TYPE_TIMING:
+        if (run_poweroff)
+            return;
+        run_poweroff = 1;
+        break;
+    case TYPE_POWEROFF:
+        break;
+    default:
+        return;
     }
 
     DialogBoxIndirectParam(&DesktopDlg, hWnd, dialog_proc, 0L);

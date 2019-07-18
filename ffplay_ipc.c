@@ -53,19 +53,22 @@
 
 #define FFPLAY_IPC_SOCK_PATH "/tmp/ffplay.socket"
 
-typedef struct Message {
+typedef struct Message
+{
     char *msg;
     int len;
-    struct Message* next;
+    struct Message *next;
 } Message;
 
-typedef struct {
+typedef struct
+{
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-    Message* first;
+    Message *first;
 } IPCMessageQueue;
 
-typedef struct {
+typedef struct
+{
     pthread_t ipc_tid;
     int quit;
     int socket_fd;
@@ -76,7 +79,8 @@ typedef struct {
     int start_time;
 } IPCState;
 
-typedef struct {
+typedef struct
+{
     IPCState *ipcs;
     int socket_fd;
     pthread_t send_tid;
@@ -89,22 +93,26 @@ static IPCState ipc_state;
 static volatile int ready = 0;
 static volatile int ffplay_exist = 0;
 
-static Message* alloc_ipc_message(char *key, char *value) {
+static Message *alloc_ipc_message(char *key, char *value)
+{
     Message *ret;
     int len = strlen(key) + strlen(value) + sizeof(MESSAGE_SEPATATOR);
     char *str;
 
-    if (len > MESSAGE_MAX_LEN) {
+    if (len > MESSAGE_MAX_LEN)
+    {
         fprintf(stderr, "Message is too long\n");
         return NULL;
     }
     str = malloc(len);
-    if (!str) {
+    if (!str)
+    {
         fprintf(stderr, "No Memory\n");
         return NULL;
     }
     ret = malloc(sizeof(*ret));
-    if (!ret) {
+    if (!ret)
+    {
         free(str);
         fprintf(stderr, "No Memory\n");
         return NULL;
@@ -117,7 +125,8 @@ static Message* alloc_ipc_message(char *key, char *value) {
     return ret;
 }
 
-static void free_ipc_message(Message *m) {
+static void free_ipc_message(Message *m)
+{
     if (!m)
         return;
     if (m->msg)
@@ -126,17 +135,20 @@ static void free_ipc_message(Message *m) {
     free(m);
 }
 
-static int init_ipc_queue(IPCMessageQueue *queue) {
+static int init_ipc_queue(IPCMessageQueue *queue)
+{
     int ret;
 
     ret = pthread_mutex_init(&queue->mutex, NULL);
-    if (ret) {
+    if (ret)
+    {
         fprintf(stderr, "pthread_mutex_init(): %s\n", strerror(errno));
         return -errno;
     }
 
     ret = pthread_cond_init(&queue->cond, NULL);
-    if (ret) {
+    if (ret)
+    {
         pthread_mutex_destroy(&queue->mutex);
         fprintf(stderr, "pthread_cond_init(): %s\n", strerror(errno));
         return -errno;
@@ -145,12 +157,14 @@ static int init_ipc_queue(IPCMessageQueue *queue) {
     return 0;
 }
 
-static void clean_ipc_queue(IPCMessageQueue *queue) {
-    Message* m;
+static void clean_ipc_queue(IPCMessageQueue *queue)
+{
+    Message *m;
 
     pthread_mutex_lock(&queue->mutex);
     m = queue->first;
-    while (m) {
+    while (m)
+    {
         free(&m->msg);
         m = m->next;
         memset(m, 0, sizeof(*m));
@@ -159,19 +173,23 @@ static void clean_ipc_queue(IPCMessageQueue *queue) {
     pthread_mutex_unlock(&queue->mutex);
 }
 
-static void deinit_ipc_queue(IPCMessageQueue *queue) {
+static void deinit_ipc_queue(IPCMessageQueue *queue)
+{
     clean_ipc_queue(queue);
     pthread_mutex_destroy(&queue->mutex);
     pthread_cond_destroy(&queue->cond);
 }
 
-static void push_ipc_message(IPCState *ipcs, Message* m) {
-    Message* end;
+static void push_ipc_message(IPCState *ipcs, Message *m)
+{
+    Message *end;
     IPCMessageQueue *queue = &ipcs->send_queue;
     pthread_mutex_lock(&queue->mutex);
     end = queue->first;
-    while (end) {
-        if (!end->next) {
+    while (end)
+    {
+        if (!end->next)
+        {
             end->next = m;
             m->next = NULL;
             break;
@@ -184,12 +202,14 @@ static void push_ipc_message(IPCState *ipcs, Message* m) {
     pthread_mutex_unlock(&queue->mutex);
 }
 
-static Message* pop_ipc_message(IPCState *ipcs) {
-    Message* first;
+static Message *pop_ipc_message(IPCState *ipcs)
+{
+    Message *first;
     IPCMessageQueue *queue = &ipcs->send_queue;
     pthread_mutex_lock(&queue->mutex);
     first = queue->first;
-    if (!first) {
+    if (!first)
+    {
         struct timeval now;
         struct timespec timeout;
         int64_t increase;
@@ -197,14 +217,16 @@ static Message* pop_ipc_message(IPCState *ipcs) {
         timeout.tv_sec = now.tv_sec;
         timeout.tv_nsec = (now.tv_usec + 100 * 1000LL) * 1000LL;
         increase = timeout.tv_nsec / 1000000000LL;
-        if (increase > 0) {
+        if (increase > 0)
+        {
             timeout.tv_sec += increase;
             timeout.tv_nsec = timeout.tv_nsec - increase * 1000000000LL;
         }
         pthread_cond_timedwait(&queue->cond, &queue->mutex, &timeout);
     }
     first = queue->first;
-    if (first) {
+    if (first)
+    {
         queue->first = first->next;
         first->next = NULL;
         pthread_mutex_unlock(&queue->mutex);
@@ -215,8 +237,9 @@ static Message* pop_ipc_message(IPCState *ipcs) {
     return NULL;
 }
 
-static void* ipc_main_thread(void *arg);
-static int init_ipc(IPCState *ipcs) {
+static void *ipc_main_thread(void *arg);
+static int init_ipc(IPCState *ipcs)
+{
     int ret;
     memset(ipcs, 0, sizeof(*ipcs));
     ipcs->socket_fd = -1;
@@ -224,7 +247,8 @@ static int init_ipc(IPCState *ipcs) {
     if (ret)
         return ret;
     ret = pthread_create(&ipcs->ipc_tid, NULL, ipc_main_thread, ipcs);
-    if (ret) {
+    if (ret)
+    {
         deinit_ipc_queue(&ipcs->send_queue);
         fprintf(stderr, "pthread_create(): %s\n", strerror(errno));
         ret = -1;
@@ -232,34 +256,46 @@ static int init_ipc(IPCState *ipcs) {
     return ret;
 }
 
-static void deinit_ipc(IPCState *ipcs) {
+static void deinit_ipc(IPCState *ipcs)
+{
     ipcs->quit = 1;
     if (ipcs->ipc_tid)
         pthread_join(ipcs->ipc_tid, NULL);
     deinit_ipc_queue(&ipcs->send_queue);
 }
 
-static void handle_remote_ipc_message(char *key, char *value, int *alive) {
+static void handle_remote_ipc_message(char *key, char *value, int *alive)
+{
     /* test code begin */
     {
-        if (!strcmp(key, STATE)) {
+        if (!strcmp(key, STATE))
+        {
             printf("recv remote state message: %s%s%s\n", key, MESSAGE_SEPATATOR, value);
-            if (!strcmp(value, READY)) {
+            if (!strcmp(value, READY))
+            {
                 __atomic_store_n(&ready, 1, __ATOMIC_SEQ_CST);
-            } else if (!strcmp(value, QUIT) || !strcmp(value, ERROR)) {
+            }
+            else if (!strcmp(value, QUIT) || !strcmp(value, ERROR))
+            {
                 clean_ipc_queue(&ipc_state.send_queue);
                 *alive = 0;
                 __atomic_store_n(&ready, 0, __ATOMIC_SEQ_CST);
                 ipc_state.ffplay_is_quit = ipc_state.quit = 1;
-            } else if (!strcmp(value, END)) {
+            }
+            else if (!strcmp(value, END))
+            {
                 if (ipc_state.hWnd)
                     PostMessage(ipc_state.hWnd, MSG_MEDIA_UPDATE, MEDIA_CMD_END, 0);
             }
-        } else if (!strcmp(key, DURATION)) {
+        }
+        else if (!strcmp(key, DURATION))
+        {
             int titletime = atoi(value);
             if (ipc_state.hWnd)
                 PostMessage(ipc_state.hWnd, MSG_MEDIA_UPDATE, MEDIA_CMD_TOTAL_TIME, titletime);
-        } else if (!strcmp(key, CUR_TIME)) {
+        }
+        else if (!strcmp(key, CUR_TIME))
+        {
             int curtime = atoi(value);
             if (ipc_state.hWnd)
                 PostMessage(ipc_state.hWnd, MSG_MEDIA_UPDATE, MEDIA_CMD_CUR_TIME, curtime);
@@ -269,30 +305,35 @@ static void handle_remote_ipc_message(char *key, char *value, int *alive) {
     /* test code end */
 }
 
-static void* ipc_recv_thread(void *arg) {
+static void *ipc_recv_thread(void *arg)
+{
     char buf[MESSAGE_MAX_LEN];
     IPCClientState *cs = (IPCClientState *)arg;
     IPCState *ipcs = cs->ipcs;
     int fd = cs->socket_fd;
     int client_alive = 1;
 
-    while (!ipcs->quit && client_alive) {
+    while (!ipcs->quit && client_alive)
+    {
         char *str;
         int recv_len;
         int str_offset;
 
         recv_len = recv(fd, buf, sizeof(buf), 0);
-        if (recv_len <= 0) {
-            if (errno != EAGAIN && client_alive) {
+        if (recv_len <= 0)
+        {
+            if (errno != EAGAIN && client_alive)
+            {
                 fprintf(stderr, "Fail to recv message: %s\n", strerror(errno));
-                handle_remote_ipc_message((char*)STATE, (char*)ERROR, &client_alive);
+                handle_remote_ipc_message((char *)STATE, (char *)ERROR, &client_alive);
                 break;
             }
             usleep(10 * 1000);
             continue;
         }
 
-        if (buf[recv_len - 1] != 0) {
+        if (buf[recv_len - 1] != 0)
+        {
             int i = 0;
             buf[recv_len - 1] = 0;
             fprintf(stderr, "Warning : Remote Message may be truncated, ");
@@ -301,13 +342,15 @@ static void* ipc_recv_thread(void *arg) {
             fprintf(stderr, "\n");
         }
         str_offset = 0;
-        while (str_offset < recv_len) {
+        while (str_offset < recv_len)
+        {
             char *str;
             char *start = buf + str_offset;
             int str_len = strlen(start) + 1;
             str_offset += str_len;
             str = strstr(start, MESSAGE_SEPATATOR);
-            if (!str) {
+            if (!str)
+            {
                 fprintf(stderr, "Remote Message is broken <%s>?\n", start);
                 continue;
             }
@@ -320,27 +363,33 @@ static void* ipc_recv_thread(void *arg) {
     return NULL;
 }
 
-static void* ipc_send_thread(void *arg) {
+static void *ipc_send_thread(void *arg)
+{
     int ret;
     IPCClientState *cs = (IPCClientState *)arg;
     IPCState *ipcs = cs->ipcs;
     int fd = cs->socket_fd;
 
     // pthread_detach(pthread_self());
-    while(!ipcs->quit) {
+    while (!ipcs->quit)
+    {
         char *send_str;
         int send_len;
         Message *m = pop_ipc_message(ipcs);
-        if (!m) {
+        if (!m)
+        {
             continue;
         }
         send_str = m->msg;
         send_len = m->len;
-        while (send_len > 0) {
+        while (send_len > 0)
+        {
             ret = send(fd, send_str, send_len, 0);
-            if (ret <= 0) {
+            if (ret <= 0)
+            {
                 fprintf(stderr, "send errno: %s\n", strerror(errno));
-                if (ret < 0 && errno != EAGAIN) {
+                if (ret < 0 && errno != EAGAIN)
+                {
                     fprintf(stderr, "Fail to send msg<%s>: %s\n",
                             m->msg, strerror(errno));
                     break;
@@ -361,7 +410,8 @@ static void* ipc_send_thread(void *arg) {
     pthread_exit(NULL);
 }
 
-static void* ipc_main_thread(void *arg) {
+static void *ipc_main_thread(void *arg)
+{
     int ret = 0;
     IPCState *ipcs = (IPCState *)arg;
     int loop = 1;
@@ -371,7 +421,8 @@ static void* ipc_main_thread(void *arg) {
     pthread_t recv_tid = 0;
 
     fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
-    if (fd < 0) {
+    if (fd < 0)
+    {
         fprintf(stderr, "Fail to create socket: %s\n", strerror(errno));
         ret = -1;
         goto out;
@@ -383,7 +434,8 @@ static void* ipc_main_thread(void *arg) {
     strcpy(address.sun_path, FFPLAY_IPC_SOCK_PATH);
 
     ret = bind(fd, (struct sockaddr *)&address, sizeof(address));
-    if (ret < 0) {
+    if (ret < 0)
+    {
         fprintf(stderr, "Fail to bind socket: %s\n", strerror(errno));
         goto out;
     }
@@ -391,14 +443,16 @@ static void* ipc_main_thread(void *arg) {
     // only one
     ret = listen(fd, 1);
 
-    if (ret < 0) {
+    if (ret < 0)
+    {
         fprintf(stderr, "Fail to listen socket: %s\n", strerror(errno));
         goto out;
     }
 
     ipcs->socket_fd = fd;
 
-    while (!ipcs->quit) {
+    while (!ipcs->quit)
+    {
         int client_fd;
         struct sockaddr_un client_addr;
         socklen_t len = sizeof(client_addr);
@@ -415,13 +469,15 @@ static void* ipc_main_thread(void *arg) {
             continue;
 
         client = malloc(sizeof(IPCClientState));
-        if (!client) {
+        if (!client)
+        {
             fprintf(stderr, "No memory\n");
             break;
         }
         memset(client, 0, sizeof(*client));
         client_fd = accept(ipcs->socket_fd, (struct sockaddr *)&client_addr, &len);
-        if (client_fd < 0) {
+        if (client_fd < 0)
+        {
             fprintf(stderr, "Fail to accept socket: %s\n", strerror(errno));
             free(client);
             continue;
@@ -430,7 +486,8 @@ static void* ipc_main_thread(void *arg) {
         client->ipcs = ipcs;
         client->socket_fd = client_fd;
         ret = pthread_create(&recv_tid, NULL, ipc_recv_thread, client);
-        if (ret) {
+        if (ret)
+        {
             close(client_fd);
             free(client);
             fprintf(stderr, "Fail to create ipc_recv_thread: %s\n", strerror(errno));
@@ -438,7 +495,8 @@ static void* ipc_main_thread(void *arg) {
         }
         client->recv_tid = recv_tid;
         ret = pthread_create(&send_tid, NULL, ipc_send_thread, client);
-        if (ret) {
+        if (ret)
+        {
             close(client_fd);
             free(client);
             fprintf(stderr, "Fail to create ipc_send_thread: %s\n", strerror(errno));
@@ -462,35 +520,39 @@ out:
         pthread_join(recv_tid, NULL);
 
     printf("exit %s, fd = %d\n", __FUNCTION__, fd);
-    return (void*)ret;
+    return (void *)ret;
 }
 
-#define ALSA_DEVICE_CFG_PATH_ENV	"ALSA_DEVICE_CFG"
-#define ALSA_DEVICE_CFG_PATH_DEFAULT	"/tmp/alsa_device.cfg"
+#define ALSA_DEVICE_CFG_PATH_ENV    "ALSA_DEVICE_CFG"
+#define ALSA_DEVICE_CFG_PATH_DEFAULT    "/tmp/alsa_device.cfg"
 
-static void* run_ffplay_thread(void *arg) {
+static void *run_ffplay_thread(void *arg)
+{
     int ret;
     char cmd[1024];
     char value[32];
     Message *m;
-    char *file_path = (char*)arg;
+    char *file_path = (char *)arg;
     int audio_cfg_fd = -1;
     char buf[256] = "\0";
-    const char* audio_cfg_file;
+    const char *audio_cfg_file;
     int wait_times = 6 * 100;
     int retry_wait = wait_times;
 
     audio_cfg_file = getenv(ALSA_DEVICE_CFG_PATH_ENV);
     if (!audio_cfg_file)
-      audio_cfg_file = ALSA_DEVICE_CFG_PATH_DEFAULT;
+        audio_cfg_file = ALSA_DEVICE_CFG_PATH_DEFAULT;
 
     audio_cfg_fd = open(audio_cfg_file, O_RDONLY);
-    if (audio_cfg_fd > 0) {
+    if (audio_cfg_fd > 0)
+    {
         read(audio_cfg_fd, buf, sizeof(buf));
         close(audio_cfg_fd);
         if (buf[strlen(buf) - 1] == '\n')
             buf[strlen(buf) - 1] = '\0';
-    } else {
+    }
+    else
+    {
         sprintf(buf, "default");
     }
     setenv("AUDIODEV", buf, 1);
@@ -507,16 +569,20 @@ static void* run_ffplay_thread(void *arg) {
     }
     printf("%s\n", cmd);
     ret = system(cmd);
-    if (ret) {
+    if (ret)
+    {
         fprintf(stderr, "Fail to system %s, exit game\n", cmd);
         exit(ret);
     }
     // wait ready
-    while (!__atomic_load_n(&ready, __ATOMIC_SEQ_CST)) {
+    while (!__atomic_load_n(&ready, __ATOMIC_SEQ_CST))
+    {
         wait_times--;
-        if(ipc_state.ffplay_is_quit == 1 || wait_times < 0){
-            printf("ffplay <%s> error %s\n", file_path, wait_times < 0 ? "timeout": "");
-            if (wait_times < 0 && retry_wait > 0 && __atomic_load_n(&ffplay_exist, __ATOMIC_SEQ_CST)) {
+        if (ipc_state.ffplay_is_quit == 1 || wait_times < 0)
+        {
+            printf("ffplay <%s> error %s\n", file_path, wait_times < 0 ? "timeout" : "");
+            if (wait_times < 0 && retry_wait > 0 && __atomic_load_n(&ffplay_exist, __ATOMIC_SEQ_CST))
+            {
                 retry_wait /= 4;
                 wait_times = retry_wait;
                 continue;
@@ -530,13 +596,15 @@ static void* run_ffplay_thread(void *arg) {
     free(file_path);
 
     // operate after ffplay is ready
-    m = alloc_ipc_message((char*)QUERY, (char*)DURATION);
-    if (m) {
+    m = alloc_ipc_message((char *)QUERY, (char *)DURATION);
+    if (m)
+    {
         push_ipc_message(&ipc_state, m);
     }
 
-    m = alloc_ipc_message((char*)QUERY, (char*)CUR_TIME);
-    if (m) {
+    m = alloc_ipc_message((char *)QUERY, (char *)CUR_TIME);
+    if (m)
+    {
         push_ipc_message(&ipc_state, m);
     }
 
@@ -550,10 +618,12 @@ void media_pause(void)
 {
     Message *m;
 
-    if (ipc_state.ffplay_is_quit == 0) {
-        m = alloc_ipc_message((char*)SET_STATE, (char*)PAUSED);
-        if (m) {
-           push_ipc_message(&ipc_state, m);
+    if (ipc_state.ffplay_is_quit == 0)
+    {
+        m = alloc_ipc_message((char *)SET_STATE, (char *)PAUSED);
+        if (m)
+        {
+            push_ipc_message(&ipc_state, m);
         }
     }
 }
@@ -562,15 +632,18 @@ void media_restore(void)
 {
     Message *m;
 
-    if (ipc_state.ffplay_is_quit == 0) {
-        m = alloc_ipc_message((char*)SET_STATE, (char*)PLAYING);
-        if (m) {
-           push_ipc_message(&ipc_state, m);
+    if (ipc_state.ffplay_is_quit == 0)
+    {
+        m = alloc_ipc_message((char *)SET_STATE, (char *)PLAYING);
+        if (m)
+        {
+            push_ipc_message(&ipc_state, m);
         }
     }
 }
 
-void media_play(const char* file_path, HWND hWnd, int start_time) {
+void media_play(const char *file_path, HWND hWnd, int start_time)
+{
     int ret;
     char *path;
 
@@ -580,9 +653,11 @@ void media_play(const char* file_path, HWND hWnd, int start_time) {
     ipc_state.hWnd = hWnd;
     ipc_state.start_time = start_time;
     path = malloc(strlen(file_path) + 1);
-    if (path) {
+    if (path)
+    {
         strcpy(path, file_path);
-        if (pthread_create(&ipc_state.init_tid, NULL, run_ffplay_thread, path)) {
+        if (pthread_create(&ipc_state.init_tid, NULL, run_ffplay_thread, path))
+        {
             printf("Failed to create run_ffplay_thread\n");
             free(path);
         }
@@ -593,18 +668,21 @@ void media_seek_to(char *value)
 {
     Message *m;
 
-    if (ipc_state.ffplay_is_quit == 0) {
-        m = alloc_ipc_message((char*)SEEK_TO, value);
+    if (ipc_state.ffplay_is_quit == 0)
+    {
+        m = alloc_ipc_message((char *)SEEK_TO, value);
         //printf("msg:%s len:%d\n",m->msg,m->len);
-        if (m) {
-           push_ipc_message(&ipc_state, m);
+        if (m)
+        {
+            push_ipc_message(&ipc_state, m);
         }
     }
 }
 
 void media_wait(void)
 {
-    if (ipc_state.init_tid) {
+    if (ipc_state.init_tid)
+    {
         pthread_join(ipc_state.init_tid, NULL);
         ipc_state.init_tid = 0;
     }
@@ -614,24 +692,31 @@ void media_exit(void)
 {
     Message *m;
 
-    if (ipc_state.init_tid) {
+    if (ipc_state.init_tid)
+    {
         pthread_join(ipc_state.init_tid, NULL);
         ipc_state.init_tid = 0;
     }
-    if (ipc_state.ffplay_is_quit == 0) {
+    if (ipc_state.ffplay_is_quit == 0)
+    {
         int wait_times = 6 * 100;
         int retry_wait = wait_times;
-        m = alloc_ipc_message((char*)SET_STATE, (char*)QUIT);
-        if (m) {
-           push_ipc_message(&ipc_state, m);
-        } else {
+        m = alloc_ipc_message((char *)SET_STATE, (char *)QUIT);
+        if (m)
+        {
+            push_ipc_message(&ipc_state, m);
+        }
+        else
+        {
             printf("!!! must not occur %s_%d", __FUNCTION__, __LINE__);
         }
 
         usleep(800 * 1000);
         // wait quit
-        while (__atomic_load_n(&ready, __ATOMIC_SEQ_CST)) {
-            if (wait_times-- < 0 && retry_wait > 0 && __atomic_load_n(&ffplay_exist, __ATOMIC_SEQ_CST)) {
+        while (__atomic_load_n(&ready, __ATOMIC_SEQ_CST))
+        {
+            if (wait_times-- < 0 && retry_wait > 0 && __atomic_load_n(&ffplay_exist, __ATOMIC_SEQ_CST))
+            {
                 retry_wait /= 4;
                 wait_times = retry_wait;
                 continue;
@@ -639,7 +724,7 @@ void media_exit(void)
             usleep(10 * 1000);
         }
         if (wait_times < 0)
-           printf("wait ffplay exit timeout, ffplay die?\n");
+            printf("wait ffplay exit timeout, ffplay die?\n");
     }
     printf("ffplay_is_quit is %d\n", ipc_state.ffplay_is_quit);
     deinit_ipc(&ipc_state);

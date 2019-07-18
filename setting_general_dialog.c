@@ -114,7 +114,7 @@ static void general_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
         creat_setting_backlight_dialog(hWnd);
         break;
     case 5:
-        creat_poweroff_dialog(hWnd,TYPE_POWEROFF);
+        creat_poweroff_dialog(hWnd, TYPE_POWEROFF);
         break;
     }
     InvalidateRect(hWnd, &msg_rcBg, TRUE);

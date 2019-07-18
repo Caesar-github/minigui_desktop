@@ -29,7 +29,7 @@ extern MG_EXPORT PLOGFONT g_SysLogFont [];
 char timebuff[100];
 static RECT msg_rcTime = {TIME_PINT_X, TIME_PINT_Y, TIME_PINT_X + TIME_PINT_W, TIME_PINT_Y + TIME_PINT_H};
 #ifdef ENABLE_BATT
-RECT msg_rcBatt = {BATT_PINT_X, BATT_PINT_Y, BATT_PINT_X+ BATT_PINT_W, BATT_PINT_Y + BATT_PINT_H};
+RECT msg_rcBatt = {BATT_PINT_X, BATT_PINT_Y, BATT_PINT_X + BATT_PINT_W, BATT_PINT_Y + BATT_PINT_H};
 #endif
 RECT msg_rcStatusBar = {STATUS_BAR_X, STATUS_BAR_Y, STATUS_BAR_X + STATUS_BAR_W, STATUS_BAR_Y + STATUS_BAR_H};
 
@@ -86,7 +86,7 @@ LOGFONT  *logfont_title;
 
 static int screenoff_cnt = 0;
 static int screenautooff = 1;
-HWND mhWnd,nhWnd;
+HWND mhWnd, nhWnd;
 
 #define maxlabelsize 35
 static int  __getline(char **lineptr, ssize_t *n, FILE *stream)
@@ -304,22 +304,22 @@ char *message_wifi = "wifi_init";
 
 void *wifi_init(void *ptr)
 {
-//	char cmd[128];
-	
-//	snprintf(cmd, sizeof(cmd), "wpa_supplicant -B -i wlan0 -c /data/cfg/wpa_supplicant.conf &");
-//	  system(cmd);
-	RK_wifi_enable(1);
-	set_wifi_state(RK_WIFI_State_DISCONNECTED);
+//  char cmd[128];
 
-//	snprintf(cmd, sizeof(cmd), "wpa_cli -i wlan0 -p /var/run/wpa_supplicant scan_results &");
-//	system(cmd);
+//  snprintf(cmd, sizeof(cmd), "wpa_supplicant -B -i wlan0 -c /data/cfg/wpa_supplicant.conf &");
+//    system(cmd);
+    RK_wifi_enable(1);
+    set_wifi_state(RK_WIFI_State_DISCONNECTED);
 
-	RK_wifi_scan();
+//  snprintf(cmd, sizeof(cmd), "wpa_cli -i wlan0 -p /var/run/wpa_supplicant scan_results &");
+//  system(cmd);
 
-//	snprintf(cmd, sizeof(cmd), "killall wpa_supplicant scan_results &");
-//	system(cmd);
-	RK_wifi_enable(0);
-	set_wifi_state(RK_WIFI_State_OFF);
+    RK_wifi_scan();
+
+//  snprintf(cmd, sizeof(cmd), "killall wpa_supplicant scan_results &");
+//  system(cmd);
+    RK_wifi_enable(0);
+    set_wifi_state(RK_WIFI_State_OFF);
 
     pthread_exit((void *)0);
 }
@@ -335,7 +335,7 @@ int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
     if (state == RK_WIFI_State_CONNECTED)
     {
         printf("RK_WIFI_State_CONNECTED\n");
-		add_wifi_date(connect_wifi_date.ssid, connect_wifi_date.psk);
+        add_wifi_date(connect_wifi_date.ssid, connect_wifi_date.psk);
     }
     else if (state == RK_WIFI_State_CONNECTFAILED)
     {
@@ -344,8 +344,8 @@ int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
     else if (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY)
     {
         printf("RK_WIFI_State_CONNECTFAILED_WRONG_KEY\n");
-		del_wifi_date(connect_wifi_date.ssid);
-	//	_print_wifi();
+        del_wifi_date(connect_wifi_date.ssid);
+        //  _print_wifi();
     }
     else if (state == RK_WIFI_State_CONNECTING)
     {
@@ -359,28 +359,29 @@ int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 
 
 
-	if( (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY || state == RK_WIFI_State_CONNECTING ||state == RK_WIFI_State_CONNECTED) && !avaiable_wifi_display_mode)
-	{
-		int i;
-		if(wifiavaiable_size <=98) // the max size of wifi is 100 
-		{
-			for(i=wifiavaiable_size-1;i>=0;i--)
-			{
-				snprintf(wifiavaiable_list[i+2].ssid,128,"%s", wifiavaiable_list[i].ssid);
-				wifiavaiable_list[i+2].rssi=wifiavaiable_list[i].rssi;
-			}
-			wifiavaiable_size+=2;
-		}
-		else
-		{	for(i=97;i>=0;i--)
-			{
-				snprintf(wifiavaiable_list[i+2].ssid,128,"%s", wifiavaiable_list[i].ssid);
-				wifiavaiable_list[i+2].rssi=wifiavaiable_list[i].rssi;
-			}
-			wifiavaiable_size=100;
-   		 }
-		avaiable_wifi_display_mode =1;
-	}
+    if ((state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY || state == RK_WIFI_State_CONNECTING || state == RK_WIFI_State_CONNECTED) && !avaiable_wifi_display_mode)
+    {
+        int i;
+        if (wifiavaiable_size <= 98) // the max size of wifi is 100
+        {
+            for (i = wifiavaiable_size - 1; i >= 0; i--)
+            {
+                snprintf(wifiavaiable_list[i + 2].ssid, 128, "%s", wifiavaiable_list[i].ssid);
+                wifiavaiable_list[i + 2].rssi = wifiavaiable_list[i].rssi;
+            }
+            wifiavaiable_size += 2;
+        }
+        else
+        {
+            for (i = 97; i >= 0; i--)
+            {
+                snprintf(wifiavaiable_list[i + 2].ssid, 128, "%s", wifiavaiable_list[i].ssid);
+                wifiavaiable_list[i + 2].rssi = wifiavaiable_list[i].rssi;
+            }
+            wifiavaiable_size = 100;
+        }
+        avaiable_wifi_display_mode = 1;
+    }
 
     return 0;
 
@@ -422,7 +423,7 @@ int main_loadres(void)
     if (LoadBitmap(HDC_SCREEN, &wifi_disabled_bmap, img))
         return -1;
 
-	snprintf(img, sizeof(img), "%skey.png", respath);
+    snprintf(img, sizeof(img), "%skey.png", respath);
     if (LoadBitmap(HDC_SCREEN, &wifi_key_bmap, img))
         return -1;
 
@@ -507,9 +508,10 @@ static void batt_update(void)
     {
         int bat = get_battery_capacity();
         //printf("battery:%d\n",bat);
-        if (bat < 5) {
+        if (bat < 5)
+        {
             battery = 0;
-            creat_poweroff_dialog(mhWnd,TYPE_LOWPOWER);
+            creat_poweroff_dialog(mhWnd, TYPE_LOWPOWER);
         }
         else if (bat < 10)
             battery = 0;
@@ -563,13 +565,13 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         batt_update();
 #endif
 #ifdef ENABLE_WIFI
-											
-		RK_wifi_register_callback(_RK_wifi_state_callback);
 
-		int iret1;
-		iret1 = pthread_create(&thread_wifi, NULL, wifi_init, (void *) message_wifi);
-//		pthread_detach(&thread_wifi);
-		printf("Thread wifi returns: %d\n", iret1); // return 0 if seccuess								
+        RK_wifi_register_callback(_RK_wifi_state_callback);
+
+        int iret1;
+        iret1 = pthread_create(&thread_wifi, NULL, wifi_init, (void *) message_wifi);
+//      pthread_detach(&thread_wifi);
+        printf("Thread wifi returns: %d\n", iret1); // return 0 if seccuess
 #endif
 
         InvalidateRect(hWnd, &msg_rcBg, TRUE);
@@ -577,30 +579,33 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         mhWnd = hWnd;
         creat_desktop_dialog(hWnd);
         break;
-        case MSG_TIMER:
-		{
-            if (wParam == _ID_TIMER_MAIN) {
+    case MSG_TIMER:
+    {
+        if (wParam == _ID_TIMER_MAIN)
+        {
 #ifdef ENABLE_BATT
-                batt_update();
+            batt_update();
 #endif
-                if (screenautooff && (screenoff_cnt < get_screenoff_val())) {
-                    screenoff_cnt ++;
-                    if (screenoff_cnt == get_screenoff_val()) {
-                        DisableKeyMessage();
-                        screenoff();
-                    }
+            if (screenautooff && (screenoff_cnt < get_screenoff_val()))
+            {
+                screenoff_cnt ++;
+                if (screenoff_cnt == get_screenoff_val())
+                {
+                    DisableKeyMessage();
+                    screenoff();
                 }
             }
-            /* for lowpower test
-            int test_cnt=0
-            test_cnt ++;
-            if (test_cnt == 5) {
-                battery = 0;
-                creat_lowpower_dialog(mhWnd);
-            }
-            */
         }
-        break;
+        /* for lowpower test
+        int test_cnt=0
+        test_cnt ++;
+        if (test_cnt == 5) {
+            battery = 0;
+            creat_lowpower_dialog(mhWnd);
+        }
+        */
+    }
+    break;
     case MSG_PAINT:
         hdc = BeginPaint(hWnd);
 
@@ -683,7 +688,7 @@ int MiniGUIMain(int args, const char *arg[])
 
     parameter_init();
     status_bar_offset = (get_time_format() == USE_24_HOUR_FORMAT) ? 0 : STATUS_BAR_ICO_OFFSET;
-	keyboard_init();
+    keyboard_init();
     screenon();
     InitCreateInfo(&CreateInfo);
 

@@ -364,24 +364,24 @@ static LRESULT videoplay_hw_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                               &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-        if (get_wifi_state() == RK_WIFI_State_OFF)
-        {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_disabled_bmap);
-        }
-        else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
-        {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_connected_bmap);
-        }
-        else
-        {
-            FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                              WIFI_PINT_W, WIFI_PINT_H,
-                              &wifi_disconnected_bmap);
-        }
+            if (get_wifi_state() == RK_WIFI_State_OFF)
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_disabled_bmap);
+            }
+            else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_connected_bmap);
+            }
+            else
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_disconnected_bmap);
+            }
 #endif
             RECT msg_rcTime;
             msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;

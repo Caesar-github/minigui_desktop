@@ -35,6 +35,6 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
-int system_fd_closexec(const char* command);
+int system_fd_closexec(const char *command);
 int runapp_result(char *cmd);
 #endif

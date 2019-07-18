@@ -36,7 +36,7 @@
 #define __SETTING_WIFI_DIALOG_H__
 
 void creat_setting_wifi_dialog(HWND hWnd);
-void *get_available_wifi( void *ptr );
+void *get_available_wifi(void *ptr);
 
 
 #endif

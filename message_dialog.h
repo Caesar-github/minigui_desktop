@@ -35,6 +35,6 @@
 #ifndef __MESSAGE_DIALOG_H__
 #define __MESSAGE_DIALOG_H__
 
-int MessageBox_ex(HWND hParentWnd, const char* pszText, 
-                      const char* pszCaption, DWORD dwStyle);
+int MessageBox_ex(HWND hParentWnd, const char *pszText,
+                  const char *pszCaption, DWORD dwStyle);
 #endif

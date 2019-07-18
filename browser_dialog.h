@@ -35,6 +35,6 @@
 #ifndef __BROWSER_DIALOG_H__
 #define __BROWSER_DIALOG_H__
 
-void creat_browser_dialog(HWND hWnd, int type, char * title);
+void creat_browser_dialog(HWND hWnd, int type, char *title);
 
 #endif
