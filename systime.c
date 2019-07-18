@@ -34,7 +34,7 @@ void time_flush(void)
     time(&t);
     now_time = localtime(&t);
     strftime(status_bar_date_str,sizeof(status_bar_date_str),"%Y-%m-%d",now_time);
-    if (!get_time_format())
+    if (get_time_format() == USE_12_HOUR_FORMAT)
     {
         if (now_time->tm_hour >= 12)
         {

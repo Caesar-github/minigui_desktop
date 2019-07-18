@@ -682,7 +682,7 @@ int MiniGUIMain(int args, const char *arg[])
 #endif
 
     parameter_init();
-    status_bar_offset = get_time_format() ? 0 : STATUS_BAR_ICO_OFFSET;
+    status_bar_offset = (get_time_format() == USE_24_HOUR_FORMAT) ? 0 : STATUS_BAR_ICO_OFFSET;
 	keyboard_init();
     screenon();
     InitCreateInfo(&CreateInfo);
