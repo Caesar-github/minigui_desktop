@@ -299,32 +299,6 @@ void sysUsecTime(char *buff)
 
 #ifdef ENABLE_WIFI
 
-pthread_t thread_wifi;
-char *message_wifi = "wifi_init";
-
-void *wifi_init(void *ptr)
-{
-//  char cmd[128];
-
-//  snprintf(cmd, sizeof(cmd), "wpa_supplicant -B -i wlan0 -c /data/cfg/wpa_supplicant.conf &");
-//    system(cmd);
-    RK_wifi_enable(1);
-    set_wifi_state(RK_WIFI_State_DISCONNECTED);
-
-//  snprintf(cmd, sizeof(cmd), "wpa_cli -i wlan0 -p /var/run/wpa_supplicant scan_results &");
-//  system(cmd);
-
-    RK_wifi_scan();
-
-//  snprintf(cmd, sizeof(cmd), "killall wpa_supplicant scan_results &");
-//  system(cmd);
-    RK_wifi_enable(0);
-    set_wifi_state(RK_WIFI_State_OFF);
-
-    pthread_exit((void *)0);
-}
-
-
 int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 {
     printf("%s state: %d\n", __func__, state);
@@ -359,33 +333,15 @@ int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 
 
 
-    if ((state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY || state == RK_WIFI_State_CONNECTING || state == RK_WIFI_State_CONNECTED) && !avaiable_wifi_display_mode)
-    {
-        int i;
-        if (wifiavaiable_size <= 98) // the max size of wifi is 100
-        {
-            for (i = wifiavaiable_size - 1; i >= 0; i--)
-            {
-                snprintf(wifiavaiable_list[i + 2].ssid, 128, "%s", wifiavaiable_list[i].ssid);
-                wifiavaiable_list[i + 2].rssi = wifiavaiable_list[i].rssi;
-            }
-            wifiavaiable_size += 2;
-        }
-        else
-        {
-            for (i = 97; i >= 0; i--)
-            {
-                snprintf(wifiavaiable_list[i + 2].ssid, 128, "%s", wifiavaiable_list[i].ssid);
-                wifiavaiable_list[i + 2].rssi = wifiavaiable_list[i].rssi;
-            }
-            wifiavaiable_size = 100;
-        }
-        avaiable_wifi_display_mode = 1;
-    }
+	if( (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY || state == RK_WIFI_State_CONNECTING ||state == RK_WIFI_State_CONNECTED) && !avaiable_wifi_display_mode)
+	{
+		avaiable_wifi_display_mode =1;
+	}
 
     return 0;
 
 }
+
 
 #endif
 
@@ -572,13 +528,9 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         batt_update();
 #endif
 #ifdef ENABLE_WIFI
+		RK_wifi_register_callback(_RK_wifi_state_callback);
 
-        RK_wifi_register_callback(_RK_wifi_state_callback);
-
-        int iret1;
-        iret1 = pthread_create(&thread_wifi, NULL, wifi_init, (void *) message_wifi);
-//      pthread_detach(&thread_wifi);
-        printf("Thread wifi returns: %d\n", iret1); // return 0 if seccuess
+		set_wifi_state(RK_WIFI_State_OFF);
 #endif
 
         InvalidateRect(hWnd, &msg_rcBg, TRUE);

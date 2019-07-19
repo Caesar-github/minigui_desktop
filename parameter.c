@@ -34,8 +34,8 @@ struct parameter_data
 //  char wifi_ssid[128];
 //  char wifi_psk[128];
 //  wifi_info wifi_val[10];
-    char wifi_ssid[10][128];
-    char wifi_psk[10][128];
+    char wifi_ssid[10][64];
+    char wifi_psk[10][64];
     int wifi_head;
     int time_format;
     int sync_net_time;
@@ -264,15 +264,15 @@ int  add_wifi_date(char *ssid, char *psk)
     {
         if (strcmp(para_data.wifi_ssid[i], ssid) == 0)
         {
-            snprintf(para_data.wifi_psk[i], 128, "%s", psk);
+            snprintf(para_data.wifi_psk[i], 64, "%s", psk);
             parameter_save();
             return 1;
         }
 
     }
 
-    snprintf(para_data.wifi_ssid[para_data.wifi_head], 128, "%s", ssid);
-    snprintf(para_data.wifi_psk[para_data.wifi_head], 128, "%s", psk);
+    snprintf(para_data.wifi_ssid[para_data.wifi_head], 64, "%s", ssid);
+    snprintf(para_data.wifi_psk[para_data.wifi_head], 64, "%s", psk);
     para_data.wifi_head++;
     parameter_save();
     return 1;
@@ -292,8 +292,8 @@ int del_wifi_date(char *ssid)
         {
             for (j = i; j < para_data.wifi_head; j++)
             {
-                snprintf(para_data.wifi_psk[j], 128, "%s", para_data.wifi_psk[j + 1]);
-                snprintf(para_data.wifi_ssid[j], 128, "%s", para_data.wifi_ssid[j + 1]);
+                snprintf(para_data.wifi_psk[j], 64, "%s", para_data.wifi_psk[j + 1]);
+                snprintf(para_data.wifi_ssid[j], 64, "%s", para_data.wifi_ssid[j + 1]);
             }
             para_data.wifi_head--;
             parameter_save();
@@ -340,8 +340,8 @@ void reset_wifi_val(void)
 {
     for (para_data.wifi_head = 0; para_data.wifi_head < 10; para_data.wifi_head++)
     {
-        snprintf(para_data.wifi_ssid[para_data.wifi_head], 128, "%s", " ");
-        snprintf(para_data.wifi_psk[para_data.wifi_head], 128, "%s", " ");
+        snprintf(para_data.wifi_ssid[para_data.wifi_head], 64, "%s", " ");
+        snprintf(para_data.wifi_psk[para_data.wifi_head], 64, "%s", " ");
     }
     para_data.wifi_head = 0;
 

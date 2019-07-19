@@ -352,13 +352,13 @@ extern HWND setting_wiif_dialog_hWnd;
 
 struct wifi_info
 {
-    char ssid[128];
-    char psk[128];
+    char ssid[64];
+    char psk[64];
 };
 
 struct wifi_avaiable
 {
-    char ssid[128];
+    char ssid[64];
     int rssi;
 };
 
@@ -366,7 +366,7 @@ extern HWND mhWnd, nhWnd;
 
 extern struct wifi_info input_wifi_date;
 extern struct wifi_info connect_wifi_date;
-extern struct wifi_avaiable wifiavaiable_list[100];  // result of scan
+extern struct wifi_avaiable wifiavaiable_list[50];  // result of scan
 extern int wifiavaiable_size;  // size of wifiavaiable_list
 
 extern struct tm *now_time;

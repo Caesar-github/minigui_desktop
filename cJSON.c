@@ -1763,21 +1763,13 @@ static cJSON *get_array_item(const cJSON *array, size_t index)
     {
         return NULL;
     }
-    printf("0.0.0\n");
-    printf("0.0.0\n");
-    printf("0.0.0\n");
-    printf("0.0.0\n");
 
     current_child = array->child;
     if (current_child == NULL)
     {
         return NULL;
     }
-    printf("0.0.1\n");
-    printf("0.0.1\n");
-    printf("0.0.1\n");
-    printf("0.0.1\n");
-    printf("0.0.1\n");
+
     while ((current_child != NULL) && (index > 0))
     {
         index--;

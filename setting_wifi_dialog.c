@@ -43,7 +43,7 @@ struct wifi_info input_wifi_date = {"", ""};
 struct wifi_info connect_wifi_date = {"", ""};
 
 
-struct wifi_avaiable wifiavaiable_list[100];
+struct wifi_avaiable wifiavaiable_list[50];
 int wifiavaiable_size;
 
 int cur_page = 1;
@@ -72,10 +72,10 @@ int wifijson_parse(char *wifijson)
     {
         for (i = 0; i < size; i++)
         {
-            if (i > 100)
+            if (i >= 50)
             {
                 cJSON_Delete(root);
-                return 100;
+                return 50;
             }
 
             object = cJSON_GetArrayItem(root, i);
@@ -100,7 +100,7 @@ int wifijson_parse(char *wifijson)
                 return 0;
             }
             printf("cJSON_GetObjectItem: type=%d, string is %s, value=%s\n", item_ssid->type, item_ssid->string, item_ssid->valuestring);
-            snprintf(wifiavaiable_list[i].ssid, 128, "%s", item_ssid->valuestring);
+            snprintf(wifiavaiable_list[i].ssid, 64, "%s", item_ssid->valuestring);
         }
         for (i = 0; i < size; i++)
         {
@@ -120,8 +120,15 @@ char *message1 = "get_available_wifi";
 
 void *get_available_wifi(void *ptr)
 {
+    RK_wifi_enable(1);
     RK_wifi_scan();
     wifiavaiable_size = wifijson_parse(RK_wifi_scan_r_sec(0x1F));
+
+    while (wifiavaiable_size < 2) // wait for scan result
+    {
+        wifiavaiable_size = wifijson_parse(RK_wifi_scan_r_sec(0x1F));
+    }
+
     avaiable_wifi_display_mode = 0;
     //  _print_wifi();
     if (get_wifi_state() == RK_WIFI_State_DISCONNECTED) // auto connect when pwd is exsited
@@ -131,8 +138,8 @@ void *get_available_wifi(void *ptr)
         {
             if (get_wifi_psk(wifiavaiable_list[i].ssid) != NULL)
             {
-                snprintf(connect_wifi_date.ssid, 128, "%s", wifiavaiable_list[i].ssid);
-                //          set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
+                snprintf(connect_wifi_date.ssid, 64, "%s", wifiavaiable_list[i].ssid);
+                //set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
                 wifi_connect_flag = 2;
                 break;
             }
@@ -191,18 +198,10 @@ static void wifi_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         if (!((get_wifi_state() == RK_WIFI_State_CONNECTED  ||  get_wifi_state() == RK_WIFI_State_CONNECTING) && ((lParam == 0) || (lParam == 1))))
         {
-            if (get_wifi_psk(wifiavaiable_list[lParam].ssid) != NULL)
-            {
-                snprintf(connect_wifi_date.ssid, 128, "%s", wifiavaiable_list[lParam].ssid);
-                set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
-                wifi_connect_flag = 2;
-            }
-            else
-            {
-                snprintf(input_wifi_date.ssid, sizeof(input_wifi_date.ssid), "%s", wifiavaiable_list[lParam].ssid);
-                input_dialog_type = WIFI_PWD ;
-                creat_input_dialog(hWnd);
-            }
+            if (avaiable_wifi_display_mode) lParam -= 2;
+            snprintf(input_wifi_date.ssid, sizeof(input_wifi_date.ssid), "%s", wifiavaiable_list[lParam].ssid);
+            input_dialog_type = WIFI_PWD ;
+            creat_input_dialog(hWnd);
         }
     }
 }
@@ -254,7 +253,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
             {
                 if (wifi_connect_flag == 2) //use local ssid and pwd to connect
                 {
-                    snprintf(connect_wifi_date.psk, 128, "%s", get_wifi_psk(connect_wifi_date.ssid));
+                    snprintf(connect_wifi_date.psk, 64, "%s", get_wifi_psk(connect_wifi_date.ssid));
                 }
                 else  //use input ssid and pwd to connect
                 {
@@ -371,9 +370,8 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                 SelectFont(hdc, logfont);
                 DrawText(hdc, res_str[RES_STR_SCANING], -1, &msg_rcFilename, DT_TOP);
             }
-            else
+            else // display all avaiable wifi
             {
-                // ==================display all wifi =======================
                 if (wifiavaiable_size > 0)
                 {
                     int state;
@@ -384,7 +382,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                     if
                     (get_wifi_state() != RK_WIFI_State_DISCONNECTED && cur_page == 1)
                     {
-                        j = 2;
+                        avaiable_wifi_display_mode = 1;
 
                         //=============  display connected wifi info in first page =========
                         msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
@@ -407,7 +405,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                             DrawText(hdc, res_str[RES_STR_WRONG_PWD], -1, &msg_rcFilename, DT_TOP);
 
                         int k;
-                        for (k = 0; k < wifiavaiable_size; k++)
+                        for (k = 0; k < wifiavaiable_size; k++) // get wifi rssi
                         {
                             if (strcmp(wifiavaiable_list[k].ssid, connect_wifi_date.ssid) == 0)
                             {
@@ -440,10 +438,23 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                         FillBox(hdc, SETTING_LIST_STR_PINT_X, SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * 2.2, LCD_W - SETTING_LIST_STR_PINT_X * 2, TITLE_LINE_PINT_H);
                         FillBox(hdc, SETTING_LIST_STR_PINT_X, SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * 2.4, LCD_W - SETTING_LIST_STR_PINT_X * 2, TITLE_LINE_PINT_H);
                     }
-                    else j = 0;
-                    // ================== display all wifi end =======================
+
+                    int wifi_avaiable_list_head;
+
                     for (; j < WIFI_NUM_PERPAGE; j++)
                     {
+
+                        if (avaiable_wifi_display_mode)
+                        {
+                            if (cur_page == 1)
+                            {
+                                if (!j) j = 2;
+                            }
+                            wifi_avaiable_list_head = j + (cur_page - 1) * WIFI_NUM_PERPAGE - 2;
+                        }
+                        else wifi_avaiable_list_head = j + (cur_page - 1) * WIFI_NUM_PERPAGE;
+
+
                         if (j + (cur_page - 1)*WIFI_NUM_PERPAGE >= wifiavaiable_size)
                             break;
 
@@ -461,11 +472,11 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                             if (!((get_wifi_state() == RK_WIFI_State_CONNECTED  ||  get_wifi_state() == RK_WIFI_State_CONNECTING) && (cur_page == 1) && ((j == 0) || (j == 1))))
                                 FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel1_bmap);
                         }
-                        if (wifiavaiable_list[j + (cur_page - 1)*WIFI_NUM_PERPAGE].rssi > -90)
+                        if (wifiavaiable_list[wifi_avaiable_list_head].rssi > -90)
                         {
                             FillBoxWithBitmap(hdc, LCD_W - 100, msg_rcFilename.top, WIFI_SIGNAL_PINT_W, WIFI_SIGNAL_PINT_H, &wifi_signal_3);
                         }
-                        else if (wifiavaiable_list[j + (cur_page - 1)*WIFI_NUM_PERPAGE].rssi < -95)
+                        else if (wifiavaiable_list[wifi_avaiable_list_head].rssi < -95)
                         {
                             FillBoxWithBitmap(hdc, LCD_W - 100, msg_rcFilename.top, WIFI_SIGNAL_PINT_W, WIFI_SIGNAL_PINT_H, &wifi_signal_1);
                         }
@@ -474,42 +485,15 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                             FillBoxWithBitmap(hdc, LCD_W - 100, msg_rcFilename.top, WIFI_SIGNAL_PINT_W, WIFI_SIGNAL_PINT_H, &wifi_signal_2);
                         }
 
-                        if (get_wifi_psk(wifiavaiable_list[j + ((cur_page - 1)*WIFI_NUM_PERPAGE)].ssid) != NULL)
+                        if (get_wifi_psk(wifiavaiable_list[wifi_avaiable_list_head].ssid) != NULL)
                         {
                             FillBoxWithBitmap(hdc, LCD_W - 70, msg_rcFilename.top, WIFI_KEY_PINT_W, WIFI_KEY_PINT_H, &wifi_key_bmap);
                         }
 
                         SelectFont(hdc, logfont);
-                        DrawText(hdc, wifiavaiable_list[j + (cur_page - 1)*WIFI_NUM_PERPAGE].ssid, -1, &msg_rcFilename, DT_TOP);
-
-                        //                      msg_rcFilename.left += 500;
-
-                        //                      if (state == RK_WIFI_State_CONNECTING)
-                        //                     {
-                        //                          if (strcmp(connect_wifi_date.ssid, wifiavaiable_list[j + ((cur_page - 1)*WIFI_NUM_PERPAGE)].ssid) == 0)
-                        //                          {
-                        //                              DrawText(hdc, res_str[RES_STR_CONNECTING], -1, &msg_rcFilename, DT_TOP);
-                        ////                          }
-                        //                     }
-                        //                      else if (state == RK_WIFI_State_CONNECTED)
-                        //                      {
-//                              if (strcmp(connect_wifi_date.ssid, wifiavaiable_list[j + ((cur_page - 1)*WIFI_NUM_PERPAGE)].ssid) == 0)
-//                              {
-                        //                                DrawText(hdc, res_str[RES_STR_CONNECTED], -1, &msg_rcFilename, DT_TOP);
-//  //                            }
-//
-//                       }
-//                       else if (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY)
-//                       {
-//                           if (strcmp(connect_wifi_date.ssid, wifiavaiable_list[j + ((cur_page - 1)*WIFI_NUM_PERPAGE)].ssid) == 0)
-//                           {
-//                               DrawText(hdc, res_str[RES_STR_WRONG_PWD], -1, &msg_rcFilename, DT_TOP);
-//                           }
-//                       }
-
+                        DrawText(hdc, wifiavaiable_list[wifi_avaiable_list_head].ssid, -1, &msg_rcFilename, DT_TOP);
                     }
                 }
-                // ==================display all wifi =======================
             }
         }
         else
@@ -620,20 +604,12 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
 
                 if (get_wifi_state() != RK_WIFI_State_OFF)
                 {
-                    if (pthread_kill(thread1, 0) != ESRCH && pthread_kill(thread1, 0) !=  EINVAL)
-                    {
-                        //scaning...
-                    }
-                    else
-                    {
-                        RK_wifi_enable(0);
-                        set_wifi_state(RK_WIFI_State_OFF);
-                        cur_page = 1;
-                    }
+                    set_wifi_state(RK_WIFI_State_OFF);
+                    RK_wifi_enable(0);
+                    cur_page = 1;
                 }
                 else
                 {
-                    RK_wifi_enable(1);
                     set_wifi_state(RK_WIFI_State_DISCONNECTED);
 
 //                        if(pthread_kill(thread1,0) != ESRCH && pthread_kill(thread1,0) !=  EINVAL)

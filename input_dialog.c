@@ -24,7 +24,7 @@
 
 #include "common.h"
 
-static char input_content[128] = "";
+static char input_content[64] = "";
 int pwd_cnt = 0;
 #define SLIDE_DISTANCE 100
 #define WHOLE_BUTTON_NUM 4
@@ -170,10 +170,10 @@ static void input_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
             }
             else
             {
-                snprintf(input_wifi_date.psk, 128, "%s", input_content);
+                snprintf(input_wifi_date.psk, 64, "%s", input_content);
                 set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
-                snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
-                snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
+                snprintf(connect_wifi_date.ssid, 64, "%s", input_wifi_date.ssid);
+                snprintf(connect_wifi_date.psk, 64, "%s", input_wifi_date.psk);
                 wifi_connect_flag = 1;
                 cur_page = 1;
                 menu_back(hWnd, wParam, lParam);
@@ -303,10 +303,10 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             }
             else
             {
-                snprintf(input_wifi_date.psk, 128, "%s", input_content);
+                snprintf(input_wifi_date.psk, 64, "%s", input_content);
                 set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
-                snprintf(connect_wifi_date.ssid, 128, "%s", input_wifi_date.ssid);
-                snprintf(connect_wifi_date.psk, 128, "%s", input_wifi_date.psk);
+                snprintf(connect_wifi_date.ssid, 64, "%s", input_wifi_date.ssid);
+                snprintf(connect_wifi_date.psk, 64, "%s", input_wifi_date.psk);
                 wifi_connect_flag = 1;
                 cur_page = 1;
                 menu_back(hWnd, wParam, lParam);
@@ -686,7 +686,7 @@ void creat_input_dialog(HWND hWnd)
                              };
     DesktopDlg.controls = KeyboardCtrl;
 
-    memset(input_content, '\0', 128);
+    memset(input_content, '\0', 64);
     pwd_cnt = 0;
     pwd_short_flag = 0;
     shift = 0;
