@@ -23,6 +23,7 @@ static int menu_sel = -1;
 static int photo_sel = 1;
 static int line_sel = 1;
 static int batt = 0;
+int res_loaded = 0;
 
 #define MENU_NUM        5
 #define MENU_ICON_NUM   2
@@ -118,7 +119,6 @@ static int loadres(void)
                 return -1;
         }
     }
-
     return 0;
 }
 
@@ -249,32 +249,34 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             FillBoxWithBitmap(hdc, BG_PINT_X,
                               BG_PINT_Y, BG_PINT_W,
                               BG_PINT_H, &background_bmap);
+            if (res_loaded)
+            {
 #ifdef ENABLE_BATT
-            FillBoxWithBitmap(hdc, BATT_PINT_X - status_bar_offset, BATT_PINT_Y,
-                              BATT_PINT_W, BATT_PINT_H,
-                              &batt_bmap[batt]);
+                FillBoxWithBitmap(hdc, BATT_PINT_X - status_bar_offset, BATT_PINT_Y,
+                                  BATT_PINT_W, BATT_PINT_H,
+                                  &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-            if (get_wifi_state() == RK_WIFI_State_OFF)
-            {
-                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                                  WIFI_PINT_W, WIFI_PINT_H,
-                                  &wifi_disabled_bmap);
-            }
-            else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
-            {
-                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                                  WIFI_PINT_W, WIFI_PINT_H,
-                                  &wifi_connected_bmap);
-            }
-            else
-            {
-                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                                  WIFI_PINT_W, WIFI_PINT_H,
-                                  &wifi_disconnected_bmap);
-            }
+                if (get_wifi_state() == RK_WIFI_State_OFF)
+                {
+                    FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                      WIFI_PINT_W, WIFI_PINT_H,
+                                      &wifi_disabled_bmap);
+                }
+                else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
+                {
+                    FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                      WIFI_PINT_W, WIFI_PINT_H,
+                                      &wifi_connected_bmap);
+                }
+                else
+                {
+                    FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                      WIFI_PINT_W, WIFI_PINT_H,
+                                      &wifi_disconnected_bmap);
+                }
 #endif
-
+            }
 
 
             RECT msg_rcTime;
@@ -291,18 +293,19 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             DrawText(hdc, status_bar_date_str, -1, &msg_rcTime, DT_TOP);
 
 //==================display volume icon============================
-            BITMAP *volume_display;
+            if (res_loaded)
+            {
+                BITMAP *volume_display;
 
-            if (get_volume() == 0) volume_display = &volume_0;
-            else if (get_volume() > 0  && get_volume() <= 32)  volume_display = &volume_1;
-            else if (get_volume() > 32  && get_volume() <= 66)  volume_display = &volume_2;
-            else volume_display = &volume_3;
+                if (get_volume() == 0) volume_display = &volume_0;
+                else if (get_volume() > 0  && get_volume() <= 32)  volume_display = &volume_1;
+                else if (get_volume() > 32  && get_volume() <= 66)  volume_display = &volume_2;
+                else volume_display = &volume_3;
 
-            FillBoxWithBitmap(hdc, VOLUME_PINT_X - status_bar_offset, VOLUME_PINT_Y,
-                              VOLUME_PINT_W, VOLUME_PINT_H,
-                              volume_display);
-
-
+                FillBoxWithBitmap(hdc, VOLUME_PINT_X - status_bar_offset, VOLUME_PINT_Y,
+                                  VOLUME_PINT_W, VOLUME_PINT_H,
+                                  volume_display);
+            }
 
 
             for (i = 5, j = (-(PHOTO_ICON_NUM_PERPAGE - 1) / 2); (i - 5) < PHOTO_ICON_NUM_PERPAGE; i++, j++)
@@ -328,6 +331,12 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
+        if (!res_loaded)
+        {
+            main_loadres();
+            res_loaded = 1;
+            InvalidateRect(hWnd, &msg_rcStatusBar, FALSE);
+        }
         break;
     }
     case MSG_KEYDOWN:

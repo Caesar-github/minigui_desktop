@@ -434,10 +434,6 @@ int main_loadres(void)
     if (LoadBitmap(HDC_SCREEN, &back_bmap, img))
         return -1;
 
-    snprintf(img, sizeof(img), "%sbackground.jpg", respath);
-    if (LoadBitmap(HDC_SCREEN, &background_bmap, img))
-        return -1;
-
 //=================add vulume icon=======================
 
     snprintf(img, sizeof(img), "%svolume_0.png", respath);
@@ -483,6 +479,17 @@ int main_loadres(void)
         return -1;
 
     return 0;
+}
+
+void background_loadres(void)
+{
+    int i;
+    char img[128];
+    char *respath = get_ui_image_path();
+
+    snprintf(img, sizeof(img), "%sbackground.jpg", respath);
+    if (LoadBitmap(HDC_SCREEN, &background_bmap, img))
+        return -1;
 }
 
 void main_unloadres(void)
@@ -549,7 +556,7 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     {
     case MSG_CREATE:
         EnableScreenAutoOff();
-        main_loadres();
+        background_loadres();
         logfont_cej = CreateLogFont("ttf", "msyh", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
         logfont_k = CreateLogFont("ttf", "msn", "UTF-8", 'k', 'r', 'n', 'c', 'n', 'n', TTF_FONT_SIZE, 0);
 
