@@ -501,9 +501,9 @@ static void* run_ffplay_thread(void *arg) {
     // -nodisp
     // -autoexit  -vcodec h264
     if (ipc_state.start_time > 0) {
-        snprintf(cmd, sizeof(cmd), "/usr/bin/ffplay -hide_banner -nostats -fs -ss %d \"%s\" &", ipc_state.start_time, file_path);
+        snprintf(cmd, sizeof(cmd), "/usr/bin/rkffplay -hide_banner -nostats -forceoverlay -fs -ss %d \"%s\" &", ipc_state.start_time, file_path);
     } else {
-        snprintf(cmd, sizeof(cmd), "/usr/bin/ffplay -hide_banner -nostats -fs \"%s\" &", file_path);
+        snprintf(cmd, sizeof(cmd), "/usr/bin/rkffplay -hide_banner -nostats -forceoverlay -fs \"%s\" &", file_path);
     }
     printf("%s\n", cmd);
     ret = system(cmd);
