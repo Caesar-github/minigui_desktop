@@ -89,8 +89,7 @@ font_number=0
 [truetypefonts]
 font_number=2
 name0=ttf-msyh-krncnn-0-0-UTF-8
-#fontfile0=/usr/local/share/minigui/res/font/msyh.ttf
-fontfile0=/usr/lib/fonts/msyh.ttc
+fontfile0=/usr/local/share/minigui/res/font/msyh.ttc
 name1=ttf-msn-krncnn-0-0-UTF-8
 fontfile1=/usr/local/share/minigui/res/font/MSNeoGothic.ttf
 
