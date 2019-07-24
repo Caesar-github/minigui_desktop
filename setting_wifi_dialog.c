@@ -42,12 +42,70 @@ static touch_pos touch_pos_down, touch_pos_up, touch_pos_old;
 struct wifi_info input_wifi_date = {"", ""};
 struct wifi_info connect_wifi_date = {"", ""};
 
+struct wifi_avaiable wifiavaiable_list[WIFI_AVAIABLE_NUM];
+struct wifi_avaiable wifi_display_tmp;
+int wifi_display_tmp_pos;
 
-struct wifi_avaiable wifiavaiable_list[50];
 int wifiavaiable_size;
 
 int cur_page = 1;
 int avaiable_wifi_display_mode = 0;
+
+
+int get_utf8_bytenum(unsigned char ch)
+{
+    int byteNum = 0;
+ 
+    if (ch >= 0xFC && ch < 0xFE)
+        byteNum = 6;
+    else if (ch >= 0xF8)
+        byteNum = 5;
+    else if (ch >= 0xF0)
+        byteNum = 4;
+    else if (ch >= 0xE0)
+        byteNum = 3;
+    else if (ch >= 0xC0)
+        byteNum = 2;
+    else if (0 == (ch & 0x80))
+        byteNum = 1;
+ 
+    return byteNum;
+}
+ 
+
+int check_utf8(const char *str)
+{
+    int byteNum = 0;
+    unsigned char ch;
+    const char *ptr = str;
+ 
+    if (NULL == str)
+        return 0;
+ 
+    while (*ptr != '\0')
+    {
+        ch = (unsigned char)*ptr;
+        if (byteNum == 0) 
+        {
+            if (0 == (byteNum = get_utf8_bytenum(ch)))
+                return 0;
+        }
+        else 
+        {
+            if ((ch & 0xC0) != 0x80)
+                return 0;
+        }
+        byteNum--;
+        ptr++;
+    }
+ 
+    if (byteNum > 0)
+        return 0;
+ 
+    return 1;
+}
+
+
 
 int wifijson_parse(char *wifijson)
 {
@@ -58,6 +116,7 @@ int wifijson_parse(char *wifijson)
 
     cJSON *root, *item_rssi, *item_ssid, *object;
     int i, size;
+    int j =0;
 
     root = cJSON_Parse(wifijson);
 
@@ -67,42 +126,58 @@ int wifijson_parse(char *wifijson)
     }
 
     size = cJSON_GetArraySize(root);
-
+	if(size>WIFI_AVAIABLE_NUM) size=WIFI_AVAIABLE_NUM;
+	printf("CJSON size = %d \n", size );
     if (size)
     {
         for (i = 0; i < size; i++)
         {
-            if (i >= 50)
-            {
-                cJSON_Delete(root);
-                return 50;
-            }
-
             object = cJSON_GetArrayItem(root, i);
             if (NULL == object)
             {
                 cJSON_Delete(root);
-                return 0;
+				printf("exit!\n");
+                break;
             }
+
+			item_ssid = cJSON_GetObjectItem(object, "ssid");
+            if (item_ssid == NULL)
+            {
+                cJSON_Delete(root);
+				printf("exit!\n");
+                break;
+            }
+			else
+			{	
+				printf("cJSON_GetObjectItem: type=%d, string is %s, value=%s\n", item_ssid->type, item_ssid->string, item_ssid->valuestring);
+
+				if(!check_utf8(item_ssid))
+				{
+					printf("this is not utf-8!  ignore!\n");
+                    continue;
+				}
+
+				if(strcmp(item_ssid->valuestring,"")==0)
+				{
+					printf("this is blank!   ignore!\n");
+ 					continue;
+				}
+				
+			}
+            snprintf(wifiavaiable_list[j].ssid, 64, "%s", item_ssid->valuestring);	
 
             item_rssi = cJSON_GetObjectItem(object, "rssi");
             if (item_rssi == NULL)
             {
                 cJSON_Delete(root);
-                return 0;
+				printf("exit!\n");
+                break;
             }
             printf("cJSON_GetObjectItem: type=%d, string is %s, value=%d\n", item_rssi->type, item_rssi->string, item_rssi->valueint);
-            wifiavaiable_list[i].rssi = item_rssi->valueint;
-            item_ssid = cJSON_GetObjectItem(object, "ssid");
-            if (item_ssid == NULL)
-            {
-                cJSON_Delete(root);
-                return 0;
-            }
-            printf("cJSON_GetObjectItem: type=%d, string is %s, value=%s\n", item_ssid->type, item_ssid->string, item_ssid->valuestring);
-            snprintf(wifiavaiable_list[i].ssid, 64, "%s", item_ssid->valuestring);
+            wifiavaiable_list[j].rssi = item_rssi->valueint;
+			j++;
         }
-        for (i = 0; i < size; i++)
+        for (i = 0; i <j; i++)
         {
             printf("i=%d, ssid=%s,rssi=%d\n",
                    i,
@@ -112,7 +187,7 @@ int wifijson_parse(char *wifijson)
     }
 
     cJSON_Delete(root);
-    return size;
+    return j;
 }
 
 pthread_t thread1;
@@ -139,7 +214,7 @@ void *get_available_wifi(void *ptr)
             if (get_wifi_psk(wifiavaiable_list[i].ssid) != NULL)
             {
                 snprintf(connect_wifi_date.ssid, 64, "%s", wifiavaiable_list[i].ssid);
-                //set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
+                set_wifi_state(RK_WIFI_State_CONNECTING);  // to display faster
                 wifi_connect_flag = 2;
                 break;
             }
@@ -194,16 +269,47 @@ static void unloadres(void)
 
 static void wifi_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    if (get_wifi_state() != RK_WIFI_State_OFF  &&  lParam < wifiavaiable_size)
+	if (avaiable_wifi_display_mode && (lParam != 0) && (lParam != 1) )
     {
-        if (!((get_wifi_state() == RK_WIFI_State_CONNECTED  ||  get_wifi_state() == RK_WIFI_State_CONNECTING) && ((lParam == 0) || (lParam == 1))))
-        {
-            if (avaiable_wifi_display_mode) lParam -= 2;
-            snprintf(input_wifi_date.ssid, sizeof(input_wifi_date.ssid), "%s", wifiavaiable_list[lParam].ssid);
-            input_dialog_type = WIFI_PWD ;
-            creat_input_dialog(hWnd);
-        }
+		lParam -= 2;
+		if(get_wifi_psk(wifiavaiable_list[lParam].ssid) == NULL )
+		{
+			snprintf(input_wifi_date.ssid, sizeof(input_wifi_date.ssid), "%s", wifiavaiable_list[lParam].ssid);
+			input_dialog_type = WIFI_PWD ;
+			creat_input_dialog(hWnd);
+		} 
+		else
+		{
+			snprintf(connect_wifi_date.ssid, sizeof(connect_wifi_date.ssid), "%s", wifiavaiable_list[lParam].ssid);
+			wifi_connect_flag = 2;
+			set_wifi_state(RK_WIFI_State_CONNECTING);
+		}
     }
+	else if(avaiable_wifi_display_mode && (lParam ==0))
+	{
+		snprintf(input_wifi_date.ssid, sizeof(input_wifi_date.ssid), "%s",connect_wifi_date.ssid);
+		input_dialog_type = WIFI_PWD ;
+		creat_input_dialog(hWnd);
+
+	}
+	else if(!avaiable_wifi_display_mode)
+	{
+		if(get_wifi_psk(wifiavaiable_list[lParam].ssid) == NULL )
+		{
+			snprintf(input_wifi_date.ssid, sizeof(input_wifi_date.ssid), "%s", wifiavaiable_list[lParam].ssid);
+			input_dialog_type = WIFI_PWD ;
+			creat_input_dialog(hWnd);
+		} 
+		else
+		{
+			snprintf(connect_wifi_date.ssid, sizeof(connect_wifi_date.ssid), "%s", wifiavaiable_list[lParam].ssid);
+			wifi_connect_flag = 2;
+			set_wifi_state(RK_WIFI_State_CONNECTING);
+		}
+
+	}
+
+
 }
 
 static void menu_back(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -251,7 +357,7 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
 #endif
             if (wifi_connect_flag)
             {
-                if (wifi_connect_flag == 2) //use local ssid and pwd to connect
+				if (wifi_connect_flag == 2) //use local ssid and pwd to connect
                 {
                     snprintf(connect_wifi_date.psk, 64, "%s", get_wifi_psk(connect_wifi_date.ssid));
                 }
@@ -377,8 +483,6 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                     int state;
                     state = get_wifi_state();
 
-                    int display_rssi;
-
                     if
                     (get_wifi_state() != RK_WIFI_State_DISCONNECTED && cur_page == 1)
                     {
@@ -395,7 +499,6 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                         DrawText(hdc, connect_wifi_date.ssid, -1, &msg_rcFilename, DT_TOP);
 
 
-
                         msg_rcFilename.left += 500;
                         if (get_wifi_state() == RK_WIFI_State_CONNECTED)
                             DrawText(hdc, res_str[RES_STR_CONNECTED], -1, &msg_rcFilename, DT_TOP);
@@ -404,21 +507,43 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                         else if (get_wifi_state() == RK_WIFI_State_CONNECTFAILED_WRONG_KEY)
                             DrawText(hdc, res_str[RES_STR_WRONG_PWD], -1, &msg_rcFilename, DT_TOP);
 
-                        int k;
-                        for (k = 0; k < wifiavaiable_size; k++) // get wifi rssi
+						int k;
+						int l;
+						if (strcmp(wifi_display_tmp.ssid, connect_wifi_date.ssid) != 0  && strcmp(wifi_display_tmp.ssid, "") != 0) // add wifi data to origin place
+						{
+							for(k=wifiavaiable_size;k>wifi_display_tmp_pos;k--)
+							{
+								snprintf(wifiavaiable_list[k].ssid,"%s",wifiavaiable_list[k-1].ssid);
+								wifiavaiable_list[k].rssi = wifiavaiable_list[k-1].rssi;
+							}
+							snprintf(wifiavaiable_list[wifi_display_tmp_pos].ssid,"%s",wifi_display_tmp.ssid);
+							wifiavaiable_list[wifi_display_tmp_pos].rssi = wifi_display_tmp.rssi;
+							wifiavaiable_size++;
+						}
+
+                        for (k = 0; k < wifiavaiable_size; k++) // delete connectting wifi data in list
                         {
                             if (strcmp(wifiavaiable_list[k].ssid, connect_wifi_date.ssid) == 0)
                             {
-                                display_rssi = wifiavaiable_list[k].rssi;
+                            	snprintf(wifi_display_tmp.ssid,"%s",connect_wifi_date.ssid);
+                                wifi_display_tmp.rssi = wifiavaiable_list[k].rssi;
+								wifi_display_tmp_pos = k;
+									
+								for (l=k;l < wifiavaiable_size; l++)
+								{
+									snprintf(wifiavaiable_list[l].ssid,"%s",wifiavaiable_list[l+1].ssid);
+									wifiavaiable_list[l].rssi = wifiavaiable_list[l+1].rssi;
+								}
+								wifiavaiable_size--;
                                 break;
                             }
                         }
 
-                        if (display_rssi > -90)
+                        if (wifi_display_tmp.rssi > -90)
                         {
                             FillBoxWithBitmap(hdc, LCD_W - 100, msg_rcFilename.top, WIFI_SIGNAL_PINT_W, WIFI_SIGNAL_PINT_H, &wifi_signal_3);
                         }
-                        else if (display_rssi < -95)
+                        else if (wifi_display_tmp.rssi < -95)
                         {
                             FillBoxWithBitmap(hdc, LCD_W - 100, msg_rcFilename.top, WIFI_SIGNAL_PINT_W, WIFI_SIGNAL_PINT_H, &wifi_signal_1);
                         }
@@ -427,7 +552,10 @@ static LRESULT setting_wifi_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, 
                             FillBoxWithBitmap(hdc, LCD_W - 100, msg_rcFilename.top, WIFI_SIGNAL_PINT_W, WIFI_SIGNAL_PINT_H, &wifi_signal_2);
                         }
 
-                        //  FillBoxWithBitmap(hdc, LCD_W - 70, msg_rcFilename.top, WIFI_KEY_PINT_W, WIFI_KEY_PINT_H, &wifi_key_bmap);
+                        if (get_wifi_psk(connect_wifi_date.ssid) != NULL)
+                        {
+                            FillBoxWithBitmap(hdc, LCD_W - 70, msg_rcFilename.top, WIFI_KEY_PINT_W, WIFI_KEY_PINT_H, &wifi_key_bmap);
+                        }
 
                         msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
                         msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * 2 ;

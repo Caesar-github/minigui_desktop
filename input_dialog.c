@@ -24,7 +24,9 @@
 
 #include "common.h"
 
-static char input_content[64] = "";
+#define INPUT_CONTNET_SIZE 64
+static char input_content[INPUT_CONTNET_SIZE] = "";
+#define INPUT_DISPLAY_SIZE 10
 int pwd_cnt = 0;
 #define SLIDE_DISTANCE 100
 #define WHOLE_BUTTON_NUM 4
@@ -258,13 +260,10 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             //char key down
 
             if (symbol_flag)
-            {
                 symbol_flag = 0;
-            }
             else
-            {
                 symbol_flag = 1;
-            }
+
 
             for (j = 0; j < BUTTON_MAXNUM; j++)
             {
@@ -282,16 +281,16 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             {
                 pwd_cnt--;
                 input_content[pwd_cnt] = '\0';
-                InvalidateRect(hWnd, &msg_rcInput, FALSE);
+                InvalidateRect(hWnd, &msg_rcInput, TRUE);
             }
         }
         else if (wParam == (IDC_INPUT_SET_BT_MIN + 39))
         {
             //space key down
             input_content[pwd_cnt] = ' ';
-            if (pwd_cnt < 127)
+            if (pwd_cnt < INPUT_CONTNET_SIZE-1)
                 pwd_cnt++;
-            InvalidateRect(hWnd, &msg_rcInput, FALSE);
+            InvalidateRect(hWnd, &msg_rcInput, TRUE);
         }
         else if (wParam == (IDC_INPUT_SET_BT_MIN + 40))
         {
@@ -299,7 +298,7 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             if (pwd_cnt < 5)
             {
                 pwd_short_flag = 1;
-                InvalidateRect(hWnd, &msg_rcBg, FALSE);
+                InvalidateRect(hWnd, &msg_rcBg, TRUE);
             }
             else
             {
@@ -318,9 +317,9 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                 input_content[pwd_cnt] = keyboard_name[2][wParam - IDC_INPUT_SET_BT_MIN][0];
             else
                 input_content[pwd_cnt] = keyboard_name[shift][wParam - IDC_INPUT_SET_BT_MIN][0];
-            if (pwd_cnt < 127)
+            if (pwd_cnt < INPUT_CONTNET_SIZE-1)
                 pwd_cnt++;
-            InvalidateRect(hWnd, &msg_rcInput, FALSE);
+            InvalidateRect(hWnd, &msg_rcInput, TRUE);
         }
 
         if (get_bl_brightness() == 0)
@@ -454,7 +453,17 @@ static LRESULT input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
 
             SelectFont(hdc, logfont);
-            DrawText(hdc, input_content, -1, &msg_rcFilename, DT_TOP);
+            
+            char input_display_tmp[INPUT_DISPLAY_SIZE+1];
+            int n=INPUT_DISPLAY_SIZE; // display final  bytes
+            if(n>strlen(input_content)) n = strlen(input_content);
+            char *p = input_content;
+            char *q = input_display_tmp;
+            p+= (strlen(input_content)-n);
+            while(n--) *(q++) = *(p++);
+            *q='\0';
+
+            DrawText(hdc, input_display_tmp, -1, &msg_rcFilename, DT_TOP);
 
             SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
             FillBox(hdc, msg_rcFilename.left, msg_rcFilename.bottom, LCD_W / 2 - SETTING_LIST_STR_PINT_X - 150, TITLE_LINE_PINT_H);

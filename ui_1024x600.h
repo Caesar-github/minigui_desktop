@@ -368,4 +368,10 @@
 #define POWER_OFF_W    (LCD_W / 2)
 #define POWER_OFF_H    (LCD_H / 2)
 
+#define VERSION_DIALOG_X    (LCD_W / 4)
+#define VERSION_DIALOG_Y    (LCD_H / 4)
+#define VERSION_DIALOG_W    (LCD_W / 2)
+#define VERSION_DIALOG_H    (LCD_H / 2)
+
+
 #endif

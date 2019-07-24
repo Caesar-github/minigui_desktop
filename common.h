@@ -171,6 +171,7 @@ enum RES_STR_ID
     RES_STR_SCANING,
     RES_STR_NO_UPDATE_FILE,
     RES_STR_RECOVERY_SOON,
+    RES_STR_UPDATE_VERSION,
     RES_STR_MAX
 };
 
@@ -366,7 +367,8 @@ extern HWND mhWnd, nhWnd;
 
 extern struct wifi_info input_wifi_date;
 extern struct wifi_info connect_wifi_date;
-extern struct wifi_avaiable wifiavaiable_list[50];  // result of scan
+#define WIFI_AVAIABLE_NUM 50
+extern struct wifi_avaiable wifiavaiable_list[WIFI_AVAIABLE_NUM];  // result of scan
 extern int wifiavaiable_size;  // size of wifiavaiable_list
 
 extern struct tm *now_time;

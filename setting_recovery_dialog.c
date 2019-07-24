@@ -96,8 +96,11 @@ static void recovery_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
         unloadres();
         loadres();
         main_unloadres();
+		background_loadres();
         main_loadres();
         loadstringres();
+		set_wifi_state(RK_WIFI_State_OFF);
+		RK_wifi_enable(0);
         menu_back(hWnd, wParam, lParam);
         break;
     case 1:

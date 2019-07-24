@@ -33,13 +33,16 @@ static char *verstion = 0;
 static char *model_disp = 0;
 static char *verstion_disp = 0;
 static BITMAP list_sel_bmap;
-static int list_sel = 0;
+static BITMAP logo_bmap;
 
-int update_flag = -1;
-/* -1 means do not find update files yet
- *  0 means find no update file
- *  1 meas update file exist
- */
+
+#define RK_LOGO_X (LCD_W-RK_LOGO_W)/2
+#define RK_LOGO_Y 50
+#define RK_LOGO_W 1018*0.9
+#define RK_LOGO_H 305*0.9
+
+
+static int list_sel = 0;
 
 char update_cmd[128];
 
@@ -85,6 +88,13 @@ static int loadres(void)
     snprintf(img, sizeof(img), "%slist_sel.png", respath);
     if (LoadBitmap(HDC_SCREEN, &list_sel_bmap, img))
         return -1;
+
+	
+    snprintf(img, sizeof(img), "%sRKlogo.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &logo_bmap, img))
+        return -1;
+
+	
     return 0;
 }
 
@@ -101,45 +111,6 @@ static void unloadres(void)
 
 static void version_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    switch (lParam)
-    {
-        printf("1Param: %d\n", lParam);
-    case 2:
-    {
-        int ret1, ret2, ret3;
-        char cmd[128] = "ls /udisk/update.img" ;
-        ret1 = system(cmd);
-        if (ret1)
-            fprintf(stderr, "no update file in udisk  ret1= %d  \n ", ret1);
-
-        snprintf(cmd, sizeof(cmd), "ls /sdcard/update.img");
-        ret2 = system(cmd);
-        if (ret2)
-            fprintf(stderr, "no update file in sdcard  ret2= %d  \n", ret2);
-
-        snprintf(cmd, sizeof(cmd), "ls /userdata/update.img");
-        ret3 = system(cmd);
-        if (ret3)
-            fprintf(stderr, "no update file in userdata  ret3= %d  \n", ret3);
-
-        if ((ret1 == 512) && (ret2 == 512) && (ret3 == 512))
-        {
-            update_flag = 0;
-        }
-        else if (ret1 == 0 || ret2 == 0 || ret3 == 0)
-        {
-            update_flag = 1;
-            if (!ret1)
-                snprintf(update_cmd, sizeof(update_cmd), "update ota /udisk/update.img");
-            else if (!ret2)
-                snprintf(update_cmd, sizeof(update_cmd), "update ota /sdcard/update.img");
-            else if (!ret3)
-                snprintf(update_cmd, sizeof(update_cmd), "update ota /userdata/update.img");
-        }
-        printf("update_flag: %d \n", update_flag);
-        break;
-    }
-    }
     InvalidateRect(hWnd, &msg_rcBg, TRUE);
 }
 
@@ -189,18 +160,6 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
 #ifdef ENABLE_WIFI
             InvalidateRect(hWnd, &msg_rcWifi, TRUE);
 #endif
-            static int l;
-            if (update_flag == 1)
-            {
-                l++;
-                InvalidateRect(hWnd, &msg_rcBg, TRUE);
-                if (l == 3) //delay 3s
-                {
-                    update_flag = -1;
-                    l = 0;
-                    system(update_cmd);
-                }
-            }
         }
         break;
     }
@@ -280,8 +239,10 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         DrawText(hdc, res_str[RES_STR_TITLE_INFO], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        msg_rcInfo.left = SETTING_INFO_PINT_X;
-        msg_rcInfo.top = SETTING_INFO_PINT_Y;
+		FillBoxWithBitmap(hdc, RK_LOGO_X, RK_LOGO_Y,RK_LOGO_W, RK_LOGO_H, &logo_bmap);
+
+		msg_rcInfo.left = SETTING_INFO_PINT_X;
+        msg_rcInfo.top = SETTING_INFO_PINT_Y+SETTING_INFO_PINT_SPAC*5;
         msg_rcInfo.right = LCD_W - msg_rcInfo.left;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
         if (model_disp)
@@ -294,28 +255,19 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
             SelectFont(hdc, logfont);
         DrawText(hdc, verstion_disp, -1, &msg_rcInfo, DT_TOP);
 
-        msg_rcInfo.top += SETTING_INFO_PINT_SPAC;
-        msg_rcInfo.left = SETTING_INFO_PINT_X + 9;
+		msg_rcInfo.top += SETTING_INFO_PINT_SPAC*3;
+        msg_rcInfo.left = LCD_W/2-10;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
         SelectFont(hdc, logfont);
+		FillBoxWithBitmap(hdc, msg_rcInfo.left-9, msg_rcInfo.top - 9, 112, SETTING_LIST_SEL_PINT_H, &list_sel1_bmap);
         DrawText(hdc, res_str[RES_STR_SYSTEM_UPGRAD], -1, &msg_rcInfo, DT_TOP);
-        FillBoxWithBitmap(hdc, SETTING_INFO_PINT_X, msg_rcInfo.top - 9, 112, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
-
-        msg_rcInfo.left = SETTING_INFO_PINT_X;
-        msg_rcInfo.top = SETTING_INFO_PINT_Y + SETTING_INFO_PINT_SPAC * 4;
+		
+        msg_rcInfo.left = LCD_W/2-20;
+        msg_rcInfo.top = SETTING_INFO_PINT_Y + SETTING_INFO_PINT_SPAC * 8;
         msg_rcInfo.right = LCD_W ;
         msg_rcInfo.bottom = msg_rcInfo.top + SETTING_INFO_PINT_H;
         SelectFont(hdc, logfont);
 
-        if (update_flag == 1)
-        {
-            DrawText(hdc, res_str[RES_STR_RECOVERY_SOON], -1, &msg_rcInfo, DT_TOP);
-        }
-        else if (update_flag == 0)
-        {
-            DrawText(hdc, res_str[RES_STR_NO_UPDATE_FILE], -1, &msg_rcInfo, DT_TOP);
-            update_flag = -1;
-        }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
         break;
@@ -359,11 +311,9 @@ static LRESULT setting_version_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         int witch_button = check_button(touch_pos_up.x, touch_pos_up.y);
         if (witch_button == 0)
             menu_back(hWnd, wParam, lParam);
-        if (witch_button == 3)
+        if (witch_button == 9)
         {
-            list_sel = witch_button - 1;
-            version_enter(hWnd, wParam, list_sel);
-            printf("system upgrade!\n");
+ 			creat_version_dialog(hWnd);
         }
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
@@ -385,3 +335,291 @@ void creat_setting_version_dialog(HWND hWnd)
 
     DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_version_dialog_proc, 0L);
 }
+
+//=========================== version_dialog ===================================
+
+int version_dialog_type = 0 ; // 0: confirm   1:no update img   2.update soon
+
+static const GAL_Rect msg_rcArrow[] =
+{
+    {TIME_INPUT_OK_X, TIME_INPUT_OK_Y, TIME_INPUT_OK_W, TIME_INPUT_OK_H},
+    {TIME_INPUT_CANCEL_X, TIME_INPUT_CANCEL_Y, TIME_INPUT_CANCEL_W, TIME_INPUT_CANCEL_H}
+};
+	
+static int is_button(int x, int y, GAL_Rect rect)
+{
+    return ((x <= rect.x + rect.w) && (x >= rect.x) && (y <= rect.y + rect.h) && (y >= rect.y));
+}
+
+static int version_dialog_check_button(int x, int y)
+{
+    if (is_button(x, y, msg_rcArrow[0]))
+        return 0;
+    if (is_button(x, y, msg_rcArrow[1]))
+        return 1;
+    return -1;
+}
+
+
+static void version_dialog_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	int ret1, ret2, ret3;
+	char cmd[128] = "ls /udisk/update.img" ;
+	ret1 = system(cmd);
+	if (ret1)
+		fprintf(stderr, "no update file in udisk  ret1= %d	\n ", ret1);
+
+	snprintf(cmd, sizeof(cmd), "ls /sdcard/update.img");
+	ret2 = system(cmd);
+	if (ret2)
+		fprintf(stderr, "no update file in sdcard  ret2= %d  \n", ret2);
+
+	snprintf(cmd, sizeof(cmd), "ls /userdata/update.img");
+	ret3 = system(cmd);
+	if (ret3)
+		fprintf(stderr, "no update file in userdata  ret3= %d  \n", ret3);
+
+	if ((ret1 == 256) && (ret2 == 256) && (ret3 == 256))
+		version_dialog_type = 1;
+
+	else if (ret1 == 0 || ret2 == 0 || ret3 == 0)
+	{
+		version_dialog_type = 2;
+		if (!ret1)
+			snprintf(update_cmd, sizeof(update_cmd), "update ota /udisk/update.img");
+		else if (!ret2)
+			snprintf(update_cmd, sizeof(update_cmd), "update ota /sdcard/update.img");
+		else if (!ret3)
+			snprintf(update_cmd, sizeof(update_cmd), "update ota /userdata/update.img");
+	}
+	printf("update_flag: %d \n", version_dialog_type);
+}
+
+
+static LRESULT version_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    HDC hdc;
+
+    //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
+    switch (message)
+    {
+    case MSG_INITDIALOG:
+    {
+        DWORD bkcolor;
+        HWND hFocus = GetDlgDefPushButton(hWnd);
+        loadres();
+        bkcolor = GetWindowElementPixel(hWnd, WE_BGC_WINDOW);
+        SetWindowBkColor(hWnd, bkcolor);
+        if (hFocus)
+            SetFocus(hFocus);
+        batt = battery;
+        SetTimer(hWnd, _ID_TIMER_SETTING_VERSION, TIMER_SETTING_VERSION);
+        return 0;
+    }
+    case MSG_TIMER:
+    {
+        static int dialog_last_time = 60;
+        if (now_time->tm_min != dialog_last_time)
+        {
+            dialog_last_time = now_time->tm_min;
+            InvalidateRect(hWnd, &msg_rcBg, FALSE);
+        }
+        if (wParam == _ID_TIMER_SETTING_VERSION)
+        {
+#ifdef ENABLE_BATT
+            if (batt != battery)
+            {
+                batt = battery;
+                InvalidateRect(hWnd, &msg_rcBatt, TRUE);
+            }
+#endif
+		static int l;
+		   if (version_dialog_type == 2)
+		   {
+			   l++;
+			   InvalidateRect(hWnd, &msg_rcBg, TRUE);
+			   if (l == 3) //delay 3s
+			   {
+				   version_dialog_type =0;
+				   l = 0;
+				   system(update_cmd);
+			   }
+	  	   }
+     	}
+      break;
+    }
+    case MSG_PAINT:
+    {
+        int i;
+        int page;
+        int cur_page;
+        struct file_node *file_node_temp;
+        gal_pixel old_brush;
+        gal_pixel pixle = 0xffffffff;
+        gal_pixel pixle2 = 0xff5e5e5e;
+
+        hdc = BeginPaint(hWnd);
+        old_brush = SetBrushColor(hdc, pixle2);
+        FillBox(hdc, 0, 0, TIME_INPUT_W, TIME_INPUT_H);
+        old_brush = SetBrushColor(hdc, pixle);
+        SetBkColor(hdc, COLOR_lightwhite);
+        SetBkMode(hdc, BM_TRANSPARENT);
+        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+        SelectFont(hdc, logfont);
+
+		RECT msg_rcButton;
+
+		switch (version_dialog_type)
+		{
+			case 0: // confirm
+
+		        MoveTo(hdc, 0, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+		        LineTo(hdc, TIME_INPUT_W, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+		        MoveTo(hdc, TIME_INPUT_W / 2, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+		        LineTo(hdc, TIME_INPUT_W / 2, TIME_INPUT_H);
+
+		        SetBkColor(hdc, COLOR_transparent);
+
+		        msg_rcButton.left = 0;
+		        msg_rcButton.right = POWER_OFF_W;
+		        msg_rcButton.top = POWER_OFF_H / 3;
+		        msg_rcButton.bottom = POWER_OFF_H;
+
+
+		        DrawText(hdc, res_str[RES_STR_UPDATE_VERSION], -1, &msg_rcButton, DT_CENTER);
+				
+		        msg_rcButton.left = TIME_INPUT_OK_X;
+		        msg_rcButton.right = msg_rcButton.left + TIME_INPUT_OK_W;
+		        msg_rcButton.top = TIME_INPUT_OK_Y;
+		        msg_rcButton.bottom = msg_rcButton.top + TIME_INPUT_OK_H;
+		        DrawText(hdc, res_str[RES_STR_OK], -1, &msg_rcButton, DT_CENTER);
+
+		        msg_rcButton.left = TIME_INPUT_CANCEL_X;
+		        msg_rcButton.right = msg_rcButton.left + TIME_INPUT_CANCEL_W;
+		        DrawText(hdc, res_str[RES_STR_CANCEL], -1, &msg_rcButton, DT_CENTER);
+		        SetBkColor(hdc, COLOR_transparent);
+			break;
+
+
+			case 1: // no update.img
+
+		        MoveTo(hdc, 0, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+		        LineTo(hdc, TIME_INPUT_W, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+		        MoveTo(hdc, TIME_INPUT_W / 2, TIME_INPUT_OK_Y - TIME_INPUT_OK_PADDING);
+		        LineTo(hdc, TIME_INPUT_W / 2, TIME_INPUT_H);
+
+		        SetBkColor(hdc, COLOR_transparent);
+
+		        msg_rcButton.left = 0;
+		        msg_rcButton.right = POWER_OFF_W;
+		        msg_rcButton.top = POWER_OFF_H / 3;
+		        msg_rcButton.bottom = POWER_OFF_H;
+
+
+		        DrawText(hdc, res_str[RES_STR_NO_UPDATE_FILE], -1, &msg_rcButton, DT_CENTER);
+				
+		        msg_rcButton.left = TIME_INPUT_OK_X;
+		        msg_rcButton.right = msg_rcButton.left + TIME_INPUT_OK_W;
+		        msg_rcButton.top = TIME_INPUT_OK_Y;
+		        msg_rcButton.bottom = msg_rcButton.top + TIME_INPUT_OK_H;
+		        DrawText(hdc, res_str[RES_STR_OK], -1, &msg_rcButton, DT_CENTER);
+
+		        msg_rcButton.left = TIME_INPUT_CANCEL_X;
+		        msg_rcButton.right = msg_rcButton.left + TIME_INPUT_CANCEL_W;
+		        DrawText(hdc, res_str[RES_STR_CANCEL], -1, &msg_rcButton, DT_CENTER);
+		        SetBkColor(hdc, COLOR_transparent);
+			break;
+
+
+
+			case 2://update sonn
+
+		        msg_rcButton.left = 0;
+		        msg_rcButton.right = POWER_OFF_W;
+		        msg_rcButton.top = POWER_OFF_H / 3;
+		        msg_rcButton.bottom = POWER_OFF_H;
+
+		        DrawText(hdc, res_str[RES_STR_RECOVERY_SOON], -1, &msg_rcButton, DT_CENTER);
+				
+
+		        SetBkColor(hdc, COLOR_transparent);
+			break;
+	
+		}
+
+        SetBrushColor(hdc, old_brush);
+        EndPaint(hWnd, hdc);
+        break;
+    }
+    case MSG_KEYDOWN:
+        //printf("%s message = 0x%x, 0x%x, 0x%x\n", __func__, message, wParam, lParam);
+        switch (wParam)
+        {
+        case KEY_EXIT_FUNC:
+            EndDialog(hWnd, wParam);
+            break;
+        case KEY_UP_FUNC:
+            break;
+        case KEY_DOWN_FUNC:
+            break;
+        case KEY_ENTER_FUNC:
+            break;
+        }
+        break;
+    case MSG_COMMAND:
+    {
+        break;
+    }
+    case MSG_DESTROY:
+        KillTimer(hWnd, _ID_TIMER_LOWPOWER);
+        break;
+    case MSG_LBUTTONDOWN:
+        touch_pos_down.x = LOSWORD(lParam);
+        touch_pos_down.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONDOWN x %d, y %d\n", __func__, touch_pos_down.x, touch_pos_down.y);
+        break;
+    case MSG_LBUTTONUP:
+    {
+        if (get_bl_brightness() == 0)
+        {
+            screenon();
+            break;
+        }
+        DisableScreenAutoOff();
+        touch_pos_up.x = LOSWORD(lParam);
+        touch_pos_up.y = HISWORD(lParam);
+        printf("%s MSG_LBUTTONUP x %d, y %d\n", __func__, touch_pos_up.x, touch_pos_up.y);
+		if(version_dialog_type !=2)
+		{
+	        int witch_button = version_dialog_check_button(touch_pos_up.x, touch_pos_up.y);
+	        if (witch_button == 0)
+			{
+				if(!version_dialog_type)
+					version_dialog_enter(hWnd, wParam, lParam);
+				else if (version_dialog_type == 1)
+					menu_back(hWnd, wParam, lParam);
+				InvalidateRect(hWnd, &msg_rcBg, TRUE);
+	        }
+	        if (witch_button == 1) menu_back(hWnd, wParam, lParam);
+		}
+		EnableScreenAutoOff();
+        break;
+    }
+    }
+
+    return DefaultDialogProc(hWnd, message, wParam, lParam);
+}
+
+void creat_version_dialog(HWND hWnd)
+{
+    DLGTEMPLATE DesktopDlg = {WS_VISIBLE, WS_EX_NONE | WS_EX_AUTOSECONDARYDC,
+                              VERSION_DIALOG_X, VERSION_DIALOG_Y,
+                              VERSION_DIALOG_W, VERSION_DIALOG_H,
+                              DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0
+                             };
+
+	version_dialog_type = 0 ;
+
+    DialogBoxIndirectParam(&DesktopDlg, hWnd, version_dialog_proc, 0L);
+}
+
