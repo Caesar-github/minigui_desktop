@@ -20,7 +20,6 @@
 #include "common.h"
 
 static int menu_sel = -1;
-static int photo_sel = 1;
 static int line_sel = 1;
 static int batt = 0;
 int res_loaded = 0;
@@ -32,10 +31,9 @@ int res_loaded = 0;
 #define PHOTO_ICON_NUM   1
 
 #define SLIDE_DISTANCE 100
-#define WHOLE_BUTTON_NUM 8
+#define WHOLE_BUTTON_NUM 5
 
 static BITMAP menu_bmap[MENU_NUM][MENU_ICON_NUM];
-static BITMAP photo_bmap[PHOTO_NUM][PHOTO_ICON_NUM];
 
 static RECT msg_rcMusic = {MUSIC_PINT_X, MUSIC_PINT_Y, MUSIC_PINT_X + MUSIC_PINT_W, MUSIC_PINT_Y + MUSIC_PINT_H};
 static RECT msg_rcPhoto = {PHOTO_PINT_X, PHOTO_PINT_Y, PHOTO_PINT_X + PHOTO_PINT_W, PHOTO_PINT_Y + PHOTO_PINT_H};
@@ -109,16 +107,6 @@ static int loadres(void)
         if (LoadBitmap(HDC_SCREEN, &menu_bmap[4][i], img))
             return -1;
     }
-    for (j = 0; j < PHOTO_NUM; j++)
-    {
-        for (i = 0; i < PHOTO_ICON_NUM; i++)
-        {
-            snprintf(img, sizeof(img), "%spic%d.jpg", respath, j);
-            //printf("%s\n", img);
-            if (LoadBitmap(HDC_SCREEN, &photo_bmap[j][i], img))
-                return -1;
-        }
-    }
     return 0;
 }
 
@@ -129,10 +117,6 @@ static void unloadres(void)
     for (j = 0; j < MENU_NUM; j++)
         for (i = 0; i < MENU_ICON_NUM; i ++)
             UnloadBitmap(&menu_bmap[j][i]);
-
-    for (j = 0; j < PHOTO_NUM; j++)
-        for (i = 0; i < PHOTO_ICON_NUM; i ++)
-            UnloadBitmap(&photo_bmap[j][i]);
 }
 
 static void desktop_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -163,22 +147,6 @@ static void desktop_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
-    case 5:
-        photo_sel -= 1;
-        if (photo_sel < 0)
-            photo_sel = 0;
-        InvalidateRect(hWnd, &msg_rcBg, TRUE);
-        break;
-    case 6:
-        full_screen = 1;
-        InvalidateRect(hWnd, &msg_rcBg, TRUE);
-        break;
-    case 7:
-        photo_sel += 1;
-        if (photo_sel > (PHOTO_NUM - 1))
-            photo_sel = PHOTO_NUM - 1;
-        InvalidateRect(hWnd, &msg_rcBg, TRUE);
-        break;
     }
 }
 
@@ -242,92 +210,77 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         hdc = BeginPaint(hWnd);
         SelectFont(hdc, logfont);
         old_brush = SetBrushColor(hdc, pixle);
-        if (full_screen)
-            FillBoxWithBitmap(hdc, 0, 0, LCD_W, LCD_H, &photo_bmap[photo_sel][0]);
-        else
+        FillBoxWithBitmap(hdc, BG_PINT_X,
+                          BG_PINT_Y, BG_PINT_W,
+                          BG_PINT_H, &background_bmap);
+        if (res_loaded)
         {
-            FillBoxWithBitmap(hdc, BG_PINT_X,
-                              BG_PINT_Y, BG_PINT_W,
-                              BG_PINT_H, &background_bmap);
-            if (res_loaded)
-            {
 #ifdef ENABLE_BATT
-                FillBoxWithBitmap(hdc, BATT_PINT_X - status_bar_offset, BATT_PINT_Y,
-                                  BATT_PINT_W, BATT_PINT_H,
-                                  &batt_bmap[batt]);
+            FillBoxWithBitmap(hdc, BATT_PINT_X - status_bar_offset, BATT_PINT_Y,
+                              BATT_PINT_W, BATT_PINT_H,
+                              &batt_bmap[batt]);
 #endif
 #ifdef ENABLE_WIFI
-                if (get_wifi_state() == RK_WIFI_State_OFF)
-                {
-                    FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                                      WIFI_PINT_W, WIFI_PINT_H,
-                                      &wifi_disabled_bmap);
-                }
-                else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
-                {
-                    FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                                      WIFI_PINT_W, WIFI_PINT_H,
-                                      &wifi_connected_bmap);
-                }
-                else
-                {
-                    FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
-                                      WIFI_PINT_W, WIFI_PINT_H,
-                                      &wifi_disconnected_bmap);
-                }
-#endif
+            if (get_wifi_state() == RK_WIFI_State_OFF)
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_disabled_bmap);
             }
+            else if (get_wifi_state() == RK_WIFI_State_CONNECTED)
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_connected_bmap);
+            }
+            else
+            {
+                FillBoxWithBitmap(hdc, WIFI_PINT_X - status_bar_offset, WIFI_PINT_Y,
+                                  WIFI_PINT_W, WIFI_PINT_H,
+                                  &wifi_disconnected_bmap);
+            }
+#endif
+        }
 
 
-            RECT msg_rcTime;
-            msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
-            msg_rcTime.top = REALTIME_PINT_Y;
-            msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
-            msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
-            SetBkColor(hdc, COLOR_transparent);
-            SetBkMode(hdc, BM_TRANSPARENT);
-            SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
-            SelectFont(hdc, logfont_title);
-            DrawText(hdc, status_bar_time_str, -1, &msg_rcTime, DT_TOP);
-            msg_rcTime.left = REALDATE_PINT_X - status_bar_offset;
-            DrawText(hdc, status_bar_date_str, -1, &msg_rcTime, DT_TOP);
+        RECT msg_rcTime;
+        msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
+        msg_rcTime.top = REALTIME_PINT_Y;
+        msg_rcTime.right = REALTIME_PINT_X + REALTIME_PINT_W;
+        msg_rcTime.bottom = REALTIME_PINT_Y + REALTIME_PINT_H;
+        SetBkColor(hdc, COLOR_transparent);
+        SetBkMode(hdc, BM_TRANSPARENT);
+        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
+        SelectFont(hdc, logfont_title);
+        DrawText(hdc, status_bar_time_str, -1, &msg_rcTime, DT_TOP);
+        msg_rcTime.left = REALDATE_PINT_X - status_bar_offset;
+        DrawText(hdc, status_bar_date_str, -1, &msg_rcTime, DT_TOP);
 
 //==================display volume icon============================
-            if (res_loaded)
-            {
-                BITMAP *volume_display;
+        if (res_loaded)
+        {
+            BITMAP *volume_display;
 
-                if (get_volume() == 0) volume_display = &volume_0;
-                else if (get_volume() > 0  && get_volume() <= 32)  volume_display = &volume_1;
-                else if (get_volume() > 32  && get_volume() <= 66)  volume_display = &volume_2;
-                else volume_display = &volume_3;
+            if (get_volume() == 0) volume_display = &volume_0;
+            else if (get_volume() > 0  && get_volume() <= 32)  volume_display = &volume_1;
+            else if (get_volume() > 32  && get_volume() <= 66)  volume_display = &volume_2;
+            else volume_display = &volume_3;
 
-                FillBoxWithBitmap(hdc, VOLUME_PINT_X - status_bar_offset, VOLUME_PINT_Y,
-                                  VOLUME_PINT_W, VOLUME_PINT_H,
-                                  volume_display);
-            }
+            FillBoxWithBitmap(hdc, VOLUME_PINT_X - status_bar_offset, VOLUME_PINT_Y,
+                              VOLUME_PINT_W, VOLUME_PINT_H,
+                              volume_display);
+        }
 
-
-            for (i = 5, j = (-(PHOTO_ICON_NUM_PERPAGE - 1) / 2); (i - 5) < PHOTO_ICON_NUM_PERPAGE; i++, j++)
-            {
-                if ((photo_sel + j) >= 0 && (photo_sel + j) < PHOTO_NUM)
-                {
-                    FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
-                                      msg_galrcMenu[i].y, msg_galrcMenu[i].w,
-                                      msg_galrcMenu[i].h, &photo_bmap[photo_sel + j][0]);
-                }
-            }
-            for (i = 0; i < MENU_NUM; i++)
-            {
-                if (i == menu_sel && line_sel == 1)
-                    FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
-                                      msg_galrcMenu[i].y, msg_galrcMenu[i].w,
-                                      msg_galrcMenu[i].h, &menu_bmap[i][1]);
-                else
-                    FillBoxWithBitmap(hdc, msg_galrcMenu[i].x + MENU_ICON_ZOOM_W / 2,
-                                      msg_galrcMenu[i].y + MENU_ICON_ZOOM_H, msg_galrcMenu[i].w - MENU_ICON_ZOOM_W,
-                                      msg_galrcMenu[i].h - MENU_ICON_ZOOM_H, &menu_bmap[i][0]);
-            }
+        for (i = 0; i < MENU_NUM; i++)
+        {
+            if (i == menu_sel && line_sel == 1)
+                FillBoxWithBitmap(hdc, msg_galrcMenu[i].x,
+                                  msg_galrcMenu[i].y, msg_galrcMenu[i].w,
+                                  msg_galrcMenu[i].h, &menu_bmap[i][1]);
+            else
+                FillBoxWithBitmap(hdc, msg_galrcMenu[i].x + MENU_ICON_ZOOM_W / 2,
+                                  msg_galrcMenu[i].y + MENU_ICON_ZOOM_H, msg_galrcMenu[i].w - MENU_ICON_ZOOM_W,
+                                  msg_galrcMenu[i].h - MENU_ICON_ZOOM_H, &menu_bmap[i][0]);
         }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
@@ -356,13 +309,6 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 else
                     menu_sel = 0;
             }
-            else
-            {
-                if (photo_sel < (PHOTO_NUM - 1))
-                    photo_sel++;
-                else
-                    photo_sel = 0;
-            }
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             break;
         case KEY_LEFT_FUNC:
@@ -373,28 +319,10 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 else
                     menu_sel = MENU_NUM - 1;
             }
-            else
-            {
-                if (photo_sel > 0)
-                    photo_sel--;
-                else
-                    photo_sel = PHOTO_NUM - 1;
-            }
             InvalidateRect(hWnd, &msg_rcBg, TRUE);
             break;
         case KEY_ENTER_FUNC:
-            if (line_sel == 0)
-            {
-                char cmd[128];
-                DisableScreenAutoOff();
-                sprintf(cmd, "/data/start.sh %d", photo_sel);
-                system("touch /tmp/.minigui_freeze");
-                system(cmd);
-                system("rm /tmp/.minigui_freeze");
-                EnableScreenAutoOff();
-                InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            }
-            else
+            if (line_sel == 1)
             {
                 switch (menu_sel)
                 {
@@ -452,51 +380,21 @@ static LRESULT desktop_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         if (touch_pos_down.x - touch_pos_up.x > SLIDE_DISTANCE)
         {
             //printf("slide left\n");
-            photo_sel += 1;
-            line_sel = 0;
-            if (photo_sel > (PHOTO_NUM - 1))
-                photo_sel = PHOTO_NUM - 1;
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            //InvalidateRect(hWnd, &msg_rcBg, TRUE);
         }
         else if (touch_pos_up.x - touch_pos_down.x > SLIDE_DISTANCE)
         {
             //printf("slide right\n");
-            photo_sel -= 1;
-            line_sel = 0;
-            if (photo_sel < 0)
-                photo_sel = 0;
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
+            //InvalidateRect(hWnd, &msg_rcBg, TRUE);
         }
         else
         {
-            if (full_screen == 0)
+            int witch_button = check_button(touch_pos_up.x, touch_pos_up.y);
+            if (witch_button >= 0 && witch_button < WHOLE_BUTTON_NUM)
             {
-                int witch_button = check_button(touch_pos_up.x, touch_pos_up.y);
-                if (witch_button >= 0 && witch_button < 5)
-                {
-                    line_sel = 1;
-                    menu_sel = witch_button;
-                    desktop_enter(hWnd, wParam, witch_button);
-                }
-                else if (witch_button >= 5 && witch_button < WHOLE_BUTTON_NUM)
-                {
-                    line_sel = 0;
-                    desktop_enter(hWnd, wParam, witch_button);
-                }
-            }
-            else
-            {
-                if (double_click_timer > 0 &&
-                        abs(touch_pos_old.x - touch_pos_up.x) < 50 &&
-                        abs(touch_pos_old.y - touch_pos_up.y) < 50)
-                {
-                    full_screen = 0;
-                    InvalidateRect(hWnd, &msg_rcBg, TRUE);
-                }
-                else
-                {
-                    double_click_timer = 2;
-                }
+                line_sel = 1;
+                menu_sel = witch_button;
+                desktop_enter(hWnd, wParam, witch_button);
             }
         }
         touch_pos_old.x = touch_pos_up.x;
@@ -516,6 +414,5 @@ void creat_desktop_dialog(HWND hWnd)
                               LCD_W, LCD_H,
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0
                              };
-    //DesktopDlg.controls = DesktopCtrl;
     DialogBoxIndirectParam(&DesktopDlg, HWND_DESKTOP, desktop_dialog_proc, 0L);
 }
