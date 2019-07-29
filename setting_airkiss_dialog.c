@@ -29,7 +29,6 @@
 
 static BITMAP airkiss_bmap;
 
-static int list_sel = 0;
 static int batt = 0;
 #define AIRKISS_NUM    2
 
@@ -45,10 +44,7 @@ static int check_button(int x, int y)
     if (y > SETTING_LIST_STR_PINT_Y)
         return (((y - SETTING_LIST_STR_PINT_Y) / SETTING_LIST_STR_PINT_SPAC) + 1);
     return -1;
-
 }
-
-
 
 static int loadres(void)
 {
@@ -75,14 +71,6 @@ static void menu_back(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 static void airkiss_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    switch (lParam)
-    {
-    case 0:
-        break;
-    case 1:
-        break;
-    }
-    InvalidateRect(hWnd, &msg_rcBg, TRUE);
 }
 
 static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -102,9 +90,17 @@ static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         if (hFocus)
             SetFocus(hFocus);
         batt = battery;
-        list_sel = 0;
         SetTimer(hWnd, _ID_TIMER_SETTING_AIRKISS, TIMER_SETTING_AIRKISS);
         nhWnd = hWnd;
+        int ret;
+        char cmd[] = "rk_airkiss &";
+
+        ret = system(cmd);
+        if (ret)
+        {
+            //fprintf(stderr, "Fail to system %s, exit\n", cmd);
+            //exit(ret);
+        }
         return 0;
     }
     case MSG_TIMER:
@@ -130,9 +126,6 @@ static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
     case MSG_PAINT:
     {
         int i;
-        int page;
-        int cur_page;
-        struct file_node *file_node_temp;
         gal_pixel old_brush;
         gal_pixel pixle = 0xffffffff;
 
@@ -194,51 +187,18 @@ static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
                           volume_display);
 
         msg_rcTitle.right += 30;
-
-        SetBkColor(hdc, COLOR_transparent);
-        SetBkMode(hdc, BM_TRANSPARENT);
-        SetTextColor(hdc, RGB2Pixel(hdc, 0xff, 0xff, 0xff));
         SelectFont(hdc, logfont);
         DrawText(hdc, res_str[RES_STR_TITLE_AIRKISS], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
-
-        page = (AIRKISS_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
-        cur_page = list_sel / SETTING_NUM_PERPAGE;
-
         msg_rcTitle.right -= 30;
 
-        FillBoxWithBitmap(hdc, SETTING_AIRKISS_PINT_X, SETTING_AIRKISS_PINT_Y, SETTING_AIRKISS_PINT_W, SETTING_AIRKISS_PINT_H, &airkiss_bmap);
+        FillBoxWithBitmap(hdc, SETTING_AIRKISS_PINT_X, SETTING_AIRKISS_PINT_Y,
+                               SETTING_AIRKISS_PINT_W, SETTING_AIRKISS_PINT_H,
+                               &airkiss_bmap);
 
-        if (page > 1)
-        {
-            for (i = 0; i < page; i++)
-            {
-                int x;
-                if (page == 1)
-                    x =  SETTING_PAGE_DOT_X;
-                else if (page % 2)
-                    x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC;
-                else
-                    x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC + SETTING_PAGE_DOT_SPAC / 2;
-                if (i == cur_page)
-                    FillCircle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);
-                else
-                    Circle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);
-            }
-        }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
 
-        int ret;
-        char cmd[] = "rk_airkiss &";
-
-        printf("%s\n", cmd);
-        ret = system(cmd);
-        if (ret)
-        {
-            //                fprintf(stderr, "Fail to system %s, exit\n", cmd);
-            //                exit(ret);
-        }
         break;
     }
     case MSG_KEYDOWN:
@@ -248,29 +208,10 @@ static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
         case KEY_EXIT_FUNC:
             EndDialog(hWnd, wParam);
             break;
-        case KEY_DOWN_FUNC:
-            if (list_sel < (AIRKISS_NUM - 1))
-                list_sel++;
-            else
-                list_sel = 0;
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            break;
-        case KEY_UP_FUNC:
-            if (list_sel > 0)
-                list_sel--;
-            else
-                list_sel = AIRKISS_NUM - 1;
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            break;
-        case KEY_ENTER_FUNC:
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            break;
         }
         break;
     case MSG_COMMAND:
-    {
         break;
-    }
     case MSG_DESTROY:
         KillTimer(hWnd, _ID_TIMER_SETTING_AIRKISS);
         unloadres();
@@ -302,23 +243,15 @@ static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
             int ret;
             char cmd1[] = "killall rk_airkiss";
 
-            printf("%s\n", cmd1);
             ret = system(cmd1);
             if (ret)
             {
                 fprintf(stderr, "Fail to system %s, exit game\n", cmd1);
-//                    exit(ret);
+                //exit(ret);
             }
 
             menu_back(hWnd, wParam, lParam);
         }
-        if (witch_button > 0 && witch_button < WHOLE_BUTTON_NUM)
-        {
-            list_sel = witch_button - 1;
-            InvalidateRect(hWnd, &msg_rcBg, TRUE);
-            airkiss_enter(hWnd, wParam, list_sel);
-        }
-
         touch_pos_old.x = touch_pos_up.x;
         touch_pos_old.y = touch_pos_up.y;
         EnableScreenAutoOff();
@@ -335,7 +268,6 @@ void creat_setting_airkiss_dialog(HWND hWnd)
                               LCD_W, LCD_H,
                               DESKTOP_DLG_STRING, 0, 0, 0, NULL, 0
                              };
-    //DesktopDlg.controls = DesktopCtrl;
 
     DialogBoxIndirectParam(&DesktopDlg, hWnd, setting_airkiss_dialog_proc, 0L);
 }

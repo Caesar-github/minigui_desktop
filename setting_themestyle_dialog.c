@@ -141,9 +141,6 @@ static LRESULT setting_themestyle_dialog_proc(HWND hWnd, UINT message, WPARAM wP
     case MSG_PAINT:
     {
         int i;
-        int page;
-        int cur_page;
-        struct file_node *file_node_temp;
         gal_pixel old_brush;
         gal_pixel pixle = 0xffffffff;
 
@@ -181,8 +178,6 @@ static LRESULT setting_themestyle_dialog_proc(HWND hWnd, UINT message, WPARAM wP
         }
 #endif
 
-
-
         RECT msg_rcTime;
         msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;
         msg_rcTime.top = REALTIME_PINT_Y;
@@ -215,50 +210,31 @@ static LRESULT setting_themestyle_dialog_proc(HWND hWnd, UINT message, WPARAM wP
         DrawText(hdc, res_str[RES_STR_TITLE_THEMESTYLE], -1, &msg_rcTitle, DT_TOP);
         FillBox(hdc, TITLE_LINE_PINT_X, TITLE_LINE_PINT_Y, TITLE_LINE_PINT_W, TITLE_LINE_PINT_H);
 
-        page = (THEMESTYLE_NUM + SETTING_NUM_PERPAGE - 1) / SETTING_NUM_PERPAGE;
-        cur_page = list_sel / SETTING_NUM_PERPAGE;
-
-        for (i = 0; i < SETTING_NUM_PERPAGE; i++)
+        for (i = 0; i < THEMESTYLE_NUM; i++)
         {
             RECT msg_rcFilename;
-
-            if ((cur_page * SETTING_NUM_PERPAGE + i) >= THEMESTYLE_NUM)
-                break;
 
             msg_rcFilename.left = SETTING_LIST_STR_PINT_X;
             msg_rcFilename.top = SETTING_LIST_STR_PINT_Y + SETTING_LIST_STR_PINT_SPAC * i;
             msg_rcFilename.right = LCD_W - msg_rcFilename.left;
             msg_rcFilename.bottom = msg_rcFilename.top + SETTING_LIST_STR_PINT_H;
 
-            if (i == list_sel % SETTING_NUM_PERPAGE)
-                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9, LCD_W, SETTING_LIST_SEL_PINT_H, &list_sel_bmap);
+            if (i == list_sel)
+                FillBoxWithBitmap(hdc, 0, msg_rcFilename.top - 9,
+                                       LCD_W, SETTING_LIST_SEL_PINT_H,
+                                       &list_sel_bmap);
 
-            if ((cur_page * SETTING_NUM_PERPAGE + i) == get_themestyle())
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[1]);
+            if (i == get_themestyle())
+                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top,
+                                       SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H,
+                                       &seldot_bmap[1]);
             else
-                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top, SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H, &seldot_bmap[0]);
-            SelectFont(hdc, logfont);
-            DrawText(hdc, res_str[RES_STR_THEMESTYLE_THEME1 + cur_page * SETTING_NUM_PERPAGE + i], -1, &msg_rcFilename, DT_TOP);
+                FillBoxWithBitmap(hdc, SETTING_LIST_DOT_PINT_X, msg_rcFilename.top,
+                                       SETTING_LIST_DOT_PINT_W, SETTING_LIST_DOT_PINT_H,
+                                       &seldot_bmap[0]);
+            DrawText(hdc, res_str[RES_STR_THEMESTYLE_THEME1 + i], -1, &msg_rcFilename, DT_TOP);
         }
 
-        if (page > 1)
-        {
-            for (i = 0; i < page; i++)
-            {
-                int x;
-                if (page == 1)
-                    x =  SETTING_PAGE_DOT_X;
-                else if (page % 2)
-                    x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC;
-                else
-                    x =  SETTING_PAGE_DOT_X - page / 2 * SETTING_PAGE_DOT_SPAC + SETTING_PAGE_DOT_SPAC / 2;
-
-                if (i == cur_page)
-                    FillCircle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);
-                else
-                    Circle(hdc, x + i * SETTING_PAGE_DOT_SPAC, SETTING_PAGE_DOT_Y, SETTING_PAGE_DOT_DIA);
-            }
-        }
         SetBrushColor(hdc, old_brush);
         EndPaint(hWnd, hdc);
         break;

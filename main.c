@@ -297,6 +297,7 @@ int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 
     set_wifi_state(state);
 
+
     if (state == RK_WIFI_State_CONNECTED)
     {
         printf("RK_WIFI_State_CONNECTED\n");
@@ -322,11 +323,12 @@ int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
         printf("RK_WIFI_State_DISCONNECT\n");
     }
 
+
+
 	if( (state == RK_WIFI_State_CONNECTFAILED_WRONG_KEY || state == RK_WIFI_State_CONNECTING ||state == RK_WIFI_State_CONNECTED) && !avaiable_wifi_display_mode)
 	{
 		avaiable_wifi_display_mode =1;
 	}
-	else avaiable_wifi_display_mode =0;
 
     return 0;
 
@@ -334,6 +336,8 @@ int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 
 
 #endif
+
+
 
 int main_loadres(void)
 {
@@ -407,17 +411,6 @@ void main_unloadres(void)
 #ifdef ENABLE_BATT
     for (i = 0; i < 6; i++)
         UnloadBitmap(&batt_bmap[i]);
-#endif
-
-#ifdef ENABLE_WIFI
-	UnloadBitmap(&wifi_bmap);
-	UnloadBitmap(&wifi_connected_bmap);
-	UnloadBitmap(&wifi_disconnected_bmap);
-	UnloadBitmap(&wifi_disabled_bmap);
-	UnloadBitmap(&wifi_key_bmap);
-	UnloadBitmap(&wifi_signal_3);
-	UnloadBitmap(&wifi_signal_2);
-	UnloadBitmap(&wifi_signal_1);
 #endif
 
     UnloadBitmap(&background_bmap);
@@ -500,6 +493,7 @@ static LRESULT MainWinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 #endif
 #ifdef ENABLE_WIFI
 		RK_wifi_register_callback(_RK_wifi_state_callback);
+
 		set_wifi_state(RK_WIFI_State_OFF);
 #endif
 

@@ -263,12 +263,10 @@
 #define SETTING_PAGE_DOT_DIA  4
 #define SETTING_PAGE_DOT_SPAC  40
 
-
-#define SETTING_AIRKISS_PINT_X    ((LCD_W - SETTING_AIRKISS_PINT_W)/ 2)
-#define SETTING_AIRKISS_PINT_Y    ((LCD_H - SETTING_AIRKISS_PINT_H)/ 2)
 #define SETTING_AIRKISS_PINT_W    480
 #define SETTING_AIRKISS_PINT_H    384
-
+#define SETTING_AIRKISS_PINT_X    ((LCD_W - SETTING_AIRKISS_PINT_W)/ 2)
+#define SETTING_AIRKISS_PINT_Y    ((LCD_H - SETTING_AIRKISS_PINT_H)/ 2)
 
 //setting_volume_dialog
 #define VOLUME_LINE_X (LCD_W-500)/2
@@ -367,11 +365,5 @@
 #define POWER_OFF_Y    (LCD_H / 4)
 #define POWER_OFF_W    (LCD_W / 2)
 #define POWER_OFF_H    (LCD_H / 2)
-
-#define VERSION_DIALOG_X    (LCD_W / 4)
-#define VERSION_DIALOG_Y    (LCD_H / 4)
-#define VERSION_DIALOG_W    (LCD_W / 2)
-#define VERSION_DIALOG_H    (LCD_H / 2)
-
 
 #endif

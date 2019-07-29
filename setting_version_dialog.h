@@ -36,6 +36,5 @@
 #define __SETTING_VERSION_DIALOG_H__
 
 void creat_setting_version_dialog(HWND hWnd);
-void creat_version_dialog(HWND hWnd);
 
 #endif

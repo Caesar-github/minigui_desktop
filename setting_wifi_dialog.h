@@ -38,4 +38,5 @@
 void creat_setting_wifi_dialog(HWND hWnd);
 void *get_available_wifi(void *ptr);
 
+
 #endif
