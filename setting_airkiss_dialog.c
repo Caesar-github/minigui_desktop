@@ -27,8 +27,8 @@
 #define SLIDE_DISTANCE 100
 #define WHOLE_BUTTON_NUM 3
 
-static BITMAP list_sel_bmap;
-static BITMAP seldot_bmap[2];
+static BITMAP airkiss_bmap;
+
 static int list_sel = 0;
 static int batt = 0;
 #define AIRKISS_NUM    2
@@ -56,35 +56,22 @@ static int loadres(void)
     char img[128];
     char *respath = get_ui_image_path();
 
-    snprintf(img, sizeof(img), "%slist_sel.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &list_sel_bmap, img))
+    snprintf(img, sizeof(img), "%sairkiss.jpg", respath);
+    if (LoadBitmap(HDC_SCREEN, &airkiss_bmap, img))
         return -1;
 
-    for (i = 0; i < 2; i++)
-    {
-        snprintf(img, sizeof(img), "%sdot%d.png", respath, i);
-        if (LoadBitmap(HDC_SCREEN, &seldot_bmap[i], img))
-            return -1;
-    }
     return 0;
 }
 
 static void unloadres(void)
 {
-    int i;
-
-    UnloadBitmap(&list_sel_bmap);
-    for (i = 0; i < 2; i++)
-    {
-        UnloadBitmap(&seldot_bmap[i]);
-    }
+    UnloadBitmap(&airkiss_bmap);
 }
 
 static void menu_back(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     EndDialog(hWnd, wParam);
 }
-
 
 static void airkiss_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -97,8 +84,6 @@ static void airkiss_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
     InvalidateRect(hWnd, &msg_rcBg, TRUE);
 }
-
-
 
 static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -184,7 +169,6 @@ static LRESULT setting_airkiss_dialog_proc(HWND hWnd, UINT message, WPARAM wPara
                               &wifi_disconnected_bmap);
         }
 #endif
-
 
         RECT msg_rcTime;
         msg_rcTime.left = REALTIME_PINT_X - status_bar_offset;

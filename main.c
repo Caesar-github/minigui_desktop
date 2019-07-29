@@ -45,11 +45,9 @@ RECT msg_rcDialog = {0, 0, LCD_W, LCD_H};
 BITMAP batt_bmap[6];
 #endif
 #ifdef ENABLE_WIFI
-BITMAP wifi_bmap;
 BITMAP wifi_connected_bmap;
 BITMAP wifi_disconnected_bmap;
 BITMAP wifi_disabled_bmap;
-BITMAP wifi_key_bmap;
 #endif
 
 BITMAP back_bmap;
@@ -59,12 +57,6 @@ BITMAP volume_0;
 BITMAP volume_1;
 BITMAP volume_2;
 BITMAP volume_3;
-BITMAP airkiss_bmap;
-BITMAP list_sel1_bmap;
-BITMAP wifi_signal_3;
-BITMAP wifi_signal_2;
-BITMAP wifi_signal_1;
-BITMAP input_box;
 
 struct tm *now_time = 0;
 struct tm *last_time = 0;
@@ -359,10 +351,6 @@ int main_loadres(void)
 #endif
 
 #ifdef ENABLE_WIFI
-    snprintf(img, sizeof(img), "%swifi.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &wifi_bmap, img))
-        return -1;
-
     snprintf(img, sizeof(img), "%swifi_connected.png", respath);
     if (LoadBitmap(HDC_SCREEN, &wifi_connected_bmap, img))
         return -1;
@@ -374,23 +362,6 @@ int main_loadres(void)
     snprintf(img, sizeof(img), "%swifi_disabled.png", respath);
     if (LoadBitmap(HDC_SCREEN, &wifi_disabled_bmap, img))
         return -1;
-
-    snprintf(img, sizeof(img), "%skey.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &wifi_key_bmap, img))
-        return -1;
-    
-    snprintf(img, sizeof(img), "%swifi_signal_3.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &wifi_signal_3, img))
-        return -1;
-
-    snprintf(img, sizeof(img), "%swifi_signal_2.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &wifi_signal_2, img))
-        return -1;
-
-    snprintf(img, sizeof(img), "%swifi_signal_1.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &wifi_signal_1, img))
-        return -1;
-
 #endif
 
     snprintf(img, sizeof(img), "%sback.png", respath);
@@ -413,20 +384,6 @@ int main_loadres(void)
 
     snprintf(img, sizeof(img), "%svolume_3.png", respath);
     if (LoadBitmap(HDC_SCREEN, &volume_3, img))
-        return -1;
-
-
-    snprintf(img, sizeof(img), "%sairkiss.jpg", respath);
-    if (LoadBitmap(HDC_SCREEN, &airkiss_bmap, img))
-        return -1;
-
-
-    snprintf(img, sizeof(img), "%sinput_box.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &input_box, img))
-        return -1;
-
-    snprintf(img, sizeof(img), "%slist_sel1.png", respath);
-    if (LoadBitmap(HDC_SCREEN, &list_sel1_bmap, img))
         return -1;
 
     return 0;
@@ -464,13 +421,14 @@ void main_unloadres(void)
 #endif
 
     UnloadBitmap(&background_bmap);
-	UnloadBitmap(&list_sel1_bmap);
-	UnloadBitmap(&input_box);
-	UnloadBitmap(&airkiss_bmap);
-	UnloadBitmap(&volume_3);
-	UnloadBitmap(&volume_2);
-	UnloadBitmap(&volume_1);
-	UnloadBitmap(&volume_0);
+    UnloadBitmap(&wifi_connected_bmap);
+    UnloadBitmap(&wifi_disconnected_bmap);
+    UnloadBitmap(&wifi_disabled_bmap);
+    UnloadBitmap(&back_bmap);
+    UnloadBitmap(&volume_0);
+    UnloadBitmap(&volume_1);
+    UnloadBitmap(&volume_2);
+    UnloadBitmap(&volume_3);
 }
 
 #ifdef ENABLE_BATT

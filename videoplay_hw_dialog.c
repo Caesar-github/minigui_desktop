@@ -105,6 +105,8 @@ static int loadres(void)
 static void unloadres(void)
 {
     int i;
+    UnloadBitmap(&playprev_bmap);
+    UnloadBitmap(&playnext_bmap);
 
     for (i = 0; i < 2; i++)
         UnloadBitmap(&playstatus_bmap[i]);

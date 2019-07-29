@@ -31,6 +31,11 @@
 #define WIFI_WHOLE_BUTTON_NUM 10
 
 static BITMAP list_sel_bmap;
+static BITMAP wifi_signal_3;
+static BITMAP wifi_signal_2;
+static BITMAP wifi_signal_1;
+static BITMAP wifi_key_bmap;
+static BITMAP list_sel1_bmap;
 
 static BITMAP seldot_bmap[2];
 static int list_sel = 0;
@@ -245,6 +250,26 @@ static int loadres(void)
     if (LoadBitmap(HDC_SCREEN, &list_sel_bmap, img))
         return -1;
 
+    snprintf(img, sizeof(img), "%skey.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_key_bmap, img))
+        return -1;
+
+    snprintf(img, sizeof(img), "%swifi_signal_3.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_signal_3, img))
+        return -1;
+
+    snprintf(img, sizeof(img), "%swifi_signal_2.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_signal_2, img))
+        return -1;
+
+    snprintf(img, sizeof(img), "%swifi_signal_1.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &wifi_signal_1, img))
+        return -1;
+
+    snprintf(img, sizeof(img), "%slist_sel1.png", respath);
+    if (LoadBitmap(HDC_SCREEN, &list_sel1_bmap, img))
+        return -1;
+
     for (i = 0; i < 2; i++)
     {
         snprintf(img, sizeof(img), "%sdot%d.png", respath, i);
@@ -259,6 +284,11 @@ static void unloadres(void)
     int i;
 
     UnloadBitmap(&list_sel_bmap);
+    UnloadBitmap(&wifi_key_bmap);
+    UnloadBitmap(&wifi_signal_3);
+    UnloadBitmap(&wifi_signal_2);
+    UnloadBitmap(&wifi_signal_1);
+    UnloadBitmap(&list_sel1_bmap);
     for (i = 0; i < 2; i++)
     {
         UnloadBitmap(&seldot_bmap[i]);

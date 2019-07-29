@@ -245,6 +245,24 @@ typedef struct
     int timing;
 } rtc_timing;
 
+struct wifi_info
+{
+    char ssid[64];
+    char psk[64];
+};
+
+struct wifi_avaiable
+{
+    char ssid[64];
+    int rssi;
+};
+
+enum INPUT_TYPE
+{
+    WIFI_PWD = 1,
+    SYSTEMTIME_DATE,
+};
+
 #if 1
 #define BROWSER_PATH_ROOT     "/oem/file"
 #define BROWSER_PATH_PIC      "/oem/file/pic"
@@ -320,7 +338,6 @@ typedef struct
 #include <DeviceIo/Rk_wifi.h>
 #include <pthread.h>
 
-
 extern int loadstringres(void);
 extern int loadtimefile(void);
 extern int loadversion(char **model, char **version);
@@ -330,39 +347,16 @@ extern void DisableScreenAutoOff(void);
 extern void EnableScreenAutoOff(void);
 
 extern BITMAP batt_bmap[6];
-extern BITMAP wifi_bmap;
 extern BITMAP wifi_connected_bmap;
 extern BITMAP wifi_disconnected_bmap;
 extern BITMAP wifi_disabled_bmap;
-extern BITMAP wifi_key_bmap;
 extern BITMAP back_bmap;
 extern BITMAP volume_0;
 extern BITMAP volume_1;
 extern BITMAP volume_2;
 extern BITMAP volume_3;
-extern BITMAP airkiss_bmap;
-extern BITMAP list_sel1_bmap;
-extern BITMAP wifi_signal_3;
-extern BITMAP wifi_signal_2;
-extern BITMAP wifi_signal_1;
-extern BITMAP input_box;
 
 extern HWND setting_wiif_dialog_hWnd;
-
-
-
-struct wifi_info
-{
-    char ssid[64];
-    char psk[64];
-};
-
-struct wifi_avaiable
-{
-    char ssid[64];
-    int rssi;
-};
-
 extern HWND mhWnd, nhWnd;
 
 extern struct wifi_info input_wifi_date;
@@ -377,15 +371,13 @@ extern int battery;
 extern BITMAP background_bmap;
 extern RECT msg_rcBg;
 extern RECT msg_rcBatt;
+extern RECT msg_rcWifi;
 extern RECT msg_rcTitle;
 extern RECT msg_rcDialog;
 extern RECT msg_rcStatusBar;
 extern int status_bar_offset;
 extern int status_bar_time_str[10];
 extern int status_bar_date_str[20];
-
-extern RECT msg_rcWifi;
-
 
 extern char *res_str[RES_STR_MAX];
 extern rtc_timing timing_power_on[TIMING_NUM + 1];
@@ -398,28 +390,16 @@ extern LOGFONT  *logfont_k_title;
 extern LOGFONT  *logfont;
 extern LOGFONT  *logfont_title;
 
-
-enum INPUT_TYPE
-{
-    WIFI_PWD = 1,
-    SYSTEMTIME_DATE,
-};
-
 extern int input_dialog_type;
 extern int pwd_short_flag;
 extern int wifi_connect_flag;
 extern int cur_page;
 extern int avaiable_wifi_display_mode;
 
-
-
-
 #define BUTTON_MAXNUM    41
 extern CTRLDATA KeyboardCtrl[BUTTON_MAXNUM];
 
-
 extern pthread_t thread1;
 extern char *message1;
-
 
 #endif

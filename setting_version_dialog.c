@@ -100,6 +100,8 @@ static int loadres(void)
 
 static void unloadres(void)
 {
+    UnloadBitmap(&list_sel_bmap);
+
     if (model_disp)
         free(model_disp);
     model_disp = 0;

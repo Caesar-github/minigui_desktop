@@ -33,7 +33,6 @@ int pwd_cnt = 0;
 #define INPUT_NUM   3
 
 static BITMAP list_sel_bmap;
-static BITMAP seldot_bmap[2];
 static int list_sel = 0;
 static int batt = 0;
 static int wifistate;
@@ -132,12 +131,6 @@ static int loadres(void)
     if (LoadBitmap(HDC_SCREEN, &list_sel_bmap, img))
         return -1;
 
-    for (i = 0; i < 2; i++)
-    {
-        snprintf(img, sizeof(img), "%sdot%d.png", respath, i);
-        if (LoadBitmap(HDC_SCREEN, &seldot_bmap[i], img))
-            return -1;
-    }
     return 0;
 }
 
@@ -146,10 +139,6 @@ static void unloadres(void)
     int i;
 
     UnloadBitmap(&list_sel_bmap);
-    for (i = 0; i < 2; i++)
-    {
-        UnloadBitmap(&seldot_bmap[i]);
-    }
 }
 
 static void menu_back(HWND hWnd, WPARAM wParam, LPARAM lParam)

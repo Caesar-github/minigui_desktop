@@ -111,6 +111,9 @@ static void unloadres(void)
 {
     int i;
 
+    UnloadBitmap(&playprev_bmap);
+    UnloadBitmap(&playnext_bmap);
+
     for (i = 0; i < ALBUM_ICON_NUM; i++)
         UnloadBitmap(&album_bmap[i]);
 

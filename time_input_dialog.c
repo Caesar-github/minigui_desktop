@@ -445,7 +445,7 @@ static LRESULT time_input_dialog_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
     case MSG_DESTROY:
         //KillTimer(hWnd, _ID_TIMER_SETTING_SYSTEMTIME);
-        //unloadres();
+        unloadres();
         break;
     case MSG_LBUTTONDOWN:
         touch_pos_down.x = LOSWORD(lParam);
