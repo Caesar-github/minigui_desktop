@@ -84,6 +84,7 @@ static void themestyle_enter(HWND hWnd, WPARAM wParam, LPARAM lParam)
     loadres();
     main_unloadres();
     main_loadres();
+    background_loadres();
     InvalidateRect(hWnd, &msg_rcBg, TRUE);
 }
 
